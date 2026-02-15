@@ -317,7 +317,7 @@ const chapters = [
          icon:"&#128190;", live:true},
   {n:4,  title:"Processing Crime and Incident Scenes",
          desc:"Scene documentation, evidence collection, first responder procedures, and maintaining chain of custody.",
-         icon:"&#128680;", live:false},
+         icon:"&#128680;", live:true},
   {n:5,  title:"Working with Windows and CLI Systems",
          desc:"Windows file systems, registry analysis, command-line tools, and boot processes relevant to forensic exams.",
          icon:"&#128187;", live:false},
@@ -371,7 +371,9 @@ function renderChapters(filter = '') {
     card.className = `ch-card${ch.live ? '' : ' placeholder'}`;
     if (ch.live) {
       card.href = getChapterURL(ch.n);
-      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} – Available`);
+      card.target = '_blank';
+      card.rel = 'noopener noreferrer';
+      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} – Available (opens in new tab)`);
     } else {
       card.setAttribute('role', 'article');
       card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} – Coming Soon`);
