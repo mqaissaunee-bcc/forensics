@@ -323,7 +323,7 @@ const chapters = [
          icon:"&#128187;", live:true},
   {n:6,  title:"Current Digital Forensics Tools",
          desc:"Overview of forensic software suites, hardware tools, validation methods, and tool selection criteria.",
-         icon:"&#128295;", live:false},
+         icon:"&#128295;", live:true},
   {n:7,  title:"Linux and Macintosh File Systems",
          desc:"Examining ext, HFS+, and APFS file systems, Linux command-line forensics, and cross-platform challenges.",
          icon:"&#128039;", live:false},
@@ -371,7 +371,9 @@ function renderChapters(filter = '') {
     card.className = `ch-card${ch.live ? '' : ' placeholder'}`;
     if (ch.live) {
       card.href = getChapterURL(ch.n);
-      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} â€“ Available`);
+      card.target = '_blank';
+      card.rel = 'noopener noreferrer';
+      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} â€“ Available (opens in new tab)`);
     } else {
       card.setAttribute('role', 'article');
       card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} â€“ Coming Soon`);
