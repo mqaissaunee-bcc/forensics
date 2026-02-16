@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 13 &mdash; Cloud Forensics</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;--tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#7A7A8A;--ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);--hi:#C44536;--hi2:#E76F51;--ok:#2D6A4F;--ok2:#52B788;--warn:#E9C46A;--bdr:#D5CEC7;--shd:0 2px 16px rgba(26,26,46,.06);--shd2:0 8px 32px rgba(26,26,46,.12);--r:12px;--rs:8px;--t:.3s cubic-bezier(.4,0,.2,1);--fH:'Merriweather',Georgia,serif;--fB:'Source Sans 3','Segoe UI',sans-serif;--fM:'JetBrains Mono','Courier New',monospace}
+[data-theme="dark"]{--bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;--tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#7A7872;--ac:#14919B;--ac2:#44C7D0;--acG:rgba(20,145,155,.15);--hi:#E76F51;--hi2:#F4A261;--ok:#52B788;--ok2:#95D5B2;--bdr:#2E3A47;--shd:0 2px 16px rgba(0,0,0,.3);--shd2:0 8px 32px rgba(0,0,0,.5)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t)}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none;transition:top .2s}.skip-link:focus{top:0}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--ac);border-radius:4px}
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 50%,#0D5C63 100%);padding:60px 24px 50px;text-align:center;position:relative;overflow:hidden}.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}.hero-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:6px 20px;border-radius:50px;font-family:var(--fM);font-size:.8rem;color:rgba(255,255,255,.9);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;position:relative}.hero h1{font-family:var(--fH);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;color:#fff;line-height:1.3;max-width:800px;margin:0 auto 12px;position:relative}.hero p{font-size:1.1rem;color:rgba(255,255,255,.85);max-width:620px;margin:0 auto;position:relative}
+.progress-container{position:sticky;top:0;z-index:1000;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:10px 24px;display:flex;align-items:center;gap:16px;transition:background var(--t)}.progress-bar-wrap{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden}.progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;transition:width .5s ease}.progress-text{font-family:var(--fM);font-size:.8rem;color:var(--tx2);min-width:42px;text-align:right}.theme-toggle{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:6px 14px;cursor:pointer;font-size:1.1rem;color:var(--tx0);transition:all var(--t);display:flex;align-items:center;gap:6px}.theme-toggle:hover,.theme-toggle:focus-visible{background:var(--ac);color:#fff}
+.nav-bar{background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 24px;display:flex;overflow-x:auto;gap:4px;scrollbar-width:none;transition:background var(--t)}.nav-bar::-webkit-scrollbar{display:none}.nav-btn{background:none;border:none;padding:14px 18px;font-family:var(--fB);font-size:.85rem;font-weight:600;color:var(--tx2);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all var(--t)}.nav-btn:hover,.nav-btn:focus-visible{color:var(--ac)}.nav-btn.active{color:var(--ac);border-bottom-color:var(--ac)}
+.container{max-width:960px;margin:0 auto;padding:32px 24px 80px}.section{display:none;animation:fadeIn .4s ease}.section.active{display:block}@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}h2{font-family:var(--fH);font-size:1.8rem;font-weight:900;color:var(--tx0);margin-bottom:8px;display:flex;align-items:center;gap:12px}h2 .icon{font-size:1.4rem}.section-sub{color:var(--tx2);font-size:1rem;margin-bottom:28px}h3{font-family:var(--fH);font-size:1.2rem;font-weight:700;margin:24px 0 12px;color:var(--tx0)}
+.card{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:24px;margin-bottom:16px;box-shadow:var(--shd);transition:all var(--t)}
+.obj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:20px}.obj-card{background:var(--bg1);border:1px solid var(--bdr);border-left:4px solid var(--ac);border-radius:var(--rs);padding:20px;display:flex;align-items:flex-start;gap:14px;box-shadow:var(--shd);transition:all var(--t)}.obj-card:hover{border-left-color:var(--hi);transform:translateX(4px)}.obj-num{font-family:var(--fM);font-size:.75rem;font-weight:600;color:#fff;background:var(--ac);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}.obj-text{font-size:.95rem;color:var(--tx1)}
+.acc-item{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shd)}.acc-hd{width:100%;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;background:none;border:none;cursor:pointer;font-family:var(--fH);font-size:1.05rem;font-weight:700;color:var(--tx0);text-align:left;transition:all var(--t);gap:12px}.acc-hd:hover,.acc-hd:focus-visible{background:var(--acG)}.acc-hd .chv{font-size:1.2rem;transition:transform var(--t);flex-shrink:0;color:var(--ac)}.acc-item.open .chv{transform:rotate(180deg)}.acc-bd{max-height:0;overflow:hidden;transition:max-height .4s ease}.acc-ct{padding:0 24px 24px;color:var(--tx1);line-height:1.8}.acc-ct p{margin-bottom:12px}.acc-ct strong{color:var(--tx0)}.kt{display:inline;background:var(--acG);color:var(--ac);padding:2px 8px;border-radius:4px;font-weight:600;font-size:.9rem}.info-box{background:var(--bg2);border-left:4px solid var(--ac);padding:16px 20px;border-radius:0 var(--rs) var(--rs) 0;margin:16px 0;font-size:.95rem}.info-box.warn{border-left-color:var(--hi)}
+.compare-tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:.9rem}.compare-tbl th,.compare-tbl td{padding:10px 14px;border:1px solid var(--bdr);text-align:left}.compare-tbl th{background:var(--acG);color:var(--ac);font-weight:700;font-family:var(--fH);font-size:.85rem}.compare-tbl td{background:var(--bg1)}
+.tab-row{display:flex;gap:4px;margin-bottom:20px;overflow-x:auto;scrollbar-width:none}.tab-row::-webkit-scrollbar{display:none}.tab-btn{padding:10px 20px;border:1px solid var(--bdr);border-radius:var(--rs);background:var(--bg1);cursor:pointer;font-family:var(--fB);font-weight:600;font-size:.85rem;color:var(--tx2);transition:all var(--t);white-space:nowrap}.tab-btn:hover{border-color:var(--ac);color:var(--ac)}.tab-btn.active{background:var(--ac);color:#fff;border-color:var(--ac)}.tab-panel{display:none}.tab-panel.active{display:block}
+.fc-section{text-align:center}.fc-counter{font-family:var(--fM);font-size:.85rem;color:var(--tx2);margin-bottom:16px}.fc-viewport{perspective:1000px;height:300px;margin-bottom:24px;display:flex;align-items:center;justify-content:center}.fc-card{width:100%;max-width:420px;height:100%;position:relative;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,0,.2,1)}.fc-card.flipped .fc-face--term{transform:rotateX(180deg)}.fc-card.flipped .fc-face--def{transform:rotateX(0deg)}.fc-card.flipped .fc-face--example{transform:rotateX(-60deg)}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--r);display:flex;flex-direction:column;padding:28px 24px;box-shadow:var(--shd2)}.fc-face--term{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;transform:rotateX(0deg) translateZ(1px);justify-content:center;align-items:center}.fc-face--def{background:var(--bg1);color:var(--tx0);border:2px solid var(--ac);transform:rotateX(-180deg) translateZ(1px)}.fc-face--example{background:linear-gradient(135deg,#6B4C9A,#9B6DFF);color:#fff;transform:rotateX(-240deg) translateZ(87px)}
+[data-theme="dark"] .fc-face--example{background:linear-gradient(135deg,#4A3070,#7B4FCC)}
+.fc-lbl{font-family:var(--fM);font-size:.65rem;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fc-lbl-icon{font-size:1rem}.fc-main{font-size:1.15rem;line-height:1.6;font-weight:600;max-width:90%}.fc-face--def .fc-main,.fc-face--example .fc-main{font-size:1rem;font-weight:400}.fc-ex-pre{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;opacity:.8;font-style:normal}.fc-hint{font-size:.8rem;opacity:.7;margin-top:auto;padding-top:12px}
+.fc-dots{display:flex;justify-content:center;gap:16px;margin-bottom:18px}.fc-dot-grp{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}.fc-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--bdr);background:var(--bg2);cursor:pointer;transition:all var(--t)}.fc-dot-grp.active .fc-dot{transform:scale(1.2)}.fc-dot.a-term{background:var(--ac);border-color:var(--ac)}.fc-dot.a-def{background:var(--bg1);border-color:var(--ac)}.fc-dot.a-ex{background:#6B4C9A;border-color:#6B4C9A}.fc-dot-lbl{font-family:var(--fM);font-size:.6rem;color:var(--tx2);text-transform:uppercase;letter-spacing:1px}
+.fc-ctrls{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}.fc-btn{padding:10px 22px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--bg1);color:var(--tx0);font-family:var(--fB);font-weight:600;font-size:.9rem;cursor:pointer;transition:all var(--t)}.fc-btn:hover{border-color:var(--ac);color:var(--ac)}.fc-btn.pri{background:var(--ac);color:#fff;border-color:var(--ac)}.fc-btn.pri:hover{background:var(--ac2)}.fc-btn.flip{background:var(--bg2)}
+.quiz-progress{font-family:var(--fM);font-size:.82rem;color:var(--tx2);margin-bottom:12px}.quiz-q{font-family:var(--fH);font-size:1.15rem;font-weight:700;margin-bottom:20px;line-height:1.5}.quiz-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}.quiz-opt{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg2);border:2px solid var(--bdr);border-radius:var(--rs);cursor:pointer;transition:all var(--t)}.quiz-opt:hover{border-color:var(--ac)}.quiz-opt.selected{border-color:var(--ac);background:var(--acG)}.quiz-opt.correct{border-color:var(--ok);background:rgba(45,106,79,.1)}.quiz-opt.incorrect{border-color:var(--hi);background:rgba(196,69,54,.1)}.quiz-opt .ltr{font-family:var(--fM);font-size:.8rem;font-weight:600;color:#fff;background:var(--ac);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}.quiz-fb{min-height:24px;font-size:.95rem;padding:8px 0;line-height:1.6}.quiz-fb.ok{color:var(--ok)}.quiz-fb.no{color:var(--hi)}.score-circle{width:100px;height:100px;border-radius:50%;background:var(--acG);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;border:3px solid var(--ac)}.score-num{font-family:var(--fM);font-size:1.4rem;font-weight:700;color:var(--ac)}.score-lbl{font-size:.7rem;color:var(--tx2)}
+.match-container{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px}.match-col-title{font-family:var(--fM);font-size:.75rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx2);margin-bottom:10px;text-align:center}.match-item{padding:12px 16px;background:var(--bg2);border:2px solid var(--bdr);border-radius:var(--rs);cursor:pointer;transition:all var(--t);margin-bottom:8px;font-size:.9rem;text-align:center}.match-item:hover{border-color:var(--ac)}.match-item.sel{border-color:var(--ac);background:var(--acG);font-weight:600}.match-item.matched{border-color:var(--ok);background:rgba(45,106,79,.1);cursor:default;opacity:.7}.match-item.wrong{border-color:var(--hi);background:rgba(196,69,54,.1);animation:shake .3s}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}.match-score{text-align:center;font-family:var(--fM);font-size:.85rem;color:var(--tx2);margin-top:10px}
+.sort-list{list-style:none;padding:0}.sort-item{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);margin-bottom:8px;cursor:grab;transition:all var(--t);font-size:.9rem}.sort-item:active{cursor:grabbing;background:var(--acG)}.sort-item.over{border-color:var(--ac);border-style:dashed}.sort-item.correct-pos{border-color:var(--ok);background:rgba(45,106,79,.08)}.sort-item.wrong-pos{border-color:var(--hi);background:rgba(196,69,54,.08)}.grip{color:var(--tx2);font-size:1.1rem;cursor:grab}.s-num{font-family:var(--fM);font-size:.75rem;color:#fff;background:var(--ac);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tf-card{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);padding:18px 20px;margin-bottom:12px;box-shadow:var(--shd)}.tf-statement{font-size:.95rem;margin-bottom:12px;line-height:1.6}.tf-btns{display:flex;gap:8px}.tf-btn{padding:8px 18px;border:1px solid var(--bdr);border-radius:var(--rs);background:var(--bg2);cursor:pointer;font-family:var(--fB);font-weight:600;font-size:.85rem;transition:all var(--t)}.tf-btn:hover{border-color:var(--ac);color:var(--ac)}.answered-true .tf-btns .tf-btn,.answered-false .tf-btns .tf-btn{opacity:.5;cursor:default}.tf-result{margin-top:10px;font-size:.9rem;line-height:1.6;display:none}.tf-result.ok,.tf-result.no{display:block}.tf-result.ok{color:var(--ok)}.tf-result.no{color:var(--hi)}
+.sg-box{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:28px;box-shadow:var(--shd)}.sg-progress-dots{display:flex;justify-content:center;gap:8px;margin-bottom:16px}.sg-dot{width:12px;height:12px;border-radius:50%;background:var(--bdr);transition:all var(--t)}.sg-dot.active{background:var(--ac);transform:scale(1.3)}.sg-dot.done{background:var(--ok)}.sg-lbl{font-family:var(--fM);font-size:.75rem;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}.sg-text{font-size:1.05rem;line-height:1.7;margin-bottom:20px}.sg-choices{display:flex;flex-direction:column;gap:10px}.sg-choice{padding:14px 18px;background:var(--bg2);border:2px solid var(--bdr);border-radius:var(--rs);cursor:pointer;font-size:.95rem;transition:all var(--t)}.sg-choice:hover{border-color:var(--ac)}.sg-choice.best{border-color:var(--ok);background:rgba(45,106,79,.1)}.sg-choice.okay{border-color:var(--warn);background:rgba(233,196,106,.1)}.sg-choice.bad{border-color:var(--hi);background:rgba(196,69,54,.1)}.sg-feedback{margin-top:16px;padding:14px 18px;border-radius:var(--rs);font-size:.95rem;line-height:1.6}
+.glo-search{width:100%;padding:14px 20px;border:2px solid var(--bdr);border-radius:var(--rs);font-family:var(--fB);font-size:1rem;background:var(--bg1);color:var(--tx0);margin-bottom:16px;transition:border-color var(--t)}.glo-search:focus{outline:none;border-color:var(--ac)}.glo-item{padding:16px 20px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);margin-bottom:8px}.glo-term{font-family:var(--fH);font-weight:700;font-size:1rem;color:var(--ac);margin-bottom:4px}.glo-def{font-size:.92rem;color:var(--tx1);line-height:1.6}
+.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}.vid-card{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;box-shadow:var(--shd);transition:all var(--t)}.vid-card:hover{box-shadow:var(--shd2);transform:translateY(-3px)}.vid-embed{width:100%;aspect-ratio:16/9;border:none}.vid-info{padding:16px}.vid-title{font-family:var(--fH);font-weight:700;font-size:.95rem;margin-bottom:6px}.vid-desc{font-size:.85rem;color:var(--tx2);line-height:1.5}
+@media(max-width:600px){.hero{padding:40px 16px 36px}.hero h1{font-size:1.5rem}.container{padding:20px 16px 60px}.fc-viewport{height:260px}.match-container{grid-template-columns:1fr}.obj-grid{grid-template-columns:1fr}.vid-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="hero" role="banner">
+<div class="hero-badge">Chapter 13</div>
+<h1>Cloud Forensics</h1>
+<p>Applying digital forensic techniques to cloud computing environments — from service models and legal hurdles to evidence acquisition and investigation tools.</p>
+</header>
+
+<div class="progress-container" role="navigation" aria-label="Progress">
+<div class="progress-bar-wrap"><div class="progress-bar" id="progBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div></div>
+<span class="progress-text" id="progText">0%</span>
+<button class="theme-toggle" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+</div>
+
+<nav class="nav-bar" aria-label="Section navigation" id="navBar">
+<button class="nav-btn active" data-s="0">Objectives</button>
+<button class="nav-btn" data-s="1">Lesson</button>
+<button class="nav-btn" data-s="2">Activities</button>
+<button class="nav-btn" data-s="3">Flashcards</button>
+<button class="nav-btn" data-s="4">Quiz</button>
+<button class="nav-btn" data-s="5">Glossary</button>
+<button class="nav-btn" data-s="6">Videos</button>
+</nav>
+
+<main class="container" id="main">
+
+<!-- ===== SECTION 0: OBJECTIVES ===== -->
+<section class="section active" id="sec0">
+<h2><span class="icon">🎯</span> Learning Objectives</h2>
+<p class="section-sub">By completing this chapter you will be able to:</p>
+<div class="obj-grid">
+<div class="obj-card"><span class="obj-num">1</span><span class="obj-text">Describe the main concepts of cloud computing, including its history, service levels, and deployment methods</span></div>
+<div class="obj-card"><span class="obj-num">2</span><span class="obj-text">Summarize the legal challenges in conducting cloud forensics, including SLAs, jurisdiction, and evidence access</span></div>
+<div class="obj-card"><span class="obj-num">3</span><span class="obj-text">Give an overview of the technical challenges with cloud forensics such as architecture, anti-forensics, and data analysis</span></div>
+<div class="obj-card"><span class="obj-num">4</span><span class="obj-text">Describe how to acquire cloud data through various methods depending on the case type</span></div>
+<div class="obj-card"><span class="obj-num">5</span><span class="obj-text">Explain how to conduct a cloud investigation, including examining CSPs and cloud customers</span></div>
+<div class="obj-card"><span class="obj-num">6</span><span class="obj-text">Explain what remote access and forensic tools can be used for cloud investigations</span></div>
+</div>
+</section>
+
+<!-- ===== SECTION 1: LESSON CONTENT ===== -->
+<section class="section" id="sec1">
+<h2><span class="icon">📖</span> Lesson Content</h2>
+<p class="section-sub">Click each topic to expand and study the material.</p>
+
+<div class="acc-item"><button class="acc-hd" aria-expanded="false">☁️ An Overview of Cloud Computing<span class="chv">▼</span></button><div class="acc-bd"><div class="acc-ct">
+<p>The cloud has introduced ways of managing data that didn't exist a decade ago, creating unique challenges for forensic investigators. <strong>Cloud computing</strong> is defined by NIST as a computing storage system that provides on-demand network access for multiple users and can allocate storage to keep up with changing needs.</p>
+<h3>History of the Cloud</h3>
+<p>The concept of cloud computing originated with <strong>Professor John McCarthy</strong> of MIT and <strong>Dr. J.C.R. Licklider</strong>, director at the U.S. Department of Defense ARPA. In 1999, Salesforce.com developed a Web service applying digital marketing research to business subscribers, which eventually led the way to cloud computing. In 2002, Amazon created Mechanical Turk and launched <span class="kt">EC2</span> in 2006. After Web 2.0 in 2009, other providers launched services including Google Apps, Apple iCloud, and Microsoft OneDrive.</p>
+<div class="info-box">💡 Cloud computing has evolved from a theoretical concept in the 1960s to a multi-billion-dollar industry powering the majority of modern business operations.</div>
+</div></div></div>
+
+<div class="acc-item"><button class="acc-hd" aria-expanded="false">📊 Cloud Service Levels &amp; Deployment Methods<span class="chv">▼</span></button><div class="acc-bd"><div class="acc-ct">
+<h3>Three Service Levels</h3>
+<table class="compare-tbl"><thead><tr><th>Level</th><th>Description</th><th>Evidence Locations</th></tr></thead><tbody>
+<tr><td><span class="kt">SaaS</span></td><td>Software as a Service — applications delivered via the Internet</td><td>Desktop, laptop, tablet, or smartphone</td></tr>
+<tr><td><span class="kt">PaaS</span></td><td>Platform as a Service — OS installed on a cloud server for customer apps</td><td>Desktop, server, company network, or remote provider infrastructure</td></tr>
+<tr><td><span class="kt">IaaS</span></td><td>Infrastructure as a Service — customers rent hardware, install their own OSs and applications</td><td>Desktop, server; infrastructure may be owned by company or provider</td></tr>
+</tbody></table>
+<h3>Four Deployment Methods</h3>
+<p><strong>Public</strong> — accessible to anyone. <strong>Private</strong> — accessed only by credentialed users. <strong>Community</strong> — shared service for a specific purpose. <strong>Hybrid</strong> — combines public, private, or community services under one cloud with data segregation.</p>
+</div></div></div>
+
+<div class="acc-item"><button class="acc-hd" aria-expanded="false">🔍 Basic Concepts of Cloud Forensics<span class="chv">▼</span></button><div class="acc-bd"><div class="acc-ct">
+<p><span class="kt">Cloud forensics</span> applies digital forensics to cloud computing and is considered a subset of network forensics. It has <strong>three dimensions</strong>:</p>
+<p><strong>Organizational</strong> — addresses the structure of the cloud. <strong>Legal</strong> — covers service agreements and jurisdictional matters. <strong>Technical</strong> — deals with procedures and specialized applications for forensic recovery and analysis.</p>
+<h3>Required Tool Capabilities</h3>
+<p><strong>Forensic data collection</strong> — identify, label, record, and acquire data. <strong>Elastic, static, and live forensics</strong> — expand and contract storage capabilities. <strong>Evidence segregation</strong> — handle shared environments. <strong>Virtualized environment investigation</strong> — examine virtual systems.</p>
+</div></div></div>
+
+<div class="acc-item"><button class="acc-hd" aria-expanded="false">⚖️ Legal Challenges in Cloud Forensics<span class="chv">▼</span></button><div class="acc-bd"><div class="acc-ct">
+<h3>Service Level Agreements (SLAs)</h3>
+<p><span class="kt">Cloud Service Agreements (CSAs)</span> are contracts between a CSP and the customer describing what services are provided and at what level. They should specify service hours, restrictions, availability, support levels, response times, throughput limitations, incident response plans, disaster recovery, fees, and security measures.</p>
+<p>Forensic examiners should be most concerned with <strong>restrictions applied to customers</strong> and <strong>security measures</strong>. Examiners should also review a CSP's policies, standards, guidelines, and processes/procedures.</p>
+<h3>Jurisdiction Issues</h3>
+<p>There is currently no law ensuring uniform access or required handling procedures for the cloud. Investigators should be concerned about <strong>commingled data</strong> — cases where relevant data is mixed with unrelated customer data. The EU Directive 95/46/EC is more restrictive than US rules regarding private information for EU citizens. Digital forensics examiners could be held liable when conducting cloud investigations — always consult legal experts.</p>
+<h3>Accessing Evidence — ECPA Mechanisms</h3>
+<p>The <span class="kt">Electronic Communications Privacy Act (ECPA)</span> describes five mechanisms the government can use:</p>
+<table class="compare-tbl"><thead><tr><th>Mechanism</th><th>Details</th></tr></thead><tbody>
+<tr><td>Search warrants</td><td>Criminal cases only; requires probable cause from law enforcement</td></tr>
+<tr><td>Subpoenas</td><td>Used for customer records; government agencies or civil litigation</td></tr>
+<tr><td>Subpoenas with prior notice</td><td>Must notify subscriber/customer before execution</td></tr>
+<tr><td>Court orders</td><td>Written by judges to compel action</td></tr>
+<tr><td>Court orders with prior notice</td><td>Must notify subscriber/customer before execution</td></tr>
+</tbody></table>
+<div class="info-box warn">⚠️ In cloud environments, the property to be seized usually describes <strong>data</strong> rather than physical hardware, unless the CSP itself is the suspect. If a search is announced, the risk of <strong>spoliation</strong> (failing to preserve evidence) increases.</div>
+</div></div></div>
+
+<div class="acc-item"><button class="acc-hd" aria-expanded="false">🛠️ Technical Challenges in Cloud Forensics<span class="chv">▼</span></button><div class="acc-bd"><div class="acc-ct">
+<h3>Architecture</h3>
+<p>No two CSPs are configured exactly the same way. Customer data may be <strong>commingled</strong>, and most CSPs keep storage locations secret. Differences in recording procedures and log keeping complicate the chain of evidence.</p>
+<h3>Analysis of Cloud Forensic Data</h3>
+<p>Analyzing evidence from a cloud requires verifying data with other data and log records. Examiners compare <strong>MAC dates</strong> (Modified, last Access, and Created). Metadata should be examined to validate file accesses.</p>
+<h3>Anti-Forensics</h3>
+<p><span class="kt">Anti-forensics</span> is the act of destroying electronically stored information (ESI) that is potential evidence. Hackers may: insert malware in other files, use encryption to obfuscate malware, use data-hiding utilities that append malware to existing files, or change timestamps to disrupt timelines. Calculating <strong>hash values</strong> and comparing them with known good files helps identify altered files.</p>
+<h3>Incident First Responders &amp; Role Management</h3>
+<p>CSPs typically have trained personnel to respond to network incidents. When they don't, the forensic examiner organizes CSP staff. Key concerns include staff cooperation, management authority, operations security briefings, and evidence collection training.</p>
+<p><strong>Role management</strong> covers data owners, identity protection, users, and access controls — useful for identifying additional victims or suspects.</p>
+</div></div></div>
+
+<div class="acc-item"><button class="acc-hd" aria-expanded="false">💾 Acquiring Cloud Data &amp; Encryption<span class="chv">▼</span></button><div class="acc-bd"><div class="acc-ct">
+<h3>Acquisition Methods by Case Type</h3>
+<table class="compare-tbl"><thead><tr><th>Scenario</th><th>Focus</th></tr></thead><tbody>
+<tr><td>Network penetration through firewall</td><td>Firewall and network logs analysis</td></tr>
+<tr><td>Unauthorized database access</td><td>Database access logs and user roles</td></tr>
+<tr><td>E-discovery / deleted artifacts</td><td>Disk acquisitions and data recovery</td></tr>
+<tr><td>Remote acquisitions</td><td>Remote access tools with forensic capabilities</td></tr>
+<tr><td>Virtual environments</td><td>Snapshots before, during, and after incident</td></tr>
+</tbody></table>
+<p>With virtual environments, <strong>snapshots</strong> provide valuable information. Examiners should re-create separate servers from each snapshot, acquire images, and calculate hashes for all files.</p>
+<h3>Encryption in the Cloud</h3>
+<p>Many CSPs offer encryption services. Encrypted data exists in two states: <span class="kt">Data at rest</span> (written to disk) and <span class="kt">Data in motion</span> (transmitted over a network). Some systems also encrypt data in use (in RAM). If encrypted data is encountered, find out from the CSP what type of encryption was used. If the data owner is uncooperative, turn to attorneys or the data owner's management.</p>
+<div class="info-box">💡 Emerging technologies: <strong>Homomorphic encryption</strong> uses an "ideal lattice" mathematical formula, while <strong>blockchain technology</strong> traces information while keeping it secure.</div>
+</div></div></div>
+
+<div class="acc-item"><button class="acc-hd" aria-expanded="false">🔎 Conducting a Cloud Investigation<span class="chv">▼</span></button><div class="acc-bd"><div class="acc-ct">
+<h3>Investigating CSPs</h3>
+<p>Key questions investigators should ask: Does the investigator have authority to use cloud staff and resources? Is detailed knowledge of the topology, policies, and storage methods available? Are there restrictions on collecting evidence from remote storage? Is the data commingled with other customers' data? Is the data local or remote, and can the CSP provide a forensically sound connection?</p>
+<h3>Investigating Cloud Customers</h3>
+<p>Locations to check on a customer's computer or mobile device: <strong>Web browser cache</strong>, the <strong>CSP application folder</strong> (under the user's account), and the <strong>Windows Prefetch folder</strong>.</p>
+<h3>Understanding Prefetch Files</h3>
+<p><span class="kt">Prefetch files</span> contain DLL pathnames and metadata used by applications, including MAC times in UTC format and a counter of how many times the application has run. If deleted, Windows re-creates one that resets MAC times and the counter.</p>
+<h3>Examining Cloud Data on a PC</h3>
+<p>Three widely used cloud services — <strong>Dropbox</strong> (base-64 format since 2012), <strong>Google Drive</strong> (key files: sync_config.db, snapshot.db, sync_log.log), and <strong>OneDrive</strong> (SyncEngine and SyncDiagnostics logs). Each stores user data in specific application and log file locations that can reveal file transfers and access history.</p>
+</div></div></div>
+
+<div class="acc-item"><button class="acc-hd" aria-expanded="false">🧰 Tools for Cloud Forensics<span class="chv">▼</span></button><div class="acc-bd"><div class="acc-ct">
+<p>Few tools are specifically designed for cloud forensics, but many digital, network, and e-discovery tools can be combined to collect and analyze cloud data.</p>
+<table class="compare-tbl"><thead><tr><th>Tool / Framework</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>Forensic Open-Stack Tools (FROST)</td><td>Integrates with OpenStack for IaaS environments; bypasses VM hypervisor; first known cloud forensics response process</td></tr>
+<tr><td>F-Response</td><td>Remote access tool using USB forwarding to allow non-remote-capable tools to access remote servers</td></tr>
+<tr><td>AXIOM Cloud</td><td>Cloud module that retrieves data from social media, messaging, and cloud storage services</td></tr>
+<tr><td>EnCase eDiscovery</td><td>Integrated digital forensics and incident response tools for e-discovery</td></tr>
+<tr><td>AccessData DFIR</td><td>Digital forensics incident response services and e-discovery</td></tr>
+</tbody></table>
+<h3>Standards &amp; Training</h3>
+<p>Organizations developing cloud forensics standards: The Cloud Security Alliance (CSA), (ISC)² Certified Cyber Forensics Professional, INFOSEC Institute, SANS Cloud Forensics, National Institute of Justice, and University College Dublin Centre for Cybersecurity.</p>
+</div></div></div>
+</section>
+
+<!-- ===== SECTION 2: ACTIVITIES ===== -->
+<section class="section" id="sec2">
+<h2><span class="icon">🧩</span> Interactive Activities</h2>
+<p class="section-sub">Reinforce your understanding through hands-on practice.</p>
+
+<div class="tab-row" role="tablist">
+<button class="tab-btn active" data-tab="actMatch" role="tab">Term Matching</button>
+<button class="tab-btn" data-tab="actSort" role="tab">Step Sorting</button>
+<button class="tab-btn" data-tab="actTF" role="tab">True / False</button>
+<button class="tab-btn" data-tab="actScenario" role="tab">Scenario</button>
+</div>
+
+<div class="tab-panel active" id="actMatch">
+<h3>Match Terms to Definitions</h3>
+<div class="match-container" id="matchZone"></div>
+<div class="match-score" id="matchScore"></div>
+</div>
+
+<div class="tab-panel" id="actSort">
+<h3>Sort the Cloud Investigation Steps</h3>
+<p style="margin-bottom:16px;color:var(--tx2);font-size:.9rem">Drag items into the correct order for planning and executing a cloud forensic investigation.</p>
+<ul class="sort-list" id="sortList"></ul>
+<button class="fc-btn pri" onclick="checkSort()" style="margin-top:12px">Check Order</button>
+</div>
+
+<div class="tab-panel" id="actTF">
+<h3>True or False</h3>
+<div id="tfZone"></div>
+</div>
+
+<div class="tab-panel" id="actScenario">
+<h3>Cloud Investigation Scenario</h3>
+<div class="sg-box" id="sgBox"></div>
+</div>
+</section>
+
+<!-- ===== SECTION 3: FLASHCARDS ===== -->
+<section class="section" id="sec3">
+<h2><span class="icon">🃏</span> Flashcards</h2>
+<p class="section-sub">Click cards to flip through term, definition, and example.</p>
+<div class="fc-section">
+<div class="fc-counter" id="fcCounter">1 / 15</div>
+<div class="fc-viewport"><div class="fc-card" id="fcCard"></div></div>
+<div class="fc-dots" id="fcDots"></div>
+<div class="fc-ctrls">
+<button class="fc-btn" onclick="fcNav(-1)">← Previous</button>
+<button class="fc-btn flip" onclick="fcFlip()">Flip Card</button>
+<button class="fc-btn pri" onclick="fcNav(1)">Next →</button>
+</div>
+</div>
+</section>
+
+<!-- ===== SECTION 4: QUIZ ===== -->
+<section class="section" id="sec4">
+<h2><span class="icon">📝</span> Chapter Quiz</h2>
+<p class="section-sub">Test your knowledge — 10 multiple-choice questions.</p>
+<div class="card" id="quizCard"></div>
+</section>
+
+<!-- ===== SECTION 5: GLOSSARY ===== -->
+<section class="section" id="sec5">
+<h2><span class="icon">📚</span> Glossary</h2>
+<p class="section-sub">Search key terms from this chapter.</p>
+<input class="glo-search" id="gloSearch" type="search" placeholder="Search terms…" aria-label="Search glossary">
+<div id="gloList"></div>
+</section>
+
+<!-- ===== SECTION 6: VIDEOS ===== -->
+<section class="section" id="sec6">
+<h2><span class="icon">🎬</span> Related Videos</h2>
+<p class="section-sub">Watch supplemental video resources on cloud forensics topics.</p>
+<div class="vid-grid">
+<div class="vid-card"><iframe class="vid-embed" src="https://www.youtube.com/embed/M988_fsOSt0" title="Cloud Computing Explained" loading="lazy" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe><div class="vid-info"><div class="vid-title">Cloud Computing Explained</div><div class="vid-desc">Overview of cloud computing fundamentals including service models, deployment types, and key concepts.</div></div></div>
+<div class="vid-card"><iframe class="vid-embed" src="https://www.youtube.com/embed/36zducUX16w" title="SaaS vs PaaS vs IaaS" loading="lazy" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe><div class="vid-info"><div class="vid-title">SaaS vs PaaS vs IaaS Explained</div><div class="vid-desc">Comparison of the three cloud service levels with real-world examples of each deployment model.</div></div></div>
+<div class="vid-card"><iframe class="vid-embed" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Digital Forensics in Cloud Environments" loading="lazy" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe><div class="vid-info"><div class="vid-title">Digital Forensics in the Cloud</div><div class="vid-desc">Learn how forensic investigators approach evidence acquisition and analysis in cloud environments.</div></div></div>
+<div class="vid-card"><iframe class="vid-embed" src="https://www.youtube.com/embed/iQsKdtjwtYI" title="Understanding Encryption" loading="lazy" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe><div class="vid-info"><div class="vid-title">Encryption Explained</div><div class="vid-desc">How encryption protects data at rest and in motion — essential context for cloud forensic examiners.</div></div></div>
+<div class="vid-card"><iframe class="vid-embed" src="https://www.youtube.com/embed/6PlNedJDMog" title="Virtual Machines Explained" loading="lazy" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe><div class="vid-info"><div class="vid-title">Virtual Machines &amp; Snapshots</div><div class="vid-desc">Understanding virtual environments and how snapshots serve as critical evidence in cloud investigations.</div></div></div>
+<div class="vid-card"><iframe class="vid-embed" src="https://www.youtube.com/embed/rw2bKIA2cOc" title="Anti-Forensics Techniques" loading="lazy" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe><div class="vid-info"><div class="vid-title">Anti-Forensics Techniques</div><div class="vid-desc">Overview of methods used to destroy or hide digital evidence, and countermeasures investigators can employ.</div></div></div>
+</div>
+</section>
+</main>
+
+<script>
+/* ===== DATA ===== */
+const FC=[
+{t:"Cloud Forensics",d:"A subset of network forensics that applies digital forensic techniques to cloud computing environments for evidence recovery and analysis.",e:"An investigator examines cloud server logs and VM snapshots after a data breach at a company using a public cloud provider."},
+{t:"SaaS",d:"Software as a Service — a cloud service level where applications are delivered via the Internet; the provider manages everything.",e:"A company uses a web-based email service. Forensic evidence is most likely found on the user's local device (desktop, laptop, smartphone)."},
+{t:"PaaS",d:"Platform as a Service — the CSP provides an OS on a cloud server; the customer loads their own applications and data on top of it.",e:"A development team deploys a custom web app on a cloud platform. Investigators check both the server and company network for evidence."},
+{t:"IaaS",d:"Infrastructure as a Service — the customer rents hardware and installs their own OSs and applications; the CSP provides only the physical infrastructure.",e:"A startup rents virtual servers from a cloud provider. The investigator must examine both the company's owned software and the provider's infrastructure."},
+{t:"CSA / SLA",d:"Cloud Service Agreement / Service Level Agreement — a contract between a CSP and customer defining services, support, fees, security, and restrictions.",e:"Before starting an investigation, the examiner reviews the CSA to identify restrictions on data collection and determine what evidence can legally be accessed."},
+{t:"Spoliation",d:"Destroying, altering, hiding, or failing to preserve evidence, whether intentional or due to negligence.",e:"After a search warrant is announced, the suspect remotely deletes cloud-stored files before investigators can acquire them."},
+{t:"ECPA",d:"Electronic Communications Privacy Act — describes five mechanisms the government can use to obtain electronic information from a provider.",e:"Law enforcement obtains a court order under ECPA to compel a cloud provider to turn over a suspect's stored email records."},
+{t:"Multitenancy",d:"A principle where a single software installation on a server is accessed by multiple entities (tenants), potentially creating jurisdictional conflicts.",e:"During an investigation, the examiner must carefully segregate the target's data from other customers sharing the same cloud server."},
+{t:"Anti-Forensics",d:"The act of destroying electronically stored information (ESI) that is potential evidence, using techniques like malware, encryption, or timestamp alteration.",e:"A hacker changes file timestamps and injects malware into other files to disrupt the forensic timeline and hide their activities."},
+{t:"Prefetch Files",d:"Windows files containing DLL pathnames, MAC times (UTC), and application run counters that can reveal cloud application usage patterns.",e:"An examiner finds a Dropbox prefetch file showing the application ran 47 times, with MAC times indicating file syncs during the incident window."},
+{t:"FROST",d:"Forensic Open-Stack Tools — integrates with OpenStack for IaaS environments, adds forensic response capabilities, and bypasses VM hypervisors.",e:"A CSP running OpenStack uses FROST to capture forensic data from virtual machines without going through the hypervisor layer."},
+{t:"F-Response",d:"A remote access tool that uses USB forwarding techniques to allow non-remote-capable forensic tools to access remote servers and cloud data.",e:"An investigator uses F-Response to connect local forensic software to a remote cloud server as if it were a directly attached USB drive."},
+{t:"Management Plane",d:"A tool with application programming interfaces (APIs) that allow reconfiguring a cloud on the fly; used in FROST to store collected forensic data.",e:"FROST places collected forensic data into the cloud's management plane, allowing investigators to access it through standard APIs."},
+{t:"Data at Rest vs. Data in Motion",d:"Two states of encrypted cloud data — data written to disk (at rest) versus data being transmitted over a network (in motion).",e:"An investigator needs different decryption approaches for files stored on cloud servers versus files intercepted during network transmission."},
+{t:"Deprovisioning",d:"Deallocating cloud resources that were previously assigned to a user or organization, potentially destroying evidence in the process.",e:"A terminated employee's cloud storage is deprovisioned by the CSP, and the forensic examiner must act quickly before the data is permanently removed."}
+];
+const QUIZ=[
+{q:"Which cloud service level allows customers to rent hardware and install whatever OSs and applications they need?",o:["SaaS","PaaS","IaaS","Hybrid Cloud"],a:2,f:"IaaS (Infrastructure as a Service) gives the customer the most control — they rent hardware and manage everything from the OS up."},
+{q:"A contract between a CSP and customer that defines services, support levels, and restrictions is known as a:",o:["Multitenancy agreement","Cloud service agreement (CSA)","Digital forensics plan","ECPA warrant"],a:1,f:"Cloud service agreements (CSAs) or service level agreements (SLAs) define the relationship between the CSP and customer."},
+{q:"What act describes five mechanisms the government can use to obtain electronic information from a provider?",o:["PATRIOT Act","FERPA","ECPA","HIPAA"],a:2,f:"The Electronic Communications Privacy Act (ECPA) describes search warrants, subpoenas (with and without notice), and court orders (with and without notice)."},
+{q:"Destroying, altering, hiding, or failing to preserve evidence is known as:",o:["Deprovisioning","Anti-forensics","Spoliation","Multitenancy"],a:2,f:"Spoliation refers to the destruction or failure to preserve evidence, whether intentional or negligent."},
+{q:"Which cloud forensics tool integrates with OpenStack and bypasses a VM's hypervisor?",o:["F-Response","AXIOM Cloud","FROST","EnCase"],a:2,f:"Forensic Open-Stack Tools (FROST) integrates with OpenStack in IaaS environments and bypasses the VM hypervisor to collect forensic data."},
+{q:"In cloud environments, encrypted data exists in which two states?",o:["Active and passive","Encrypted and decrypted","Data at rest and data in motion","Primary and secondary"],a:2,f:"Data at rest (written to disk) and data in motion (being transmitted over a network) are the two states of encrypted cloud data."},
+{q:"Which Windows file type contains DLL pathnames, MAC times, and an application run counter?",o:["Registry hive","Prefetch file","Event log","Pagefile"],a:1,f:"Prefetch files contain metadata including MAC times in UTC format and a counter of how many times an application has run."},
+{q:"A principle where multiple entities share a single software installation on a server is called:",o:["Provisioning","Deprovisioning","Elasticity","Multitenancy"],a:3,f:"Multitenancy allows multiple tenants to share the same server, which creates challenges for evidence segregation and jurisdiction."},
+{q:"Which three cloud services should investigators know how to examine for stored data on a PC?",o:["AWS, Azure, Google Cloud","Dropbox, Google Drive, OneDrive","Salesforce, Oracle, IBM","iCloud, Box, Mega"],a:1,f:"Dropbox, Google Drive, and OneDrive are the three widely used cloud services that store evidence on users' computers in specific folder and log file locations."},
+{q:"What role management information is useful for identifying additional victims or suspects?",o:["Encryption keys and certificates","Data owners, users, and access controls","Firewall rules and IP ranges","Hardware inventory and serial numbers"],a:1,f:"Role management covers data owners, identity protection, users, and access controls — all useful for identifying additional people involved."}
+];
+const MATCH_DATA=[
+["SaaS","Applications delivered via the Internet; provider manages everything"],
+["IaaS","Customer rents hardware and installs their own OS and apps"],
+["CSA","Contract defining services, restrictions, and security between CSP and customer"],
+["Spoliation","Destroying, altering, or failing to preserve evidence"],
+["FROST","OpenStack forensics tool that bypasses VM hypervisors"],
+["Multitenancy","Multiple entities share a single software installation on a server"]
+];
+const SORT_DATA=[
+"Review the cloud service agreement (CSA) for restrictions",
+"Consult legal experts on jurisdiction and privacy issues",
+"Determine if the data is local or remote",
+"Obtain proper legal authority (warrant, subpoena, court order)",
+"Isolate and preserve relevant cloud evidence and logs",
+"Acquire disk images and calculate hash values",
+"Analyze MAC dates, metadata, and log records",
+"Document findings and prepare the forensic report"
+];
+const TF_DATA=[
+{s:"Cloud forensics is considered a subset of network forensics.",a:true,e:"Correct — cloud forensics applies digital forensic techniques within cloud environments and is classified as a subset of network forensics."},
+{s:"In cloud environments, search warrants typically describe physical hardware to be seized.",a:false,e:"In cloud environments, the property to be seized usually describes data rather than physical hardware, unless the CSP is the suspect."},
+{s:"The ECPA describes three mechanisms for obtaining electronic information from providers.",a:false,e:"The ECPA describes five mechanisms: search warrants, subpoenas, subpoenas with prior notice, court orders, and court orders with prior notice."},
+{s:"Anti-forensics techniques include changing file timestamps to disrupt forensic timelines.",a:true,e:"Correct — altering timestamps is one anti-forensics technique that makes it difficult to develop a timeline of a hacker's activities."},
+{s:"All cloud service providers use identical architectures, making forensic analysis straightforward.",a:false,e:"No two CSPs are configured exactly the same way, which is one of the major technical challenges in cloud forensics."},
+{s:"FROST is a forensic tool that works by going through a VM's hypervisor to collect data.",a:false,e:"A key feature of FROST is that it bypasses the VM's hypervisor, collecting data through the cloud's management plane instead."},
+{s:"Prefetch files in Windows contain MAC times in UTC format and an application run counter.",a:true,e:"Correct — prefetch files contain DLL pathnames, MAC times in UTC format, and a counter tracking how many times an application has run."},
+{s:"Data at rest refers to data being transmitted over a network.",a:false,e:"Data at rest is data written to disk. Data in motion is data being transmitted over a network."}
+];
+const SCENARIO=[
+{text:"Your firm is hired to investigate a suspected data breach at a company using a hybrid cloud deployment. Where do you begin?",choices:["Immediately start collecting data from cloud servers","Review the cloud service agreement to understand restrictions and access rights","Contact the media about the breach"],best:1,fb:"Always start by reviewing the CSA to understand restrictions, authorized access, and what legal authority you need before collecting any evidence."},
+{text:"The CSA indicates that customer data is commingled with other tenants on shared servers. What is your primary concern?",choices:["The data might be encrypted","You must segregate the target's data without violating other tenants' privacy rights","The server might be in a different time zone"],best:1,fb:"In multitenant environments, you must carefully segregate the relevant data to avoid violating privacy rights or confidentiality agreements of other customers."},
+{text:"You discover that a hacker may have altered timestamps on key files. How can you verify file integrity?",choices:["Compare hash values of suspicious files against known good hash values","Ask the hacker if they changed anything","Assume the timestamps are correct and proceed"],best:0,fb:"Calculating hash values and comparing them with known good files' hash values is the standard method to identify files that may have been altered."},
+{text:"You need to examine a cloud customer's Windows computer for evidence of cloud application usage. Which locations should you check?",choices:["Only the Recycle Bin","Web browser cache, CSP application folder, and Windows Prefetch folder","Only the Desktop and Downloads folders"],best:1,fb:"Investigators should check the browser cache, the CSP's application folder (under the user's account), and the Windows Prefetch folder for evidence of cloud application usage."},
+{text:"Your investigation involves a cloud system running in a virtual environment. What provides the most valuable before-and-after evidence?",choices:["Email correspondence about the incident","Virtual machine snapshots taken before, during, and after the incident","The CSP's marketing materials"],best:1,fb:"VM snapshots capture the state of the system at specific points in time, providing critical forensic evidence. Re-create separate servers from each snapshot, acquire images, and hash all files."}
+];
+const GLOSSARY=[
+{t:"Cloud Computing",d:"A NIST-defined computing storage system providing on-demand network access for multiple users with scalable resource allocation."},
+{t:"Cloud Forensics",d:"Application of digital forensics to cloud computing; a subset of network forensics with organizational, legal, and technical dimensions."},
+{t:"Cloud Service Provider (CSP)",d:"A vendor providing on-demand network access to shared resources such as remote data storage or web applications."},
+{t:"Cloud Service Agreement (CSA)",d:"A contract between a CSP and customer defining services, support levels, restrictions, fees, and security measures."},
+{t:"SaaS",d:"Software as a Service — applications delivered via the Internet; the CSP manages everything."},
+{t:"PaaS",d:"Platform as a Service — an OS installed on a cloud server where the customer loads their own applications."},
+{t:"IaaS",d:"Infrastructure as a Service — the customer rents hardware and installs their own OSs, applications, and databases."},
+{t:"Public Cloud",d:"A cloud service accessible to the general public."},
+{t:"Private Cloud",d:"A cloud service dedicated to a single organization, accessible only by credentialed users."},
+{t:"Community Cloud",d:"A shared cloud service providing access to common data for a specific group or purpose."},
+{t:"Hybrid Cloud",d:"Combines public, private, or community cloud services with data segregation to protect private information."},
+{t:"Multitenancy",d:"A software architecture principle where multiple entities (tenants) share a single server installation, potentially creating jurisdictional conflicts."},
+{t:"Spoliation",d:"Destroying, altering, hiding, or failing to preserve evidence, whether intentional or through negligence."},
+{t:"ECPA",d:"Electronic Communications Privacy Act — describes five mechanisms the government can use to obtain electronic information from providers."},
+{t:"Anti-Forensics",d:"The act of destroying ESI that is potential evidence, using techniques such as malware, encryption, timestamp alteration, or data hiding."},
+{t:"MAC Dates",d:"Modified, last Access, and Created dates and times for files — critical for building forensic timelines."},
+{t:"Prefetch Files",d:"Windows files containing DLL pathnames, MAC times (UTC), and application run counters used to speed application startup."},
+{t:"FROST",d:"Forensic Open-Stack Tools — integrates with OpenStack in IaaS clouds, adds forensic response capabilities, and bypasses VM hypervisors."},
+{t:"F-Response",d:"A remote access tool using USB forwarding to enable non-remote forensic tools to access remote cloud servers."},
+{t:"Management Plane",d:"A tool with APIs that allows reconfiguring a cloud on the fly; used in FROST to store collected forensic data."},
+{t:"AXIOM Cloud",d:"A cloud forensics module that retrieves data from social media, messaging apps, and cloud storage services."},
+{t:"Deprovisioning",d:"Deallocating cloud resources previously assigned to a user or organization."},
+{t:"Provisioning",d:"Allocating cloud resources such as additional disk space to a user or organization."},
+{t:"Data at Rest",d:"Data that has been written to disk and is stored on a cloud server or storage device."},
+{t:"Data in Motion",d:"Data actively being transmitted over a network between endpoints."},
+{t:"Homomorphic Encryption",d:"An encryption method using an 'ideal lattice' mathematical formula to encrypt data while allowing computations on it."},
+{t:"Blockchain",d:"A technology used to trace information while keeping it secure, as used by cryptocurrencies."},
+{t:"Cloud Security Alliance (CSA)",d:"An organization that develops resource documentation for CSPs covering privacy agreements, security measures, and best practices."},
+{t:"Dropbox",d:"A cloud storage service that has used base-64 format since 2012; evidence found in application folders and sync databases."},
+{t:"Snapshot",d:"A point-in-time capture of a virtual machine's state that provides forensic evidence before, during, and after an incident."}
+];
+
+/* ===== ENGINE ===== */
+let curSec=0,accOpened=new Set(),fcIdx=0,fcSide=0,qIdx=0,qScore=0,qAnswered=false,sgStep=0;
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+
+/* Nav */
+document.getElementById('navBar').addEventListener('click',e=>{const b=e.target.closest('.nav-btn');if(!b)return;curSec=+b.dataset.s;$$('.nav-btn').forEach(n=>n.classList.remove('active'));b.classList.add('active');$$('.section').forEach(s=>s.classList.remove('active'));document.getElementById('sec'+curSec).classList.add('active');updateProg();});
+
+/* Theme */
+(function(){const t=localStorage.getItem('ch13theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');document.getElementById('themeBtn').addEventListener('click',()=>{const d=document.documentElement.getAttribute('data-theme')==='dark';document.documentElement.setAttribute('data-theme',d?'':'dark');localStorage.setItem('ch13theme',d?'':'dark');});})();
+
+/* Progress */
+function updateProg(){const base=14,accPct=accOpened.size/8*50,navPct=curSec/6*50;const p=Math.min(100,Math.round(base+accPct*(50/50)+navPct*(50/50)));const bar=$('#progBar');bar.style.width=p+'%';bar.setAttribute('aria-valuenow',p);$('#progText').textContent=p+'%';}
+
+/* Accordions */
+document.addEventListener('click',e=>{const h=e.target.closest('.acc-hd');if(!h)return;const item=h.parentElement,bd=item.querySelector('.acc-bd');const open=item.classList.contains('open');$$('.acc-item').forEach(i=>{i.classList.remove('open');i.querySelector('.acc-bd').style.maxHeight=null;i.querySelector('.acc-hd').setAttribute('aria-expanded','false');});if(!open){item.classList.add('open');bd.style.maxHeight=bd.scrollHeight+'px';h.setAttribute('aria-expanded','true');const idx=[...$$('.acc-item')].indexOf(item);accOpened.add(idx);updateProg();}});
+
+/* Tabs */
+document.addEventListener('click',e=>{const b=e.target.closest('.tab-btn[data-tab]');if(!b)return;const row=b.parentElement;row.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));b.classList.add('active');const sec=b.closest('.section');sec.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));sec.querySelector('#'+b.dataset.tab).classList.add('active');});
+
+/* MATCHING */
+(function(){const zone=$('#matchZone');let selTerm=null,matched=0;const terms=MATCH_DATA.map(m=>m[0]),defs=MATCH_DATA.map(m=>m[1]);const sTerms=[...terms].sort(()=>Math.random()-.5),sDefs=[...defs].sort(()=>Math.random()-.5);let html='<div><div class="match-col-title">Terms</div>';sTerms.forEach((t,i)=>html+=`<div class="match-item" data-type="term" data-val="${t}" tabindex="0">${t}</div>`);html+='</div><div><div class="match-col-title">Definitions</div>';sDefs.forEach((d,i)=>html+=`<div class="match-item" data-type="def" data-val="${d}" tabindex="0">${d}</div>`);html+='</div>';zone.innerHTML=html;
+zone.addEventListener('click',e=>{const el=e.target.closest('.match-item');if(!el||el.classList.contains('matched'))return;if(el.dataset.type==='term'){zone.querySelectorAll('[data-type=term]').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');selTerm=el.dataset.val;}else if(selTerm){const pair=MATCH_DATA.find(m=>m[0]===selTerm);if(pair&&pair[1]===el.dataset.val){el.classList.add('matched');zone.querySelector(`[data-val="${selTerm}"]`).classList.add('matched');matched++;$('#matchScore').textContent=matched+'/'+MATCH_DATA.length+' matched';selTerm=null;}else{el.classList.add('wrong');setTimeout(()=>el.classList.remove('wrong'),400);}}});})();
+
+/* SORTING */
+(function(){const list=$('#sortList'),shuffled=[...SORT_DATA].sort(()=>Math.random()-.5);shuffled.forEach((s,i)=>{const li=document.createElement('li');li.className='sort-item';li.draggable=true;li.dataset.val=s;li.innerHTML=`<span class="grip">⠿</span><span class="s-num">${i+1}</span>${s}`;list.appendChild(li);});
+let dragEl=null;list.addEventListener('dragstart',e=>{dragEl=e.target.closest('.sort-item');e.dataTransfer.effectAllowed='move';});list.addEventListener('dragover',e=>{e.preventDefault();const t=e.target.closest('.sort-item');if(t&&t!==dragEl)t.classList.add('over');});list.addEventListener('dragleave',e=>{const t=e.target.closest('.sort-item');if(t)t.classList.remove('over');});list.addEventListener('drop',e=>{e.preventDefault();const t=e.target.closest('.sort-item');if(t&&t!==dragEl){t.classList.remove('over');const items=[...list.children],di=items.indexOf(dragEl),ti=items.indexOf(t);if(di<ti)t.after(dragEl);else t.before(dragEl);[...list.children].forEach((c,i)=>c.querySelector('.s-num').textContent=i+1);}});})();
+function checkSort(){const items=[...$('#sortList').children];items.forEach((el,i)=>{el.classList.remove('correct-pos','wrong-pos');if(el.dataset.val===SORT_DATA[i])el.classList.add('correct-pos');else el.classList.add('wrong-pos');});}
+
+/* TRUE/FALSE */
+(function(){const zone=$('#tfZone');TF_DATA.forEach((q,i)=>{const div=document.createElement('div');div.className='tf-card';div.id='tf'+i;div.innerHTML=`<div class="tf-statement">${q.s}</div><div class="tf-btns"><button class="tf-btn" onclick="tfAnswer(${i},true)">True</button><button class="tf-btn" onclick="tfAnswer(${i},false)">False</button></div><div class="tf-result" id="tfR${i}"></div>`;zone.appendChild(div);});})();
+function tfAnswer(i,ans){const card=$('#tf'+i),res=$('#tfR'+i);if(card.classList.contains('answered-true')||card.classList.contains('answered-false'))return;card.classList.add(ans?'answered-true':'answered-false');const correct=ans===TF_DATA[i].a;res.className='tf-result '+(correct?'ok':'no');res.textContent=(correct?'✓ Correct! ':'✗ Incorrect. ')+TF_DATA[i].e;}
+
+/* SCENARIO */
+function renderSG(){const s=SCENARIO[sgStep],box=$('#sgBox');let dots='<div class="sg-progress-dots">';SCENARIO.forEach((_,i)=>dots+=`<div class="sg-dot${i<sgStep?' done':''}${i===sgStep?' active':''}"></div>`);dots+='</div>';box.innerHTML=dots+`<div class="sg-lbl">Step ${sgStep+1} of ${SCENARIO.length}</div><div class="sg-text">${s.text}</div><div class="sg-choices">${s.choices.map((c,i)=>`<div class="sg-choice" onclick="sgPick(${i})">${c}</div>`).join('')}</div>`;}
+function sgPick(i){const s=SCENARIO[sgStep],choices=$$('#sgBox .sg-choice');choices.forEach((c,j)=>{c.classList.add(j===s.best?'best':j===i?'bad':'okay');c.style.pointerEvents='none';});const fb=document.createElement('div');fb.className='sg-feedback';fb.style.background=i===s.best?'rgba(45,106,79,.1)':'rgba(196,69,54,.1)';fb.textContent=s.fb;$('#sgBox').appendChild(fb);if(sgStep<SCENARIO.length-1)setTimeout(()=>{sgStep++;renderSG();},2200);}
+renderSG();
+
+/* FLASHCARDS */
+function renderFC(){const c=FC[fcIdx],card=$('#fcCard');fcSide=0;card.classList.remove('flipped');card.innerHTML=`<div class="fc-face fc-face--term"><div class="fc-lbl"><span class="fc-lbl-icon">📎</span>TERM</div><div class="fc-main">${c.t}</div><div class="fc-hint">Click to flip</div></div><div class="fc-face fc-face--def"><div class="fc-lbl"><span class="fc-lbl-icon">📖</span>DEFINITION</div><div class="fc-main">${c.d}</div><div class="fc-hint">Click for example</div></div><div class="fc-face fc-face--example"><div class="fc-lbl"><span class="fc-lbl-icon">💡</span>EXAMPLE</div><div class="fc-main"><em class="fc-ex-pre">Scenario</em>${c.e}</div></div>`;$('#fcCounter').textContent=(fcIdx+1)+' / '+FC.length;renderFCDots();}
+function renderFCDots(){const wrap=$('#fcDots');wrap.innerHTML='';FC.forEach((_,i)=>{const g=document.createElement('div');g.className='fc-dot-grp'+(i===fcIdx?' active':'');g.innerHTML='<div class="fc-dot a-term"></div>';g.onclick=()=>{fcIdx=i;renderFC();};wrap.appendChild(g);});}
+function fcFlip(){const card=$('#fcCard');fcSide=(fcSide+1)%3;if(fcSide===0)card.classList.remove('flipped');else card.classList.add('flipped');if(fcSide===2)card.style.setProperty('--extra','rotateX(-240deg)');else card.style.removeProperty('--extra');}
+function fcNav(d){fcIdx=(fcIdx+d+FC.length)%FC.length;renderFC();}
+$('#fcCard').addEventListener('click',fcFlip);renderFC();
+
+/* QUIZ */
+function renderQuiz(){if(qIdx>=QUIZ.length){$('#quizCard').innerHTML=`<div style="text-align:center"><div class="score-circle"><span class="score-num">${qScore}/${QUIZ.length}</span><span class="score-lbl">Score</span></div><p style="font-size:1.1rem;margin-bottom:16px">${qScore>=8?'Excellent work!':qScore>=6?'Good job — review missed topics.':'Keep studying and try again.'}</p><button class="fc-btn pri" onclick="qIdx=0;qScore=0;qAnswered=false;renderQuiz()">Retake Quiz</button></div>`;return;}
+const q=QUIZ[qIdx];qAnswered=false;$('#quizCard').innerHTML=`<div class="quiz-progress">Question ${qIdx+1} of ${QUIZ.length}</div><div class="quiz-q">${q.q}</div><div class="quiz-opts">${q.o.map((o,i)=>`<div class="quiz-opt" data-i="${i}" tabindex="0"><span class="ltr">${'ABCD'[i]}</span><span>${o}</span></div>`).join('')}</div><div class="quiz-fb" id="qFb"></div><button class="fc-btn pri" id="qNext" style="display:none" onclick="qIdx++;renderQuiz()">Next →</button>`;}
+document.addEventListener('click',e=>{const opt=e.target.closest('.quiz-opt');if(!opt||qAnswered)return;qAnswered=true;const i=+opt.dataset.i,q=QUIZ[qIdx],fb=$('#qFb');$$('.quiz-opt').forEach(o=>{o.classList.add(+o.dataset.i===q.a?'correct':'');if(+o.dataset.i===i&&i!==q.a)o.classList.add('incorrect');});if(i===q.a){qScore++;fb.className='quiz-fb ok';fb.textContent='✓ Correct! '+q.f;}else{fb.className='quiz-fb no';fb.textContent='✗ Incorrect. '+q.f;}$('#qNext').style.display='inline-block';});
+renderQuiz();
+
+/* GLOSSARY */
+(function(){const list=$('#gloList'),sorted=[...GLOSSARY].sort((a,b)=>a.t.localeCompare(b.t));function render(f){list.innerHTML='';sorted.filter(g=>!f||g.t.toLowerCase().includes(f)||g.d.toLowerCase().includes(f)).forEach(g=>{list.innerHTML+=`<div class="glo-item"><div class="glo-term">${g.t}</div><div class="glo-def">${g.d}</div></div>`;});}
+$('#gloSearch').addEventListener('input',e=>render(e.target.value.toLowerCase()));render('');})();
+
+updateProg();
+</script>
+</body>
+</html>
