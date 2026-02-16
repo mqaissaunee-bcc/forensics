@@ -42,7 +42,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 ::-webkit-scrollbar-thumb{background:var(--ac);border-radius:4px}
 *:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 
-/* ── HERO ── */
+/* â”€â”€ HERO â”€â”€ */
 .hero{
   background:linear-gradient(135deg,#0D5C63 0%,#14919B 40%,#0D5C63 100%);
   padding:80px 24px 60px;text-align:center;position:relative;overflow:hidden;
@@ -55,7 +55,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .hero h1{font-family:var(--fH);font-size:clamp(2rem,4.5vw,3.2rem);font-weight:900;color:#fff;line-height:1.25;max-width:820px;margin:0 auto 16px;position:relative}
 .hero p{font-size:1.15rem;color:rgba(255,255,255,.82);max-width:640px;margin:0 auto;position:relative;line-height:1.65}
 
-/* ── TOOLBAR ── */
+/* â”€â”€ TOOLBAR â”€â”€ */
 .toolbar{
   position:sticky;top:0;z-index:100;
   background:var(--bg1);border-bottom:1px solid var(--bdr);
@@ -83,7 +83,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 }
 .theme-toggle:hover,.theme-toggle:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
 
-/* ── STATS BAR ── */
+/* â”€â”€ STATS BAR â”€â”€ */
 .stats-bar{
   display:flex;justify-content:center;gap:40px;flex-wrap:wrap;
   padding:28px 24px;max-width:960px;margin:0 auto;
@@ -92,7 +92,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .stat-num{font-family:var(--fH);font-size:2rem;font-weight:900;color:var(--ac);line-height:1}
 .stat-label{font-size:.82rem;color:var(--tx2);font-family:var(--fM);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
 
-/* ── MAIN CONTENT ── */
+/* â”€â”€ MAIN CONTENT â”€â”€ */
 .container{max-width:1040px;margin:0 auto;padding:8px 24px 60px}
 .section-header{
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
@@ -112,7 +112,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .view-btn:hover,.view-btn:focus-visible{color:var(--ac);border-color:var(--ac)}
 .view-btn.active{background:var(--ac);color:#fff;border-color:var(--ac)}
 
-/* ── CHAPTER CARDS ── */
+/* â”€â”€ CHAPTER CARDS â”€â”€ */
 .chapters-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
@@ -187,7 +187,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .ch-card:hover .ch-arrow{transform:translateX(4px)}
 .ch-card.placeholder .ch-arrow{display:none}
 
-/* ── FEATURES ── */
+/* â”€â”€ FEATURES â”€â”€ */
 .features{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
   gap:16px;margin:40px 0 20px;
@@ -201,7 +201,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .feature .f-title{font-family:var(--fH);font-weight:700;font-size:.95rem;color:var(--tx0);margin-bottom:4px}
 .feature .f-desc{font-size:.82rem;color:var(--tx2);line-height:1.5}
 
-/* ── FOOTER ── */
+/* â”€â”€ FOOTER â”€â”€ */
 .site-footer{
   text-align:center;padding:32px 24px;border-top:1px solid var(--bdr);
   font-size:.85rem;color:var(--tx2);margin-top:40px;
@@ -209,7 +209,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .site-footer a{color:var(--ac);text-decoration:none}
 .site-footer a:hover{text-decoration:underline}
 
-/* ── RESPONSIVE ── */
+/* â”€â”€ RESPONSIVE â”€â”€ */
 @media(max-width:640px){
   .hero{padding:50px 16px 40px}
   .hero h1{font-size:1.6rem}
@@ -226,7 +226,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
   .features{grid-template-columns:1fr}
 }
 
-/* ── ANIMATIONS ── */
+/* â”€â”€ ANIMATIONS â”€â”€ */
 @keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 .ch-card{animation:slideUp .5s ease both}
 .ch-card:nth-child(1){animation-delay:.05s}
@@ -320,7 +320,7 @@ const chapters = [
          icon:"&#128680;", live:true},
   {n:5,  title:"Working with Windows and CLI Systems",
          desc:"Windows file systems, registry analysis, command-line tools, and boot processes relevant to forensic exams.",
-         icon:"&#128187;", live:false},
+         icon:"&#128187;", live:true},
   {n:6,  title:"Current Digital Forensics Tools",
          desc:"Overview of forensic software suites, hardware tools, validation methods, and tool selection criteria.",
          icon:"&#128295;", live:false},
@@ -371,12 +371,10 @@ function renderChapters(filter = '') {
     card.className = `ch-card${ch.live ? '' : ' placeholder'}`;
     if (ch.live) {
       card.href = getChapterURL(ch.n);
-      card.target = '_blank';
-      card.rel = 'noopener noreferrer';
-      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} – Available (opens in new tab)`);
+      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} â€“ Available`);
     } else {
       card.setAttribute('role', 'article');
-      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} – Coming Soon`);
+      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} â€“ Coming Soon`);
     }
 
     card.innerHTML = `
