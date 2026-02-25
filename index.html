@@ -112,13 +112,13 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .view-btn:hover,.view-btn:focus-visible{color:var(--ac);border-color:var(--ac)}
 .view-btn.active{background:var(--ac);color:#fff;border-color:var(--ac)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ CHAPTER CARDS Ã¢â€â‚¬Ã¢â€â‚¬ */
-.chapters-grid{
+/* Ã¢â€â‚¬Ã¢â€â‚¬ MODULE CARDS Ã¢â€â‚¬Ã¢â€â‚¬ */
+.modules-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
   gap:20px;margin-top:8px;
 }
-.chapters-grid.list-view{grid-template-columns:1fr}
+.modules-grid.list-view{grid-template-columns:1fr}
 
 .ch-card{
   background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);
@@ -216,7 +216,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
   .stats-bar{gap:24px}
   .stat-num{font-size:1.5rem}
   .container{padding:8px 16px 40px}
-  .chapters-grid{grid-template-columns:1fr}
+  .modules-grid{grid-template-columns:1fr}
   .toolbar{padding:10px 16px}
   .search-box input{width:120px}
   .features{grid-template-columns:1fr 1fr}
@@ -255,18 +255,18 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 </header>
 
 <div class="toolbar" role="navigation" aria-label="Toolbar">
-  <div class="toolbar-title"><span class="ico" aria-hidden="true">&#128218;</span> Course Chapters</div>
+  <div class="toolbar-title"><span class="ico" aria-hidden="true">&#128218;</span> Course Modules</div>
   <div class="toolbar-right">
     <div class="search-box">
       <span aria-hidden="true">&#128269;</span>
-      <input type="text" id="searchInput" placeholder="Search chapters..." aria-label="Search chapters">
+      <input type="text" id="searchInput" placeholder="Search modules..." aria-label="Search modules">
     </div>
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">&#127769;</button>
   </div>
 </div>
 
 <div class="stats-bar" aria-label="Course statistics">
-  <div class="stat"><div class="stat-num">13</div><div class="stat-label">Chapters</div></div>
+  <div class="stat"><div class="stat-num">13</div><div class="stat-label">Modules</div></div>
   <div class="stat"><div class="stat-num">7</div><div class="stat-label">Sections Each</div></div>
   <div class="stat"><div class="stat-num" id="liveCount">1</div><div class="stat-label">Available</div></div>
   <div class="stat"><div class="stat-num">&#8734;</div><div class="stat-label">Practice</div></div>
@@ -275,25 +275,25 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 <main id="main-content" class="container">
 
   <div class="features" aria-label="Lesson features">
-    <div class="feature"><span class="f-ico" aria-hidden="true">&#127919;</span><div class="f-title">Objectives</div><div class="f-desc">Clear learning goals for every chapter</div></div>
+    <div class="feature"><span class="f-ico" aria-hidden="true">&#127919;</span><div class="f-title">Objectives</div><div class="f-desc">Clear learning goals for every module</div></div>
     <div class="feature"><span class="f-ico" aria-hidden="true">&#128214;</span><div class="f-title">Lessons</div><div class="f-desc">Expandable, in-depth content sections</div></div>
     <div class="feature"><span class="f-ico" aria-hidden="true">&#129513;</span><div class="f-title">Activities</div><div class="f-desc">Matching, sorting, true/false &amp; scenarios</div></div>
     <div class="feature"><span class="f-ico" aria-hidden="true">&#127183;</span><div class="f-title">Flashcards</div><div class="f-desc">3D rotating term, definition &amp; example cards</div></div>
     <div class="feature"><span class="f-ico" aria-hidden="true">&#9989;</span><div class="f-title">Quizzes</div><div class="f-desc">Scored knowledge checks with feedback</div></div>
-    <div class="feature"><span class="f-ico" aria-hidden="true">&#128218;</span><div class="f-title">Glossary</div><div class="f-desc">Searchable key terms for every chapter</div></div>
+    <div class="feature"><span class="f-ico" aria-hidden="true">&#128218;</span><div class="f-title">Glossary</div><div class="f-desc">Searchable key terms for every module</div></div>
     <div class="feature"><span class="f-ico" aria-hidden="true">&#127916;</span><div class="f-title">Videos</div><div class="f-desc">Curated YouTube &amp; web videos per topic</div></div>
     <div class="feature"><span class="f-ico" aria-hidden="true">&#127769;</span><div class="f-title">Dark Mode</div><div class="f-desc">Eye-friendly theme for late-night studying</div></div>
   </div>
 
   <div class="section-header">
-    <h2><span class="ico" aria-hidden="true">&#128209;</span> All Chapters</h2>
+    <h2><span class="ico" aria-hidden="true">&#128209;</span> All Modules</h2>
     <div class="view-toggles" role="radiogroup" aria-label="View mode">
       <button class="view-btn active" data-view="grid" role="radio" aria-checked="true" aria-label="Grid view">&#9638;&#9638;</button>
       <button class="view-btn" data-view="list" role="radio" aria-checked="false" aria-label="List view">&#9776;</button>
     </div>
   </div>
 
-  <div class="chapters-grid" id="chaptersGrid">
+  <div class="modules-grid" id="modulesGrid">
     <!-- Cards injected by JS -->
   </div>
 
@@ -305,7 +305,7 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 </footer>
 
 <script>
-const chapters = [
+const modules = [
   {n:1,  title:"Understanding the Digital Forensics Profession & Investigations",
          desc:"Introduction to digital forensics, investigation procedures, legal processes, and the tools of the trade.",
          icon:"&#128373;", live:true},
@@ -335,33 +335,33 @@ const chapters = [
          icon:"&#128270;", live:true},
   {n:10, title:"Virtual Machine Forensics, Live Acquisitions, and Network Forensics",
          desc:"VM artifact analysis, live memory acquisition, network traffic capture, and remote forensic techniques.",
-         icon:"&#9729;&#65039;", live:true},
+         icon:"&#9729;&#65039;", live:false},
   {n:11, title:"E-mail and Social Media Investigations",
          desc:"E-mail header analysis, social media evidence preservation, and investigating online communications.",
-         icon:"&#128231;", live:true},
+         icon:"&#128231;", live:false},
   {n:12, title:"Mobile Device Forensics and the Internet of Anything",
          desc:"Smartphone acquisition methods, app data analysis, IoT device forensics, and wearable evidence.",
-         icon:"&#128241;", live:true},
+         icon:"&#128241;", live:false},
   {n:13, title:"Cloud Forensics",
          desc:"Cloud service models, legal challenges, SLA considerations, and techniques for acquiring cloud-based evidence.",
-         icon:"&#9729;&#65039;", live:true}
+         icon:"&#9729;&#65039;", live:false}
 ];
 
-function getChapterURL(n) {
-  return `chapter${n}_lesson.html`;
+function getModuleURL(n) {
+  return `module${n}_lesson.html`;
 }
 
-function renderChapters(filter = '') {
-  const grid = document.getElementById('chaptersGrid');
+function renderModules(filter = '') {
+  const grid = document.getElementById('modulesGrid');
   grid.innerHTML = '';
-  const filtered = chapters.filter(ch =>
+  const filtered = modules.filter(ch =>
     ch.title.toLowerCase().includes(filter.toLowerCase()) ||
     ch.desc.toLowerCase().includes(filter.toLowerCase()) ||
     String(ch.n).includes(filter)
   );
 
   if (!filtered.length) {
-    grid.innerHTML = '<p style="text-align:center;color:var(--tx2);padding:40px;grid-column:1/-1">No chapters match your search.</p>';
+    grid.innerHTML = '<p style="text-align:center;color:var(--tx2);padding:40px;grid-column:1/-1">No modules match your search.</p>';
     return;
   }
 
@@ -370,13 +370,13 @@ function renderChapters(filter = '') {
     const card = document.createElement(tag);
     card.className = `ch-card${ch.live ? '' : ' placeholder'}`;
     if (ch.live) {
-      card.href = getChapterURL(ch.n);
+      card.href = getModuleURL(ch.n);
       card.target = '_blank';
       card.rel = 'noopener noreferrer';
-      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} Ã¢â‚¬â€œ Available (opens in new tab)`);
+      card.setAttribute('aria-label', `Module ${ch.n}: ${ch.title} Ã¢â‚¬â€œ Available (opens in new tab)`);
     } else {
       card.setAttribute('role', 'article');
-      card.setAttribute('aria-label', `Chapter ${ch.n}: ${ch.title} Ã¢â‚¬â€œ Coming Soon`);
+      card.setAttribute('aria-label', `Module ${ch.n}: ${ch.title} Ã¢â‚¬â€œ Coming Soon`);
     }
 
     card.innerHTML = `
@@ -385,7 +385,7 @@ function renderChapters(filter = '') {
         <div class="ch-icon">${ch.icon}</div>
       </div>
       <div class="ch-body">
-        <div class="ch-title">Chapter ${ch.n}: ${ch.title}</div>
+        <div class="ch-title">Module ${ch.n}: ${ch.title}</div>
         <div class="ch-desc">${ch.desc}</div>
         <div class="ch-footer">
           <span class="ch-status ${ch.live ? 'live' : 'coming'}">${ch.live ? '&#9679; Available' : '&#9711; Coming Soon'}</span>
@@ -396,12 +396,12 @@ function renderChapters(filter = '') {
   });
 
   // Update live count
-  document.getElementById('liveCount').textContent = chapters.filter(c => c.live).length;
+  document.getElementById('liveCount').textContent = modules.filter(c => c.live).length;
 }
 
 // SEARCH
 document.getElementById('searchInput').addEventListener('input', e => {
-  renderChapters(e.target.value);
+  renderModules(e.target.value);
 });
 
 // VIEW TOGGLE
@@ -413,7 +413,7 @@ document.querySelectorAll('.view-btn').forEach(btn => {
     });
     btn.classList.add('active');
     btn.setAttribute('aria-checked', 'true');
-    const grid = document.getElementById('chaptersGrid');
+    const grid = document.getElementById('modulesGrid');
     if (btn.dataset.view === 'list') {
       grid.classList.add('list-view');
     } else {
@@ -442,7 +442,7 @@ themeToggle.addEventListener('click', () => {
 });
 
 // INIT
-renderChapters();
+renderModules();
 </script>
 </body>
 </html>
