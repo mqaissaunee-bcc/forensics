@@ -306,5 +306,6 @@ document.getElementById('sgNext').addEventListener('click',()=>{sgS++;if(sgS>=sc
 function renderGlo(f=''){const l=document.getElementById('gloList');l.innerHTML='';const fl=glossaryData.filter(g=>g.term.toLowerCase().includes(f.toLowerCase())||g.def.toLowerCase().includes(f.toLowerCase()));if(!fl.length){l.innerHTML='<p style="color:var(--tx2);padding:20px;text-align:center">No matching terms.</p>';return}fl.forEach(g=>{const d=document.createElement('div');d.className='glo-item';d.innerHTML=`<div class="glo-term">${g.term}</div><div class="glo-def">${g.def}</div>`;l.appendChild(d)})}
 document.getElementById('gloSearch').addEventListener('input',e=>renderGlo(e.target.value));renderGlo();updProg();
 </script>
+<script src="assistant.js" defer></script>
 </body>
 </html>
