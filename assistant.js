@@ -34,6 +34,8 @@
     ".ca-bot{align-self:flex-start;background:#fff;border:1px solid #d7e1e8}",
     ".ca-bot p{margin:0 0 8px}.ca-bot p:last-child{margin:0}",
     ".ca-bot ul,.ca-bot ol{margin:0 0 8px;padding-left:20px}",
+    ".ca-bot p.ca-h{font-weight:700;margin:10px 0 4px}",
+    ".ca-bot p.ca-h:first-child{margin-top:0}",
     ".ca-bot code{background:#eef3f6;padding:1px 4px;border-radius:4px;font:13px ui-monospace,Menlo,Consolas,monospace}",
     ".ca-bot pre{background:#13283a;color:#e6eef4;padding:10px;border-radius:8px;overflow-x:auto;margin:0 0 8px}",
     ".ca-bot pre code{background:none;color:inherit;padding:0}",
@@ -75,15 +77,29 @@
       .replace(/\\\(([\s\S]+?)\\\)/g, function (m, t) { return keep(t, false); })
       .replace(/(^|[^\\$\w])\$(?!\s)([^$\n]*?[^\s\\$])\$(?![\w$])/g, function (m, pre, t) { return pre + keep(t, false); });
     s = esc(s)
-      .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-    s = s.split(/\n{2,}/).map(function (para) {
-      var lines = para.trim().split("\n");
-      if (!lines[0]) return "";
-      if (lines.every(function (l) { return /^\s*[-*] /.test(l); })) return "<ul>" + lines.map(function (l) { return "<li>" + l.replace(/^\s*[-*] /, "") + "</li>"; }).join("") + "</ul>";
-      if (lines.every(function (l) { return /^\s*\d+\. /.test(l); })) return "<ol>" + lines.map(function (l) { return "<li>" + l.replace(/^\s*\d+\. /, "") + "</li>"; }).join("") + "</ol>";
-      if (/^\u0000\d+\u0000$/.test(para.trim())) return para.trim();
-      return "<p>" + lines.join("<br>") + "</p>";
-    }).join("");
+      .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/__([^_\n]+)__/g, "<strong>$1</strong>");
+    // Italics: *text* or _text_, but not list markers or snake_case words.
+    function inline(t) {
+      return t.replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)\*(?![*\w])/g, "$1<em>$2</em>")
+        .replace(/(^|[^\w])_(?!\s)([^_\n]+?)_(?!\w)/g, "$1<em>$2</em>");
+    }
+    // Build paragraphs, headings and lists line by line, so a list can follow a sentence.
+    var out = [], para = [], list = null;
+    function endPara() { if (para.length) { out.push("<p>" + para.map(inline).join("<br>") + "</p>"); para = []; } }
+    function endList() { if (list) { out.push("<" + list.tag + ">" + list.items.map(function (i) { return "<li>" + inline(i) + "</li>"; }).join("") + "</" + list.tag + ">"); list = null; } }
+    s.split("\n").forEach(function (line) {
+      var t = line.trim(), m;
+      if (!t) { endPara(); endList(); return; }
+      if (/^\u0000\d+\u0000$/.test(t) || /^\u0001\d+\u0001$/.test(t)) { endPara(); endList(); out.push(t); return; }
+      if ((m = t.match(/^#{1,6}\s+(.*)$/))) { endPara(); endList(); out.push('<p class="ca-h">' + inline(m[1]) + "</p>"); return; }
+      if ((m = t.match(/^(?:[-*\u2022])\s+(.*)$/))) { endPara(); if (!list || list.tag !== "ul") { endList(); list = { tag: "ul", items: [] }; } list.items.push(m[1]); return; }
+      if ((m = t.match(/^\d+[.)]\s+(.*)$/))) { endPara(); if (!list || list.tag !== "ol") { endList(); list = { tag: "ol", items: [] }; } list.items.push(m[1]); return; }
+      if (list && /^\s{2,}\S/.test(line)) { list.items[list.items.length - 1] += "<br>" + t; return; }
+      endList(); para.push(t);
+    });
+    endPara(); endList();
+    s = out.join("");
     s = s.replace(/\u0002(\d+)\u0002/g, function (m, i) { return "<code>" + esc(codes[+i]) + "</code>"; });
     s = s.replace(/\u0001(\d+)\u0001/g, function (m, i) {
       var x = maths[+i];
