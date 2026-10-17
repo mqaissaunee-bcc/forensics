@@ -5,7 +5,7 @@
 (function () {
   "use strict";
   var CONFIG = {
-    workerUrl: "https://forensics-assistant.mqaissaunee.workers.dev/",
+    workerUrl: "https://forensics-assistant.mqaissaunee.workers.dev",
     title: "Digital Forensics & Investigations assistant",
     greeting: "Hi! I'm the course assistant for Digital Forensics & Investigations. Ask me to explain anything on this page: a concept, a term, or a step you're stuck on.\n\nI won't do graded work for you, but I'm happy to help you understand how to do it.",
     note: "AI can be wrong. Check important answers, and don't share personal information.",
