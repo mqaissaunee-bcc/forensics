@@ -242,6 +242,17 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .ch-card:nth-child(11){animation-delay:.55s}
 .ch-card:nth-child(12){animation-delay:.6s}
 .ch-card:nth-child(13){animation-delay:.65s}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.labs-cta{max-width:1040px;margin:-28px auto 8px;padding:0 24px;position:relative;z-index:5}
+.labs-cta-inner{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--bg1);border:1px solid var(--bdr);border-left:4px solid var(--ac);border-radius:var(--r);padding:16px 20px;box-shadow:var(--shd)}
+.labs-cta-ico{font-size:1.6rem;flex:none}
+.labs-cta-text{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
+.labs-cta-text strong{font-family:var(--fH);font-size:1.05rem;color:var(--tx0)}
+.labs-cta-text span{font-size:.9rem;color:var(--tx2)}
+.labs-cta-btn{flex:none;background:var(--ac);color:#fff;text-decoration:none;font-family:var(--fB);font-weight:600;font-size:.92rem;padding:10px 20px;border-radius:50px;border:1px solid var(--ac);transition:all var(--t);min-height:44px;display:inline-flex;align-items:center}
+.labs-cta-btn:hover,.labs-cta-btn:focus-visible{background:var(--ac2);border-color:var(--ac2)}
+@media(max-width:640px){.labs-cta{margin-top:-20px}.labs-cta-btn{width:100%;justify-content:center}}
 </style>
 </head>
 <body>
@@ -253,6 +264,18 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
   <h1>Digital Forensics &amp; Investigations</h1>
   <p>A comprehensive, interactive learning experience covering digital evidence, investigation procedures, forensic tools, and courtroom-ready analysis techniques.</p>
 </header>
+
+<div class="labs-cta" role="region" aria-label="Lab companions">
+  <div class="labs-cta-inner">
+    <span class="labs-cta-ico" aria-hidden="true">&#128269;</span>
+    <div class="labs-cta-text">
+      <strong>Hands-on Lab Companions</strong>
+      <span>Step-by-step guides, tool references, troubleshooting &amp; evidence checklists for all 21 forensics labs.</span>
+    </div>
+    <a class="labs-cta-btn" href="forensics_labs.html" target="_blank" rel="noopener">Open lab companions &rarr;<span class="sr-only"> (opens in new tab)</span></a>
+  </div>
+</div>
+
 
 <div class="toolbar" role="navigation" aria-label="Toolbar">
   <div class="toolbar-title"><span class="ico" aria-hidden="true">&#128218;</span> Course Modules</div>
