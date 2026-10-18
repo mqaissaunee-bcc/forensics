@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 16: Mobile Forensic Analysis &mdash; Digital Forensics Lab Companion</title>
+<meta name="description" content="Student companion for NDG Forensics v2 Lab 16 (Mobile Forensic Analysis): walkthrough, reference, troubleshooting, manual corrections, self-check and evidence checklist.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;
+  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#6A6A7A;
+  --ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);
+  --hi:#C44536;--hi2:#E76F51;--ok:#2D6A4F;--ok2:#52B788;--warn:#B7791F;--warnBg:rgba(233,196,106,.18);
+  --fixBg:rgba(196,69,54,.08);--okBg:rgba(45,106,79,.09);--tipBg:rgba(13,92,99,.07);
+  --codeBg:#1A2028;--codeTx:#E8E6E3;
+  --bdr:#D5CEC7;--shd:0 2px 16px rgba(26,26,46,.06);--shd2:0 8px 32px rgba(26,26,46,.12);
+  --r:12px;--rs:8px;--t:.3s cubic-bezier(.4,0,.2,1);
+  --fH:'Merriweather',Georgia,serif;--fB:'Source Sans 3','Segoe UI',system-ui,sans-serif;--fM:'JetBrains Mono','Consolas','Courier New',monospace;
+  --fs:1;
+}
+[data-theme="dark"]{
+  --bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;
+  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#8F8C86;
+  --ac:#44C7D0;--ac2:#14919B;--acG:rgba(20,145,155,.18);
+  --hi:#F4A261;--hi2:#E76F51;--ok:#95D5B2;--ok2:#52B788;--warn:#E9C46A;--warnBg:rgba(233,196,106,.12);
+  --fixBg:rgba(231,111,81,.12);--okBg:rgba(82,183,136,.12);--tipBg:rgba(20,145,155,.12);
+  --codeBg:#0B0F13;--codeTx:#E8E6E3;
+  --bdr:#2E3A47;--shd:0 2px 16px rgba(0,0,0,.3);--shd2:0 8px 32px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--fs))}
+body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t);min-height:100vh}
+a{color:var(--ac)}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none}
+.skip-link:focus{top:0}
+*:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 40%,#0D5C63 100%);padding:48px 24px 56px;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,var(--bg0),transparent);pointer-events:none}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 20px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:rgba(255,255,255,.9);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;position:relative}
+.hero h1{font-family:var(--fH);font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;color:#fff;line-height:1.25;max-width:820px;margin:0 auto 12px;position:relative}
+.hero p.sub{font-size:1.05rem;color:rgba(255,255,255,.88);max-width:680px;margin:0 auto;position:relative}
+.hero p.sub a{color:#fff}
+.meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50px;padding:4px 14px;font-size:.82rem}
+
+/* toolbar */
+.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.toolbar a.back{font-family:var(--fH);font-weight:700;font-size:.92rem;color:var(--tx0);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.toolbar a.back:hover{color:var(--ac)}
+.prog{flex:1;min-width:160px;max-width:340px;display:flex;align-items:center;gap:10px;font-family:var(--fM);font-size:.72rem;color:var(--tx2);letter-spacing:1px;text-transform:uppercase}
+.bar{flex:1;height:8px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--bdr)}
+.bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .4s}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tbtn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:6px 14px;cursor:pointer;font:600 .85rem var(--fB);color:var(--tx0);min-height:44px;min-width:44px;transition:all var(--t)}
+.tbtn:hover,.tbtn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+[data-theme="dark"] .tbtn:hover{color:#0F1419}
+
+/* layout */
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px}
+.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shd);margin:-36px 0 26px;position:relative;z-index:2}
+.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px}
+.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 18px;padding-left:1.3em}
+.toc a{color:var(--tx0);text-decoration:none;font-size:.95rem}
+.toc a:hover{color:var(--ac);text-decoration:underline}
+section.blk{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:26px 28px;margin-bottom:22px;box-shadow:var(--shd)}
+section.blk>h2{font-family:var(--fH);font-size:1.4rem;font-weight:900;color:var(--tx0);margin-bottom:14px;display:flex;align-items:center;gap:12px;line-height:1.3}
+section.blk>h2 .n{flex:none;font-family:var(--fM);font-size:.8rem;background:var(--acG);color:var(--ac);border-radius:50px;padding:3px 11px}
+h3{font-family:var(--fH);font-size:1.08rem;color:var(--tx0);margin:22px 0 8px}
+section.blk p,section.blk li{color:var(--tx1)}
+section.blk p+p{margin-top:10px}
+section.blk ul,section.blk ol{padding-left:1.4em;margin:8px 0}
+section.blk li{margin:4px 0}
+strong,b{color:var(--tx0)}
+code{font-family:var(--fM);font-size:.86em;background:var(--bg2);border:1px solid var(--bdr);border-radius:5px;padding:1px 6px;color:var(--tx0);word-break:break-word}
+kbd{font-family:var(--fM);font-size:.82em;background:var(--bg1);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:0 6px}
+.path{font-family:var(--fM);font-size:.84em;color:var(--ac);word-break:break-word}
+
+/* task + steps */
+.task{border-top:1px dashed var(--bdr);padding-top:6px;margin-top:18px}
+.task:first-of-type{border-top:0;margin-top:4px}
+.task>h3{display:flex;gap:10px;align-items:baseline}
+.task>h3 .tn{font-family:var(--fM);font-size:.75rem;color:var(--ac);text-transform:uppercase;letter-spacing:1.5px;flex:none}
+ol.steps{counter-reset:s;list-style:none;padding-left:0 !important}
+ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 46px;border-bottom:1px solid var(--bg2)}
+ol.steps>li:last-child{border-bottom:0}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--acG);color:var(--ac);font:700 .85rem var(--fM);display:flex;align-items:center;justify-content:center}
+
+/* commands */
+.cmd{margin:10px 0;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bdr)}
+.cmd-bar{display:flex;justify-content:space-between;align-items:center;background:var(--bg2);padding:4px 6px 4px 12px;font-family:var(--fM);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
+.copy{background:var(--bg1);border:1px solid var(--bdr);border-radius:6px;font:600 .75rem var(--fB);color:var(--tx0);padding:4px 12px;cursor:pointer;min-height:32px;min-width:64px}
+.copy:hover,.copy:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+.cmd pre{background:var(--codeBg);color:var(--codeTx);padding:12px 14px;overflow-x:auto;font-family:var(--fM);font-size:.86rem;line-height:1.55;white-space:pre}
+.cmd pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+
+/* callouts */
+.call{border-left:4px solid var(--ac);background:var(--tipBg);border-radius:0 var(--rs) var(--rs) 0;padding:10px 14px;margin:12px 0}
+.call .k{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--ac);margin-bottom:2px}
+.call p{margin:0 !important}
+.call.warn{border-color:var(--warn);background:var(--warnBg)}.call.warn .k{color:var(--warn)}
+.call.fix{border-color:var(--hi);background:var(--fixBg)}.call.fix .k{color:var(--hi)}
+.call.court{border-color:var(--ok);background:var(--okBg)}.call.court .k{color:var(--ok)}
+.shot{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--ac2);border-radius:var(--rs);padding:8px 12px;margin:10px 0;font-size:.92rem;color:var(--tx1);background:var(--bg0)}
+.shot-ico{font-size:1.1rem;line-height:1.4}
+
+/* tables */
+.tblwrap{overflow-x:auto;margin:12px 0;border:1px solid var(--bdr);border-radius:var(--rs)}
+table.tbl{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
+table.tbl th{background:var(--bg2);text-align:left;font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx1);padding:9px 12px;border-bottom:1px solid var(--bdr)}
+table.tbl td{padding:9px 12px;border-bottom:1px solid var(--bg2);vertical-align:top;color:var(--tx1)}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl td:first-child{color:var(--tx0);font-weight:600}
+
+/* env grid */
+.env{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:12px 0}
+.env div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 14px}
+.env b{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2);font-weight:600}
+.env span{color:var(--tx0);font-size:.95rem}
+
+/* done rows */
+.done-row{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--bg2);font-size:.92rem;color:var(--tx2)}
+.done-row input,.evidence input{width:22px;height:22px;accent-color:var(--ac);cursor:pointer;flex:none}
+.done-row label{cursor:pointer}
+
+/* Q&A */
+.q{border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px;margin:10px 0;background:var(--bg0)}
+.q .ask{color:var(--tx0) !important;font-weight:600}
+.reveal{margin-top:8px;background:var(--bg1);border:1px solid var(--ac);color:var(--ac);border-radius:50px;padding:4px 14px;font:600 .82rem var(--fB);cursor:pointer;min-height:36px}
+.reveal:hover,.reveal:focus-visible{background:var(--ac);color:#fff}
+.ans{display:none;margin-top:8px;padding:8px 12px;border-left:3px solid var(--ok);background:var(--okBg);border-radius:0 6px 6px 0;color:var(--tx1)}
+.ans.open{display:block}
+
+/* evidence */
+.evidence ul{list-style:none;padding-left:0 !important}
+.evidence li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rs);margin:8px 0;background:var(--bg0)}
+.evidence .shotname{font-weight:700;color:var(--tx0)}
+.evline{margin-top:14px;font-size:.9rem;color:var(--tx2)}
+.evline span{display:inline-block;min-width:220px;border-bottom:1px solid var(--tx2);margin-left:6px}
+
+/* cheat */
+.cheat .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.cheat .grid>div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px}
+.cheat h3{margin-top:0;font-size:.98rem;color:var(--ac)}
+.cheat li{font-size:.92rem}
+
+/* lab nav + footer */
+.labnav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
+.labnav a{flex:1;min-width:220px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;text-decoration:none;color:var(--tx0);box-shadow:var(--shd);transition:all var(--t)}
+.labnav a:hover{border-color:var(--ac);transform:translateY(-2px)}
+.labnav small{display:block;font-family:var(--fM);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2)}
+.labnav a.nx{text-align:right}
+.site-footer{text-align:center;padding:28px 24px;border-top:1px solid var(--bdr);font-size:.85rem;color:var(--tx2);margin-top:30px}
+.site-footer a{color:var(--ac);text-decoration:none}
+
+@media(max-width:640px){
+  .hero{padding:36px 16px 48px}
+  section.blk{padding:20px 16px}
+  ol.steps>li{padding-left:40px}
+  .toolbar{padding:6px 12px}
+  .prog{order:3;max-width:none;min-width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
+@media print{
+  :root{--bg0:#fff;--bg1:#fff;--bg2:#f2f2f2;--tx0:#000;--tx1:#222;--tx2:#444;--codeBg:#f4f4f4;--codeTx:#000}
+  .toolbar,.toc,.labnav,.copy,.reveal,.skip-link,#df-assistant-root{display:none !important}
+  .hero{background:none;padding:10px 0;color:#000}.hero h1,.hero p.sub,.hero p.sub a{color:#000}.hero-badge,.chip{color:#000;border-color:#999;background:none}
+  .hero::after{display:none}
+  section.blk{box-shadow:none;break-inside:auto;border-color:#bbb}
+  .ans{display:block}
+  .cmd pre{white-space:pre-wrap}
+  a{color:#000}
+}
+</style>
+</head>
+<body data-prefix="df-lab16-">
+<a href="#main" class="skip-link">Skip to main content</a>
+<header class="hero">
+  <div class="hero-badge">Lab 16 &middot; Hands-on Companion</div>
+  <h1>Mobile Forensic Analysis</h1>
+  <p class="sub">Supports <a href="module12_lesson.html" target="_blank" rel="noopener">Module 12 &mdash; Mobile Device Forensics and the Internet of Anything<span class="sr-only"> (opens in new tab)</span></a></p>
+  <div class="meta"><span class="chip">&#128187; CSI-Linux</span><span class="chip">&#128295; Autopsy 4 (Android Analyzer, Exif Parser)</span><span class="chip">&#9201; 75–90 min</span></div>
+</header>
+<div class="toolbar" role="navigation" aria-label="Lab tools">
+  <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&lsaquo; All labs<span class="sr-only"> (opens in new tab)</span></a>
+  <div class="prog"><div class="bar" id="progressbar" role="progressbar" aria-label="Sections reviewed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar-fill"></span></div><span id="bar-txt">0/7 reviewed</span></div>
+  <div class="tools">
+    <button class="tbtn" id="fs-down" type="button" aria-label="Smaller text">A&minus;</button>
+    <button class="tbtn" id="fs-up" type="button" aria-label="Larger text">A+</button>
+    <button class="tbtn" id="print-btn" type="button" aria-label="Print this page">&#128424;&#65039; Print</button>
+    <button class="tbtn" id="theme-toggle" type="button" aria-pressed="false">&#127769; Dark</button>
+    <button class="tbtn" id="reset-btn" type="button">Clear progress</button>
+  </div>
+</div>
+<main id="main" class="wrap">
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#environment">Before you start</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#corrections">Manual corrections</a></li><li><a href="#defensible">Making it defensible</a></li><li><a href="#module">Course connection</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav>
+<section class="blk" id="overview" aria-labelledby="h-overview"><h2 id="h-overview"><span class="n">01</span>Overview &mdash; what this lab is really teaching</h2><p>A smartphone is the most revealing evidence source most people carry: it knows where they've been, who they talked to, what they searched, what they installed, and when. This lab works a <strong>physical image of a Samsung Galaxy</strong> &mdash; the most complete kind of mobile extraction, including deleted data &mdash; and pulls out device identity, email, Google Maps navigation history, Wi-Fi and SIM details, call logs, installed apps, and SMS/MMS.</p><p>You'll use <strong>Autopsy</strong> with the <strong>Android Analyzer</strong> and <strong>Exif Parser</strong> ingest modules to both <em>manually</em> read the key databases/config files (settings.db, checkin.xml, the Gmail mailstore, da_destination_history, wpa_supplicant.conf, SimCard.dat) and review Autopsy's <em>parsed</em> call logs, installed programs, and messages &mdash; learning where every parsed artifact actually came from.</p><p>Two themes. First, <strong>extraction type determines what you get</strong>: a <em>physical</em> image reaches deleted space and is the gold standard, but most modern phones (encrypted, locked bootloaders) only permit <em>logical</em> or <em>advanced logical</em> extractions &mdash; still rich, but live-data-only. Second, <strong>phone evidence is almost all SQLite + XML config</strong>, organized by app package name &mdash; so, exactly like IoT (Lab 15), the skill is knowing which package's database holds IMEI, which holds Maps history, which holds the SIM's ICCID. Device identifiers (IMEI, Gmail account, SIM ICCID) are what tie the hardware, the account, and the subscriber together.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section>
+<section class="blk" id="environment" aria-labelledby="h-environment"><h2 id="h-environment"><span class="n">02</span>Before you start</h2><div class="env"><div><b>Machine</b><span>CSI-Linux</span></div><div><b>Login</b><span>csi</span></div><div><b>Tool</b><span>Autopsy 4 (Android Analyzer + Exif Parser)</span></div><div><b>Dataset</b><span><code>Lab16.001</code> &mdash; Samsung Galaxy physical image (NIST CFReDS)</span></div><div><b>Key partition</b><span>vol15 (data)</span></div></div><div class="call tip"><span class="k">Tip</span><p>A <strong>physical</strong> image like this one includes unallocated space and deleted data &mdash; the best you can get. Note which extraction type produced your evidence: physical &gt; advanced logical &gt; logical &gt; manual, in completeness. Many real phones only allow the lower tiers.</p></div></section>
+<section class="blk" id="walkthrough" aria-labelledby="h-walkthrough"><h2 id="h-walkthrough"><span class="n">03</span>Walkthrough</h2><div class="task"><h3><span class="tn">Task 1</span>Open the data partition</h3><p>Android physical images have many partitions; the user data lives in one.</p><ol class="steps"><li>New case &rarr; add <code>Lab16.001</code> &rarr; Configure Ingest &rarr; tick <strong>Exif Parser</strong> + <strong>Android Analyzer</strong> &rarr; Finish. Let ingest finish.</li><li>Expand to <code>Lab16.001 &gt; vol15</code> (the data partition). Everything below is organized by app <strong>package name</strong>.</li></ol></div><div class="task"><h3><span class="tn">Task 2</span>Read device identity and settings</h3><p>Who the device is, and how it was configured.</p><ol class="steps"><li><code>data/com.android.providers.settings/databases/settings.db</code> &rarr; Application tab. <strong>System</strong> table (sound, airplane, driving mode); <strong>secure</strong> table (Bluetooth, data roaming, non-market app installs, lockscreen enabled, face unlock). <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The secure settings table showing lockscreen/face-unlock state.</span></div></li><li><code>com.google.android.gms/shared_prefs/checkin.xml</code> (Text tab): the <strong>IMEI</strong> (unique device ID) and the associated <strong>Gmail account</strong>. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> checkin.xml showing the IMEI and Gmail account.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 3</span>Email, Maps, Wi-Fi, SIM</h3><p>The behavioral and location goldmine.</p><ol class="steps"><li><code>com.google.android.gm/databases/mailstore.<account>.db</code> &rarr; <strong>messages</strong> (from/to, dateSentMs/dateReceivedMs &rarr; right-click Display as &gt; Date, subject, snippet) and <strong>attachments</strong> (filename, linked by messageId).</li><li><code>com.google.android.apps.maps/databases/da_destination_history</code> &rarr; <strong>destination_history</strong>: navigation time, dest_lat/lng, dest_address, source_lat/lng &mdash; where the user navigated from and to. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The Maps destination_history row with coordinates and address.</span></div></li><li><code>misc/wifi/wpa_supplicant.conf</code> (Text): wireless interface, device model/manufacturer/serial, saved SSIDs + encryption + passphrases.</li><li><code>System/SimCard.dat</code> (Text): SIM <strong>ICCID</strong>, phone number, operator, country, and the Unix time a SIM was changed/removed &mdash; current and previous SIM.</li></ol></div><div class="task"><h3><span class="tn">Task 4</span>Review Autopsy's parsed artifacts</h3><p>See the Android Analyzer's normalized output and where it came from.</p><ol class="steps"><li>Results &rarr; Extracted Content &rarr; <strong>Call Logs</strong> (source logs.db; to/from number, start/end times, direction, contact name).</li><li><strong>Installed Programs</strong> (name + install date &mdash; note any social-media apps). <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The parsed Call Logs or Installed Programs list.</span></div></li><li><strong>Messages</strong> (direction, numbers, date, read status, subject, body, SMS vs MMS, thread ID, from-number).</li></ol></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section>
+<section class="blk" id="reference" aria-labelledby="h-reference"><h2 id="h-reference"><span class="n">04</span>Reference &mdash; extraction types and where evidence lives</h2><h3>Mobile extraction types (most to least complete)</h3><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Type</th><th scope="col">Gets you</th><th scope="col">When</th></tr></thead><tbody><tr><td><strong>Physical</strong></td><td>Full flash incl. deleted/unallocated &mdash; this lab.</td><td>Rooted/exploitable devices; the ideal.</td></tr><tr><td><strong>Advanced logical</strong> (file system)</td><td>Most app data + system files, live only.</td><td>Common on modern devices.</td></tr><tr><td><strong>Logical</strong></td><td>Contacts, calls, SMS, some app data via APIs.</td><td>Default fallback.</td></tr><tr><td><strong>Manual</strong></td><td>Photos of the screen &mdash; last resort.</td><td>When nothing else works.</td></tr></tbody></table></div><h3>Key identifiers &mdash; hardware, account, subscriber</h3><ul><li><strong>IMEI</strong> (checkin.xml): uniquely identifies the <em>handset</em>. Dial <code>*#06#</code> on a live phone to display it.</li><li><strong>Gmail/account</strong> (checkin.xml, mailstore): ties the device to a cloud identity.</li><li><strong>SIM ICCID + phone number</strong> (SimCard.dat): identifies the <em>subscriber</em>; previous-SIM data shows swaps.</li><li><strong>Wi-Fi MAC/SSIDs + Maps history</strong>: location evidence.</li></ul><h3>Where to look, by package</h3><p>Evidence is foldered by app package: <code>com.android.providers.settings</code> (settings/IMEI area), <code>com.google.android.gm</code> (Gmail), <code>com.google.android.apps.maps</code> (navigation), <code>com.sec.android.provider.logsprovider</code> (calls). Know the package, find the database.</p><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section>
+<section class="blk" id="stuck" aria-labelledby="h-stuck"><h2 id="h-stuck"><span class="n">05</span>Where people get stuck</h2><p>Most problems in this lab fall into one of these.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Symptom</th><th scope="col">Likely cause</th><th scope="col">Fix</th></tr></thead><tbody><tr><td>Can't find an artifact</td><td>Looking in the wrong package or partition</td><td>Evidence is in vol15/data, foldered by package name. Find the app's package, then its databases folder.</td></tr><tr><td>Dates are raw numbers</td><td>Not converted</td><td>Right-click the column &rarr; Display as &gt; Date (or convert the epoch). Mail uses ms; others may differ.</td></tr><tr><td>Only a few artifacts parsed</td><td>Wrong ingest modules</td><td>Android Analyzer (+ Exif Parser) must be selected and allowed to finish.</td></tr><tr><td>Scrolling the DB view is clumsy</td><td>Autopsy's table viewer</td><td>Select a cell and use arrow keys to move across columns, as the lab notes.</td></tr><tr><td>Expected deleted data isn't there</td><td>Logical, not physical, extraction</td><td>Only physical images reach deleted space. Note your extraction type &mdash; this lab's is physical.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section>
+<section class="blk" id="corrections" aria-labelledby="h-corrections"><h2 id="h-corrections"><span class="n">06</span>Manual corrections &amp; currency notes</h2><p>The NDG manual was written in 2020&ndash;21. These are the places where it is wrong, inconsistent, or out of date &mdash; worth knowing before you trust a screenshot.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Where</th><th scope="col">The manual says</th><th scope="col">What's actually true</th></tr></thead><tbody><tr><td>Device vintage</td><td>Samsung Galaxy S2-era NIST CFReDS image</td><td>Old. Modern Androids are <strong>encrypted by default</strong> with locked bootloaders, so a full physical image is often impossible without exploits or vendor cooperation &mdash; advanced-logical is the realistic ceiling. The analysis method holds; the acquisition is far harder now.</td></tr><tr><td>Android Analyzer</td><td>Autopsy's Android Analyzer module</td><td>Still present, but real mobile exams lean on <strong>Cellebrite UFED, Magnet AXIOM, MSAB XRY, or ALEAPP/iLEAPP</strong>, which parse hundreds of apps. Autopsy is a capable free option; know the commercial tools exist.</td></tr><tr><td>iOS absence</td><td>Android-only</td><td>iOS is roughly half the market and very different &mdash; encrypted backups, keychain, a different file system (APFS), and SQLite databases in distinct locations. Mobile forensics means both platforms; this lab covers one.</td></tr><tr><td>App schema drift</td><td>Reads specific table/column names</td><td>App databases change schema between versions constantly &mdash; today's mailstore or Maps table may differ. Rely on the method (find the package → open its SQLite → identify the relevant table), not memorized column names.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-corrections" data-done="corrections"><label for="done-corrections">Mark this section reviewed</label></div></section>
+<section class="blk" id="defensible" aria-labelledby="h-defensible"><h2 id="h-defensible"><span class="n">07</span>Making it defensible</h2><p>Phones are the richest &mdash; and most contested &mdash; evidence; handle with matching rigor:</p><ul><li><strong>State the extraction type.</strong> Physical vs logical determines what's present and what absence means. Deleted data missing from a logical extraction isn't 'wasn't there.'</li><li><strong>Separate handset, account, and subscriber.</strong> IMEI = device, Gmail = account, SIM = subscriber &mdash; and none of those is automatically 'the defendant.' Corroborate.</li><li><strong>Convert and document timestamps.</strong> Mail-ms vs other epochs; state the zone.</li><li><strong>Hash the image and exports</strong> (Lab 20); document source paths by package &mdash; schemas change, so provenance is how others reproduce you.</li></ul><div class="call court"><span class="k">On the stand</span><p>'My client's phone said X' invites every attack: was the phone his, was the account his, was the SIM his, could someone else have used it, is the app data reliable at that version? Lead with device/account/subscriber identifiers, state the extraction type and its limits, and corroborate location and messaging with independent sources.</p></div><div class="done-row"><input type="checkbox" id="done-defensible" data-done="defensible"><label for="done-defensible">Mark this section reviewed</label></div></section>
+<section class="blk" id="module" aria-labelledby="h-module"><h2 id="h-module"><span class="n">08</span>Course connection</h2><p>This lab is the hands-on side of <a href="module12_lesson.html" target="_blank" rel="noopener"><strong>Module 12: Mobile Device Forensics and the Internet of Anything</strong></a> &middot; also touches <a href="module15_lesson.html" target="_blank" rel="noopener">Module 15</a>.</p><p>Mobile is the centerpiece of the mobile/IoT module and shares its whole toolkit with Lab 15 (ext4 + SQLite, epochs, config files). It pulls in EXIF/geolocation from Lab 11, email from Lab 12, browser-style SQLite from Lab 13, Wi-Fi/network identity from Lab 3, and feeds the hashing of Lab 20 and chain of custody of Lab 21.</p></section>
+<section class="blk" id="check" aria-labelledby="h-check"><h2 id="h-check"><span class="n">09</span>Check yourself</h2><div class="q"><p class="ask">1. Rank the mobile extraction types by completeness and say what the top one uniquely provides.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Physical > advanced logical (file system) > logical > manual. A physical image uniquely includes unallocated space and deleted data &mdash; the most complete picture &mdash; but is often impossible on modern encrypted, locked devices.</div></div><div class="q"><p class="ask">2. Where on an Android image do you find the IMEI and the device's Google account, and why do both matter?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">In com.google.android.gms/shared_prefs/checkin.xml. The IMEI uniquely identifies the handset; the Gmail account ties it to a cloud identity &mdash; together they link the physical device to an account, a key step in attribution.</div></div><div class="q"><p class="ask">3. Why can't you rely on memorized table and column names when examining phone app databases?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">App database schemas change between versions constantly, so a table or column present in one version may be renamed or gone in another. You rely on the method &mdash; find the app's package, open its SQLite database, identify the relevant table &mdash; rather than fixed names.</div></div><div class="q"><p class="ask">4. A phone's data implicates someone. Name three distinct identifiers you'd separate, and why.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">IMEI (the handset), the Google/Gmail account (the cloud identity), and the SIM ICCID/phone number (the subscriber). None of them is automatically 'the person' &mdash; keeping them distinct, and corroborating each, is what makes attribution defensible.</div></div><div class="done-row"><input type="checkbox" id="done-check" data-done="check"><label for="done-check">Mark this section reviewed</label></div></section>
+<section class="blk" id="evidence" aria-labelledby="h-evidence"><h2 id="h-evidence"><span class="n">10</span>Evidence to capture</h2><p>Your instructor wants screenshots of these key steps as proof you ran the lab. Capture them as you go (the &#128248; markers in the walkthrough show where), tick each one off, then print this page or submit the list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" id="ev-1" data-evidence="1"><label for="ev-1"><span class="shotname">Device identity.</span> checkin.xml showing the IMEI and associated Gmail account.</label></li><li><input type="checkbox" id="ev-2" data-evidence="2"><label for="ev-2"><span class="shotname">Security settings.</span> The settings.db secure table showing lockscreen/face-unlock state.</label></li><li><input type="checkbox" id="ev-3" data-evidence="3"><label for="ev-3"><span class="shotname">Location history.</span> The Maps destination_history row with coordinates and address.</label></li><li><input type="checkbox" id="ev-4" data-evidence="4"><label for="ev-4"><span class="shotname">Communications.</span> The parsed Call Logs or Messages list under Extracted Content.</label></li><li><input type="checkbox" id="ev-5" data-evidence="5"><label for="ev-5"><span class="shotname">SIM / Wi-Fi.</span> SimCard.dat (ICCID/number) or wpa_supplicant.conf (SSIDs).</label></li></ul></div><p class="evline">Student name:<span></span> &nbsp; Date:<span style="min-width:120px"></span></p></section>
+<section class="blk" id="cheat" aria-labelledby="h-cheat"><h2 id="h-cheat"><span class="n">11</span>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Extraction types</h3><ul><li>Physical = full incl. deleted (best)</li><li>Advanced logical = most app+system data</li><li>Logical = contacts/calls/SMS via API</li><li>Manual = screen photos (last resort)</li></ul></div><div><h3>Find evidence</h3><ul><li>Data partition, foldered by package name</li><li>IMEI+account → checkin.xml</li><li>Calls → logsprovider; Maps → apps.maps</li><li>SIM → SimCard.dat (ICCID, previous SIM)</li></ul></div></div></div></section>
+<nav class="labnav" aria-label="Lab navigation"><a href="forensics_lab15_companion.html" target="_blank" rel="noopener"><small>&lsaquo; Previous lab</small>Lab 15: IoT Forensics<span class="sr-only"> (opens in new tab)</span></a><a class="nx" href="forensics_lab17_companion.html" target="_blank" rel="noopener"><small>Next lab &rsaquo;</small>Lab 17: Log Capturing and Interpretation<span class="sr-only"> (opens in new tab)</span></a></nav>
+</main>
+<footer class="site-footer">
+  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="index.html" target="_blank" rel="noopener">Course hub<span class="sr-only"> (opens in new tab)</span></a></p>
+  <p style="margin-top:4px">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College &middot; 2026</p>
+</footer>
+<div id="live" class="sr-only" aria-live="polite"></div>
+<script>
+(function(){
+  "use strict";
+  var body=document.body, root=document.documentElement;
+  var P=body.getAttribute("data-prefix")||"df-lab-";
+  function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function del(k){try{localStorage.removeItem(k);}catch(e){}}
+
+  /* theme: shares the course hub's key so the choice follows students across the site */
+  var tb=document.getElementById("theme-toggle");
+  function applyTheme(m){
+    if(m==="dark"){root.setAttribute("data-theme","dark");}else{root.removeAttribute("data-theme");}
+    if(tb){tb.innerHTML=m==="dark"?"&#9728;&#65039; Light":"&#127769; Dark";tb.setAttribute("aria-pressed",m==="dark"?"true":"false");}
+  }
+  applyTheme(load("df-theme")==="dark"?"dark":"light");
+  if(tb){tb.addEventListener("click",function(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";save("df-theme",n);applyTheme(n);});}
+
+  /* text size */
+  var fs=parseFloat(load("df-lab-fs")||"1");
+  function applyFs(){fs=Math.min(1.4,Math.max(0.85,fs));root.style.setProperty("--fs",fs);save("df-lab-fs",String(fs));}
+  applyFs();
+  var up=document.getElementById("fs-up"),dn=document.getElementById("fs-down");
+  if(up){up.addEventListener("click",function(){fs+=0.1;applyFs();});}
+  if(dn){dn.addEventListener("click",function(){fs-=0.1;applyFs();});}
+
+  var pr=document.getElementById("print-btn");
+  if(pr){pr.addEventListener("click",function(){window.print();});}
+
+  /* progress */
+  var dones=document.querySelectorAll("[data-done]");
+  var barFill=document.getElementById("bar-fill"),barTxt=document.getElementById("bar-txt");
+  function refresh(){
+    var n=0;for(var i=0;i<dones.length;i++){if(dones[i].checked){n++;}}
+    var pct=dones.length?Math.round(100*n/dones.length):0;
+    if(barFill){barFill.style.width=pct+"%";}
+    if(barTxt){barTxt.textContent=n+"/"+dones.length+" reviewed";}
+    var pb=document.getElementById("progressbar");
+    if(pb){pb.setAttribute("aria-valuenow",String(pct));}
+    save(P+"total",String(dones.length));save(P+"count",String(n));
+  }
+  for(var i=0;i<dones.length;i++){(function(cb){
+    var k=P+"done-"+cb.getAttribute("data-done");
+    cb.checked=load(k)==="1";
+    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}refresh();});
+  })(dones[i]);}
+  refresh();
+
+  /* evidence checklist */
+  var evs=document.querySelectorAll("[data-evidence]");
+  for(var j=0;j<evs.length;j++){(function(cb){
+    var k=P+"ev-"+cb.getAttribute("data-evidence");
+    cb.checked=load(k)==="1";
+    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}});
+  })(evs[j]);}
+
+  /* reset */
+  var rs=document.getElementById("reset-btn");
+  if(rs){rs.addEventListener("click",function(){
+    if(!window.confirm("Clear your progress and evidence ticks for this lab?")){return;}
+    var ks=[];try{for(var a=0;a<localStorage.length;a++){var kk=localStorage.key(a);if(kk&&kk.indexOf(P)===0){ks.push(kk);}}}catch(e){}
+    for(var b=0;b<ks.length;b++){del(ks[b]);}
+    for(var c=0;c<dones.length;c++){dones[c].checked=false;}
+    for(var d=0;d<evs.length;d++){evs[d].checked=false;}
+    refresh();
+  });}
+
+  /* reveal answers */
+  var rv=document.querySelectorAll(".reveal");
+  for(var r=0;r<rv.length;r++){(function(btn){
+    btn.addEventListener("click",function(){
+      var a=btn.nextElementSibling;var open=a.classList.toggle("open");
+      btn.setAttribute("aria-expanded",open?"true":"false");btn.textContent=open?"Hide answer":"Show answer";
+    });
+  })(rv[r]);}
+
+  /* copy buttons: copy the clean text stored in data-copy */
+  var live=document.getElementById("live");
+  function announce(t){if(live){live.textContent="";setTimeout(function(){live.textContent=t;},30);}}
+  function fallback(t){var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
+  var cps=document.querySelectorAll(".copy");
+  for(var q=0;q<cps.length;q++){(function(btn){
+    btn.addEventListener("click",function(){
+      var t=btn.getAttribute("data-copy");
+      function done(){btn.textContent="Copied";announce("Command copied");setTimeout(function(){btn.textContent="Copy";},1500);}
+      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done();});}else{fallback(t);done();}
+    });
+  })(cps[q]);}
+})();
+</script>
+<script src="assistant.js" defer></script>
+</body>
+</html>

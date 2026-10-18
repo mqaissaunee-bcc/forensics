@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 12: Email Analysis &mdash; Digital Forensics Lab Companion</title>
+<meta name="description" content="Student companion for NDG Forensics v2 Lab 12 (Email Analysis): walkthrough, reference, troubleshooting, manual corrections, self-check and evidence checklist.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;
+  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#6A6A7A;
+  --ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);
+  --hi:#C44536;--hi2:#E76F51;--ok:#2D6A4F;--ok2:#52B788;--warn:#B7791F;--warnBg:rgba(233,196,106,.18);
+  --fixBg:rgba(196,69,54,.08);--okBg:rgba(45,106,79,.09);--tipBg:rgba(13,92,99,.07);
+  --codeBg:#1A2028;--codeTx:#E8E6E3;
+  --bdr:#D5CEC7;--shd:0 2px 16px rgba(26,26,46,.06);--shd2:0 8px 32px rgba(26,26,46,.12);
+  --r:12px;--rs:8px;--t:.3s cubic-bezier(.4,0,.2,1);
+  --fH:'Merriweather',Georgia,serif;--fB:'Source Sans 3','Segoe UI',system-ui,sans-serif;--fM:'JetBrains Mono','Consolas','Courier New',monospace;
+  --fs:1;
+}
+[data-theme="dark"]{
+  --bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;
+  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#8F8C86;
+  --ac:#44C7D0;--ac2:#14919B;--acG:rgba(20,145,155,.18);
+  --hi:#F4A261;--hi2:#E76F51;--ok:#95D5B2;--ok2:#52B788;--warn:#E9C46A;--warnBg:rgba(233,196,106,.12);
+  --fixBg:rgba(231,111,81,.12);--okBg:rgba(82,183,136,.12);--tipBg:rgba(20,145,155,.12);
+  --codeBg:#0B0F13;--codeTx:#E8E6E3;
+  --bdr:#2E3A47;--shd:0 2px 16px rgba(0,0,0,.3);--shd2:0 8px 32px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--fs))}
+body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t);min-height:100vh}
+a{color:var(--ac)}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none}
+.skip-link:focus{top:0}
+*:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 40%,#0D5C63 100%);padding:48px 24px 56px;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,var(--bg0),transparent);pointer-events:none}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 20px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:rgba(255,255,255,.9);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;position:relative}
+.hero h1{font-family:var(--fH);font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;color:#fff;line-height:1.25;max-width:820px;margin:0 auto 12px;position:relative}
+.hero p.sub{font-size:1.05rem;color:rgba(255,255,255,.88);max-width:680px;margin:0 auto;position:relative}
+.hero p.sub a{color:#fff}
+.meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50px;padding:4px 14px;font-size:.82rem}
+
+/* toolbar */
+.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.toolbar a.back{font-family:var(--fH);font-weight:700;font-size:.92rem;color:var(--tx0);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.toolbar a.back:hover{color:var(--ac)}
+.prog{flex:1;min-width:160px;max-width:340px;display:flex;align-items:center;gap:10px;font-family:var(--fM);font-size:.72rem;color:var(--tx2);letter-spacing:1px;text-transform:uppercase}
+.bar{flex:1;height:8px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--bdr)}
+.bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .4s}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tbtn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:6px 14px;cursor:pointer;font:600 .85rem var(--fB);color:var(--tx0);min-height:44px;min-width:44px;transition:all var(--t)}
+.tbtn:hover,.tbtn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+[data-theme="dark"] .tbtn:hover{color:#0F1419}
+
+/* layout */
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px}
+.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shd);margin:-36px 0 26px;position:relative;z-index:2}
+.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px}
+.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 18px;padding-left:1.3em}
+.toc a{color:var(--tx0);text-decoration:none;font-size:.95rem}
+.toc a:hover{color:var(--ac);text-decoration:underline}
+section.blk{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:26px 28px;margin-bottom:22px;box-shadow:var(--shd)}
+section.blk>h2{font-family:var(--fH);font-size:1.4rem;font-weight:900;color:var(--tx0);margin-bottom:14px;display:flex;align-items:center;gap:12px;line-height:1.3}
+section.blk>h2 .n{flex:none;font-family:var(--fM);font-size:.8rem;background:var(--acG);color:var(--ac);border-radius:50px;padding:3px 11px}
+h3{font-family:var(--fH);font-size:1.08rem;color:var(--tx0);margin:22px 0 8px}
+section.blk p,section.blk li{color:var(--tx1)}
+section.blk p+p{margin-top:10px}
+section.blk ul,section.blk ol{padding-left:1.4em;margin:8px 0}
+section.blk li{margin:4px 0}
+strong,b{color:var(--tx0)}
+code{font-family:var(--fM);font-size:.86em;background:var(--bg2);border:1px solid var(--bdr);border-radius:5px;padding:1px 6px;color:var(--tx0);word-break:break-word}
+kbd{font-family:var(--fM);font-size:.82em;background:var(--bg1);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:0 6px}
+.path{font-family:var(--fM);font-size:.84em;color:var(--ac);word-break:break-word}
+
+/* task + steps */
+.task{border-top:1px dashed var(--bdr);padding-top:6px;margin-top:18px}
+.task:first-of-type{border-top:0;margin-top:4px}
+.task>h3{display:flex;gap:10px;align-items:baseline}
+.task>h3 .tn{font-family:var(--fM);font-size:.75rem;color:var(--ac);text-transform:uppercase;letter-spacing:1.5px;flex:none}
+ol.steps{counter-reset:s;list-style:none;padding-left:0 !important}
+ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 46px;border-bottom:1px solid var(--bg2)}
+ol.steps>li:last-child{border-bottom:0}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--acG);color:var(--ac);font:700 .85rem var(--fM);display:flex;align-items:center;justify-content:center}
+
+/* commands */
+.cmd{margin:10px 0;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bdr)}
+.cmd-bar{display:flex;justify-content:space-between;align-items:center;background:var(--bg2);padding:4px 6px 4px 12px;font-family:var(--fM);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
+.copy{background:var(--bg1);border:1px solid var(--bdr);border-radius:6px;font:600 .75rem var(--fB);color:var(--tx0);padding:4px 12px;cursor:pointer;min-height:32px;min-width:64px}
+.copy:hover,.copy:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+.cmd pre{background:var(--codeBg);color:var(--codeTx);padding:12px 14px;overflow-x:auto;font-family:var(--fM);font-size:.86rem;line-height:1.55;white-space:pre}
+.cmd pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+
+/* callouts */
+.call{border-left:4px solid var(--ac);background:var(--tipBg);border-radius:0 var(--rs) var(--rs) 0;padding:10px 14px;margin:12px 0}
+.call .k{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--ac);margin-bottom:2px}
+.call p{margin:0 !important}
+.call.warn{border-color:var(--warn);background:var(--warnBg)}.call.warn .k{color:var(--warn)}
+.call.fix{border-color:var(--hi);background:var(--fixBg)}.call.fix .k{color:var(--hi)}
+.call.court{border-color:var(--ok);background:var(--okBg)}.call.court .k{color:var(--ok)}
+.shot{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--ac2);border-radius:var(--rs);padding:8px 12px;margin:10px 0;font-size:.92rem;color:var(--tx1);background:var(--bg0)}
+.shot-ico{font-size:1.1rem;line-height:1.4}
+
+/* tables */
+.tblwrap{overflow-x:auto;margin:12px 0;border:1px solid var(--bdr);border-radius:var(--rs)}
+table.tbl{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
+table.tbl th{background:var(--bg2);text-align:left;font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx1);padding:9px 12px;border-bottom:1px solid var(--bdr)}
+table.tbl td{padding:9px 12px;border-bottom:1px solid var(--bg2);vertical-align:top;color:var(--tx1)}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl td:first-child{color:var(--tx0);font-weight:600}
+
+/* env grid */
+.env{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:12px 0}
+.env div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 14px}
+.env b{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2);font-weight:600}
+.env span{color:var(--tx0);font-size:.95rem}
+
+/* done rows */
+.done-row{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--bg2);font-size:.92rem;color:var(--tx2)}
+.done-row input,.evidence input{width:22px;height:22px;accent-color:var(--ac);cursor:pointer;flex:none}
+.done-row label{cursor:pointer}
+
+/* Q&A */
+.q{border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px;margin:10px 0;background:var(--bg0)}
+.q .ask{color:var(--tx0) !important;font-weight:600}
+.reveal{margin-top:8px;background:var(--bg1);border:1px solid var(--ac);color:var(--ac);border-radius:50px;padding:4px 14px;font:600 .82rem var(--fB);cursor:pointer;min-height:36px}
+.reveal:hover,.reveal:focus-visible{background:var(--ac);color:#fff}
+.ans{display:none;margin-top:8px;padding:8px 12px;border-left:3px solid var(--ok);background:var(--okBg);border-radius:0 6px 6px 0;color:var(--tx1)}
+.ans.open{display:block}
+
+/* evidence */
+.evidence ul{list-style:none;padding-left:0 !important}
+.evidence li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rs);margin:8px 0;background:var(--bg0)}
+.evidence .shotname{font-weight:700;color:var(--tx0)}
+.evline{margin-top:14px;font-size:.9rem;color:var(--tx2)}
+.evline span{display:inline-block;min-width:220px;border-bottom:1px solid var(--tx2);margin-left:6px}
+
+/* cheat */
+.cheat .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.cheat .grid>div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px}
+.cheat h3{margin-top:0;font-size:.98rem;color:var(--ac)}
+.cheat li{font-size:.92rem}
+
+/* lab nav + footer */
+.labnav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
+.labnav a{flex:1;min-width:220px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;text-decoration:none;color:var(--tx0);box-shadow:var(--shd);transition:all var(--t)}
+.labnav a:hover{border-color:var(--ac);transform:translateY(-2px)}
+.labnav small{display:block;font-family:var(--fM);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2)}
+.labnav a.nx{text-align:right}
+.site-footer{text-align:center;padding:28px 24px;border-top:1px solid var(--bdr);font-size:.85rem;color:var(--tx2);margin-top:30px}
+.site-footer a{color:var(--ac);text-decoration:none}
+
+@media(max-width:640px){
+  .hero{padding:36px 16px 48px}
+  section.blk{padding:20px 16px}
+  ol.steps>li{padding-left:40px}
+  .toolbar{padding:6px 12px}
+  .prog{order:3;max-width:none;min-width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
+@media print{
+  :root{--bg0:#fff;--bg1:#fff;--bg2:#f2f2f2;--tx0:#000;--tx1:#222;--tx2:#444;--codeBg:#f4f4f4;--codeTx:#000}
+  .toolbar,.toc,.labnav,.copy,.reveal,.skip-link,#df-assistant-root{display:none !important}
+  .hero{background:none;padding:10px 0;color:#000}.hero h1,.hero p.sub,.hero p.sub a{color:#000}.hero-badge,.chip{color:#000;border-color:#999;background:none}
+  .hero::after{display:none}
+  section.blk{box-shadow:none;break-inside:auto;border-color:#bbb}
+  .ans{display:block}
+  .cmd pre{white-space:pre-wrap}
+  a{color:#000}
+}
+</style>
+</head>
+<body data-prefix="df-lab12-">
+<a href="#main" class="skip-link">Skip to main content</a>
+<header class="hero">
+  <div class="hero-badge">Lab 12 &middot; Hands-on Companion</div>
+  <h1>Email Analysis</h1>
+  <p class="sub">Supports <a href="module11_lesson.html" target="_blank" rel="noopener">Module 11 &mdash; E-mail and Social Media Investigations<span class="sr-only"> (opens in new tab)</span></a></p>
+  <div class="meta"><span class="chip">&#128187; CAINE</span><span class="chip">&#128295; Thunderbird, Email Header Analyzer</span><span class="chip">&#9201; 60 min</span></div>
+</header>
+<div class="toolbar" role="navigation" aria-label="Lab tools">
+  <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&lsaquo; All labs<span class="sr-only"> (opens in new tab)</span></a>
+  <div class="prog"><div class="bar" id="progressbar" role="progressbar" aria-label="Sections reviewed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar-fill"></span></div><span id="bar-txt">0/7 reviewed</span></div>
+  <div class="tools">
+    <button class="tbtn" id="fs-down" type="button" aria-label="Smaller text">A&minus;</button>
+    <button class="tbtn" id="fs-up" type="button" aria-label="Larger text">A+</button>
+    <button class="tbtn" id="print-btn" type="button" aria-label="Print this page">&#128424;&#65039; Print</button>
+    <button class="tbtn" id="theme-toggle" type="button" aria-pressed="false">&#127769; Dark</button>
+    <button class="tbtn" id="reset-btn" type="button">Clear progress</button>
+  </div>
+</div>
+<main id="main" class="wrap">
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#environment">Before you start</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#corrections">Manual corrections</a></li><li><a href="#defensible">Making it defensible</a></li><li><a href="#module">Course connection</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav>
+<section class="blk" id="overview" aria-labelledby="h-overview"><h2 id="h-overview"><span class="n">01</span>Overview &mdash; what this lab is really teaching</h2><p>Email is still the backbone of business communication &mdash; and the <strong>header</strong> on every message is a travel log. As a message hops from the sender's machine through relay servers to the recipient's inbox, each server stamps its own <code>Received:</code> line onto the <em>top</em> of the header. Read from the bottom up and you reconstruct the entire route, including the <strong>originating IP address</strong>, the authentication results that reveal spoofing, and a <strong>Message-ID</strong> that can prove whether an email was truly sent or merely drafted.</p><p>You'll open messages in <strong>Thunderbird</strong> (an offline MBOX client), save the raw header, read it by hand bottom-to-top, then parse a second header with the offline <strong>Email Header Analyzer</strong> for a tidy breakdown.</p><p>The core technique is simple and powerful: <strong>headers are read from the bottom up</strong>, because the oldest events (origination) are at the bottom and each hop stacks on top. Along the way you learn to spot <strong>SPF, DKIM, and ARC</strong> results (the authentication checks that catch forged senders), to read the first <code>Received:</code> line for the sender's real IP, and to use <strong>In-Reply-To / References</strong> to tell a fresh email from a reply or forward. The caveat threaded throughout: header fields below the first trusted relay can be <em>forged</em>, so trust is highest at the top (your own servers) and must be earned downward.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section>
+<section class="blk" id="environment" aria-labelledby="h-environment"><h2 id="h-environment"><span class="n">02</span>Before you start</h2><div class="env"><div><b>Machine</b><span>CAINE</span></div><div><b>Login</b><span>caine</span></div><div><b>Tools</b><span>Thunderbird (MBOX), Email Header Analyzer (local server)</span></div><div><b>Dataset</b><span>Two inbox messages (<em>The deadline</em>, <em>Fw: Re: The deadline</em>)</span></div><div><b>Output</b><span>Desktop\Working Folder\FOR_LAB_012</span></div></div><div class="call tip"><span class="k">Tip</span><p>Make a forensic copy of the mailbox before examining where possible. Reading headers live is acceptable in time-sensitive situations &mdash; just document that you did and why.</p></div></section>
+<section class="blk" id="walkthrough" aria-labelledby="h-walkthrough"><h2 id="h-walkthrough"><span class="n">03</span>Walkthrough</h2><div class="task"><h3><span class="tn">Task 1</span>Save and read a header by hand</h3><p>The raw header holds everything; reading it bottom-up reconstructs the route.</p><ol class="steps"><li>In Thunderbird, open <em>The deadline</em> &rarr; More &gt; <strong>View Source</strong> &rarr; File &gt; Save Page As &rarr; <code>The deadline.txt</code> in <code>FOR_LAB_012</code>.</li><li>Open it in gedit and <strong>scroll to the bottom</strong>. From the bottom up: the body, then the sender/recipient/subject/date, then the <strong>Message-ID</strong> (unique per email; no In-Reply-To/References here means it was composed from scratch). <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The Message-ID line in the saved header.</span></div></li><li>Scroll up to the first <code>Received:</code> line &mdash; it shows the <strong>sender's IP</strong> (174.128.225.186) received by web-mail.mail.com. Note the <strong>DKIM</strong> and <strong>SPF</strong> results here. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The first Received line showing the originating IP.</span></div></li><li>Continue up through each relay (gmx &rarr; google) to the final delivery server. The top lines (ARC, last Received) are the most recent and most trustworthy.</li></ol></div><div class="task"><h3><span class="tn">Task 2</span>Parse a header with Email Header Analyzer</h3><p>A local, offline tool that lays the route out as a table.</p><ol class="steps"><li>Open UXTerm and start the local server:</li><li><div class="cmd"><div class="cmd-bar"><span>Terminal</span><button class="copy" type="button" data-copy="cd Desktop/email-header-analyzer-master/mha/">Copy</button></div><pre><code>cd Desktop/email-header-analyzer-master/mha/</code></pre></div></li><li><div class="cmd"><div class="cmd-bar"><span>Terminal</span><button class="copy" type="button" data-copy="python3 server.py -d">Copy</button></div><pre><code>python3 server.py -d</code></pre></div></li><li>In Firefox, go to <code>http://127.0.0.1:8080</code>.</li><li>In Thunderbird, open <em>Fw: Re: The deadline</em> &rarr; View Source &rarr; Select All &rarr; Copy. Paste into the analyzer &rarr; <strong>Analyze This!</strong>.</li><li>Read the parsed table: servers and IPs at the top, hop-by-hop below, plus the <strong>In-Reply-To / References</strong> fields that mark this as a reply/forward (unlike the first email). <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The Email Header Analyzer output showing the parsed hops and IPs.</span></div></li></ol></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section>
+<section class="blk" id="reference" aria-labelledby="h-reference"><h2 id="h-reference"><span class="n">04</span>Reference &mdash; reading a header</h2><h3>Read bottom-up, trust top-down</h3><p>Each server adds its <code>Received:</code> line to the <em>top</em>, so the bottom is the origin and the top is delivery. Trust is highest at the top (your own/recipient's servers, which you control) and decreases downward &mdash; lines below the first trusted relay can be forged by an attacker.</p><h3>Key fields</h3><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Field</th><th scope="col">What it tells you</th></tr></thead><tbody><tr><td><code>Received:</code> (first/lowest)</td><td>Originating server + sender's IP. The single most useful line.</td></tr><tr><td><code>Message-ID</code></td><td>Unique per message, set by the sending server. Proves an email was actually sent (not just drafted) and helps identify the origin.</td></tr><tr><td><code>In-Reply-To</code> / <code>References</code></td><td>Present on replies/forwards; give the Message-ID of the parent. Absent = composed from scratch.</td></tr><tr><td><strong>SPF</strong></td><td>Was the sending IP authorized to send for that domain? Fail = likely spoofed.</td></tr><tr><td><strong>DKIM</strong></td><td>Cryptographic signature proving the message wasn't tampered in transit and came from the claimed domain.</td></tr><tr><td><strong>ARC</strong></td><td>Preserves SPF/DKIM results across forwarding hops.</td></tr><tr><td><code>From</code> / <code>Return-Path</code></td><td>Display vs envelope sender &mdash; a mismatch is a spoofing flag.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section>
+<section class="blk" id="stuck" aria-labelledby="h-stuck"><h2 id="h-stuck"><span class="n">05</span>Where people get stuck</h2><p>Most problems in this lab fall into one of these.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Symptom</th><th scope="col">Likely cause</th><th scope="col">Fix</th></tr></thead><tbody><tr><td>Thunderbird tries to connect to a server</td><td>No internet in the VM</td><td>Close the login/browser prompt &mdash; the mailbox is local MBOX, no connection needed.</td></tr><tr><td>Analyzer page won't load</td><td>Server not running or wrong URL</td><td>Confirm python3 server.py -d is running, then open http://127.0.0.1:8080 exactly.</td></tr><tr><td>Reading the header top-down gives the wrong order</td><td>Headers stack newest-on-top</td><td>Read Received lines from the bottom up &mdash; oldest (origination) is at the bottom.</td></tr><tr><td>Originating IP is a private/relay IP</td><td>Provider masked the real sender IP</td><td>Some providers strip the client IP for privacy; you may only get their relay. Note the limitation.</td></tr><tr><td>No In-Reply-To field</td><td>The email was composed fresh</td><td>That's a finding: absence of In-Reply-To/References means it wasn't a reply or forward.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section>
+<section class="blk" id="corrections" aria-labelledby="h-corrections"><h2 id="h-corrections"><span class="n">06</span>Manual corrections &amp; currency notes</h2><p>The NDG manual was written in 2020&ndash;21. These are the places where it is wrong, inconsistent, or out of date &mdash; worth knowing before you trust a screenshot.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Where</th><th scope="col">The manual says</th><th scope="col">What's actually true</th></tr></thead><tbody><tr><td>Email formats</td><td>Focuses on MBOX via Thunderbird</td><td>Still common, but enterprise evidence is often <strong>PST/OST</strong> (Outlook/Exchange) or <strong>EDB</strong> (Exchange store). Individual messages come as EML/MSG. The header-reading skill is identical across all of them.</td></tr><tr><td>Webmail reality</td><td>Centered on a desktop client</td><td>Much email now lives in webmail/cloud (Gmail, M365) with no local database &mdash; acquisition shifts to API exports, mailbox exports, or legal process to the provider. Headers are still the analysis unit.</td></tr><tr><td>Authentication depth</td><td>Mentions SPF/DKIM/ARC lightly</td><td>These are now central to spoofing analysis, plus <strong>DMARC</strong> (which ties SPF/DKIM to a policy). A 'DMARC: pass' vs 'fail' is often the deciding factor on whether a sender is forged.</td></tr><tr><td>Tool currency</td><td>Uses a local Email Header Analyzer build</td><td>Fine and private (offline). Online analyzers (MXToolbox, Google's Messageheader) are quicker but send data to a third party &mdash; the lab's offline approach is the privacy-safe one for real evidence.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-corrections" data-done="corrections"><label for="done-corrections">Mark this section reviewed</label></div></section>
+<section class="blk" id="defensible" aria-labelledby="h-defensible"><h2 id="h-defensible"><span class="n">07</span>Making it defensible</h2><p>Headers are strong routing evidence but partly forgeable &mdash; calibrate your confidence to where trust begins:</p><ul><li><strong>Trust from the top down.</strong> Your/the recipient's servers are reliable; lines added before the first trusted relay can be attacker-controlled. State which lines you trust and why.</li><li><strong>An IP is not a person.</strong> The originating IP identifies a network endpoint at a time; attributing it to an individual needs ISP records and more.</li><li><strong>Use SPF/DKIM/DMARC to assess spoofing</strong> rather than taking the From line at face value.</li><li><strong>Keep the raw header.</strong> Parsers are convenient but your evidence is the original header text &mdash; preserve and hash it.</li></ul><div class="call court"><span class="k">On the stand</span><p>'Couldn't this header be faked?' Partly &mdash; which is why you explain the trust boundary (top-down), cite SPF/DKIM/DMARC results, and treat the originating IP as a lead to corroborate with provider records, not as proof of who sat at the keyboard.</p></div><div class="done-row"><input type="checkbox" id="done-defensible" data-done="defensible"><label for="done-defensible">Mark this section reviewed</label></div></section>
+<section class="blk" id="module" aria-labelledby="h-module"><h2 id="h-module"><span class="n">08</span>Course connection</h2><p>This lab is the hands-on side of <a href="module11_lesson.html" target="_blank" rel="noopener"><strong>Module 11: E-mail and Social Media Investigations</strong></a>.</p><p>Email analysis is the hands-on core of the email/social-media module. Headers tie into the IP and network thinking of Lab 3 and Lab 10, and a message's timestamps feed the Lab 14 timeline. On mobile (Lab 16) you'll find email fragments in app databases rather than headers &mdash; the same evidence, a different container.</p></section>
+<section class="blk" id="check" aria-labelledby="h-check"><h2 id="h-check"><span class="n">09</span>Check yourself</h2><div class="q"><p class="ask">1. Why do you read an email header from the bottom up?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Each server that handles the message adds its Received line to the top of the header, so the header stacks newest-on-top. The bottom is the origination and the top is delivery, so bottom-up reconstructs the chronological route.</div></div><div class="q"><p class="ask">2. Which single header line is most useful for identifying where a message came from, and what does it give you?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">The first (lowest) Received line &mdash; it shows the originating server and the sender's IP address. It's the starting point for tracing the source.</div></div><div class="q"><p class="ask">3. How can you tell a header belongs to a reply or forward rather than a message composed from scratch?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Replies and forwards carry In-Reply-To and/or References fields holding the parent message's Message-ID. If those fields are absent, the email was composed fresh.</div></div><div class="q"><p class="ask">4. Why shouldn't you fully trust every line of a header?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Lines added before the first trusted relay can be forged by an attacker &mdash; trust is highest at the top (servers you control) and decreases downward. You verify sender legitimacy using SPF/DKIM/DMARC rather than taking the From line or lower Received lines at face value.</div></div><div class="done-row"><input type="checkbox" id="done-check" data-done="check"><label for="done-check">Mark this section reviewed</label></div></section>
+<section class="blk" id="evidence" aria-labelledby="h-evidence"><h2 id="h-evidence"><span class="n">10</span>Evidence to capture</h2><p>Your instructor wants screenshots of these key steps as proof you ran the lab. Capture them as you go (the &#128248; markers in the walkthrough show where), tick each one off, then print this page or submit the list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" id="ev-1" data-evidence="1"><label for="ev-1"><span class="shotname">Message-ID.</span> The Message-ID line in the saved raw header.</label></li><li><input type="checkbox" id="ev-2" data-evidence="2"><label for="ev-2"><span class="shotname">Originating IP.</span> The first Received line showing the sender's IP address.</label></li><li><input type="checkbox" id="ev-3" data-evidence="3"><label for="ev-3"><span class="shotname">Authentication.</span> The SPF/DKIM (or DMARC) result lines in the header.</label></li><li><input type="checkbox" id="ev-4" data-evidence="4"><label for="ev-4"><span class="shotname">Parsed header.</span> The Email Header Analyzer output with the hop-by-hop table.</label></li><li><input type="checkbox" id="ev-5" data-evidence="5"><label for="ev-5"><span class="shotname">Reply markers.</span> The In-Reply-To / References fields on the forwarded message.</label></li></ul></div><p class="evline">Student name:<span></span> &nbsp; Date:<span style="min-width:120px"></span></p></section>
+<section class="blk" id="cheat" aria-labelledby="h-cheat"><h2 id="h-cheat"><span class="n">11</span>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Read a header</h3><ul><li>Bottom-up = origin → delivery</li><li>First Received line = sender IP</li><li>Message-ID = unique, proves sent</li><li>In-Reply-To/References = reply/forward</li></ul></div><div><h3>Trust & spoofing</h3><ul><li>Trust top-down (your servers first)</li><li>SPF/DKIM/DMARC pass vs fail</li><li>IP ≠ person → need ISP records</li><li>Keep & hash the raw header</li></ul></div></div></div></section>
+<nav class="labnav" aria-label="Lab navigation"><a href="forensics_lab11_companion.html" target="_blank" rel="noopener"><small>&lsaquo; Previous lab</small>Lab 11: Picture File Analysis<span class="sr-only"> (opens in new tab)</span></a><a class="nx" href="forensics_lab13_companion.html" target="_blank" rel="noopener"><small>Next lab &rsaquo;</small>Lab 13: Internet Browser Forensics<span class="sr-only"> (opens in new tab)</span></a></nav>
+</main>
+<footer class="site-footer">
+  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="index.html" target="_blank" rel="noopener">Course hub<span class="sr-only"> (opens in new tab)</span></a></p>
+  <p style="margin-top:4px">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College &middot; 2026</p>
+</footer>
+<div id="live" class="sr-only" aria-live="polite"></div>
+<script>
+(function(){
+  "use strict";
+  var body=document.body, root=document.documentElement;
+  var P=body.getAttribute("data-prefix")||"df-lab-";
+  function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function del(k){try{localStorage.removeItem(k);}catch(e){}}
+
+  /* theme: shares the course hub's key so the choice follows students across the site */
+  var tb=document.getElementById("theme-toggle");
+  function applyTheme(m){
+    if(m==="dark"){root.setAttribute("data-theme","dark");}else{root.removeAttribute("data-theme");}
+    if(tb){tb.innerHTML=m==="dark"?"&#9728;&#65039; Light":"&#127769; Dark";tb.setAttribute("aria-pressed",m==="dark"?"true":"false");}
+  }
+  applyTheme(load("df-theme")==="dark"?"dark":"light");
+  if(tb){tb.addEventListener("click",function(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";save("df-theme",n);applyTheme(n);});}
+
+  /* text size */
+  var fs=parseFloat(load("df-lab-fs")||"1");
+  function applyFs(){fs=Math.min(1.4,Math.max(0.85,fs));root.style.setProperty("--fs",fs);save("df-lab-fs",String(fs));}
+  applyFs();
+  var up=document.getElementById("fs-up"),dn=document.getElementById("fs-down");
+  if(up){up.addEventListener("click",function(){fs+=0.1;applyFs();});}
+  if(dn){dn.addEventListener("click",function(){fs-=0.1;applyFs();});}
+
+  var pr=document.getElementById("print-btn");
+  if(pr){pr.addEventListener("click",function(){window.print();});}
+
+  /* progress */
+  var dones=document.querySelectorAll("[data-done]");
+  var barFill=document.getElementById("bar-fill"),barTxt=document.getElementById("bar-txt");
+  function refresh(){
+    var n=0;for(var i=0;i<dones.length;i++){if(dones[i].checked){n++;}}
+    var pct=dones.length?Math.round(100*n/dones.length):0;
+    if(barFill){barFill.style.width=pct+"%";}
+    if(barTxt){barTxt.textContent=n+"/"+dones.length+" reviewed";}
+    var pb=document.getElementById("progressbar");
+    if(pb){pb.setAttribute("aria-valuenow",String(pct));}
+    save(P+"total",String(dones.length));save(P+"count",String(n));
+  }
+  for(var i=0;i<dones.length;i++){(function(cb){
+    var k=P+"done-"+cb.getAttribute("data-done");
+    cb.checked=load(k)==="1";
+    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}refresh();});
+  })(dones[i]);}
+  refresh();
+
+  /* evidence checklist */
+  var evs=document.querySelectorAll("[data-evidence]");
+  for(var j=0;j<evs.length;j++){(function(cb){
+    var k=P+"ev-"+cb.getAttribute("data-evidence");
+    cb.checked=load(k)==="1";
+    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}});
+  })(evs[j]);}
+
+  /* reset */
+  var rs=document.getElementById("reset-btn");
+  if(rs){rs.addEventListener("click",function(){
+    if(!window.confirm("Clear your progress and evidence ticks for this lab?")){return;}
+    var ks=[];try{for(var a=0;a<localStorage.length;a++){var kk=localStorage.key(a);if(kk&&kk.indexOf(P)===0){ks.push(kk);}}}catch(e){}
+    for(var b=0;b<ks.length;b++){del(ks[b]);}
+    for(var c=0;c<dones.length;c++){dones[c].checked=false;}
+    for(var d=0;d<evs.length;d++){evs[d].checked=false;}
+    refresh();
+  });}
+
+  /* reveal answers */
+  var rv=document.querySelectorAll(".reveal");
+  for(var r=0;r<rv.length;r++){(function(btn){
+    btn.addEventListener("click",function(){
+      var a=btn.nextElementSibling;var open=a.classList.toggle("open");
+      btn.setAttribute("aria-expanded",open?"true":"false");btn.textContent=open?"Hide answer":"Show answer";
+    });
+  })(rv[r]);}
+
+  /* copy buttons: copy the clean text stored in data-copy */
+  var live=document.getElementById("live");
+  function announce(t){if(live){live.textContent="";setTimeout(function(){live.textContent=t;},30);}}
+  function fallback(t){var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
+  var cps=document.querySelectorAll(".copy");
+  for(var q=0;q<cps.length;q++){(function(btn){
+    btn.addEventListener("click",function(){
+      var t=btn.getAttribute("data-copy");
+      function done(){btn.textContent="Copied";announce("Command copied");setTimeout(function(){btn.textContent="Copy";},1500);}
+      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done();});}else{fallback(t);done();}
+    });
+  })(cps[q]);}
+})();
+</script>
+<script src="assistant.js" defer></script>
+</body>
+</html>

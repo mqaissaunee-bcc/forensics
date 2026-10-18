@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 09: Recycle Bin Forensics &mdash; Digital Forensics Lab Companion</title>
+<meta name="description" content="Student companion for NDG Forensics v2 Lab 09 (Recycle Bin Forensics): walkthrough, reference, troubleshooting, manual corrections, self-check and evidence checklist.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;
+  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#6A6A7A;
+  --ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);
+  --hi:#C44536;--hi2:#E76F51;--ok:#2D6A4F;--ok2:#52B788;--warn:#B7791F;--warnBg:rgba(233,196,106,.18);
+  --fixBg:rgba(196,69,54,.08);--okBg:rgba(45,106,79,.09);--tipBg:rgba(13,92,99,.07);
+  --codeBg:#1A2028;--codeTx:#E8E6E3;
+  --bdr:#D5CEC7;--shd:0 2px 16px rgba(26,26,46,.06);--shd2:0 8px 32px rgba(26,26,46,.12);
+  --r:12px;--rs:8px;--t:.3s cubic-bezier(.4,0,.2,1);
+  --fH:'Merriweather',Georgia,serif;--fB:'Source Sans 3','Segoe UI',system-ui,sans-serif;--fM:'JetBrains Mono','Consolas','Courier New',monospace;
+  --fs:1;
+}
+[data-theme="dark"]{
+  --bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;
+  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#8F8C86;
+  --ac:#44C7D0;--ac2:#14919B;--acG:rgba(20,145,155,.18);
+  --hi:#F4A261;--hi2:#E76F51;--ok:#95D5B2;--ok2:#52B788;--warn:#E9C46A;--warnBg:rgba(233,196,106,.12);
+  --fixBg:rgba(231,111,81,.12);--okBg:rgba(82,183,136,.12);--tipBg:rgba(20,145,155,.12);
+  --codeBg:#0B0F13;--codeTx:#E8E6E3;
+  --bdr:#2E3A47;--shd:0 2px 16px rgba(0,0,0,.3);--shd2:0 8px 32px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--fs))}
+body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t);min-height:100vh}
+a{color:var(--ac)}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none}
+.skip-link:focus{top:0}
+*:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 40%,#0D5C63 100%);padding:48px 24px 56px;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,var(--bg0),transparent);pointer-events:none}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 20px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:rgba(255,255,255,.9);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;position:relative}
+.hero h1{font-family:var(--fH);font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;color:#fff;line-height:1.25;max-width:820px;margin:0 auto 12px;position:relative}
+.hero p.sub{font-size:1.05rem;color:rgba(255,255,255,.88);max-width:680px;margin:0 auto;position:relative}
+.hero p.sub a{color:#fff}
+.meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50px;padding:4px 14px;font-size:.82rem}
+
+/* toolbar */
+.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.toolbar a.back{font-family:var(--fH);font-weight:700;font-size:.92rem;color:var(--tx0);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.toolbar a.back:hover{color:var(--ac)}
+.prog{flex:1;min-width:160px;max-width:340px;display:flex;align-items:center;gap:10px;font-family:var(--fM);font-size:.72rem;color:var(--tx2);letter-spacing:1px;text-transform:uppercase}
+.bar{flex:1;height:8px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--bdr)}
+.bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .4s}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tbtn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:6px 14px;cursor:pointer;font:600 .85rem var(--fB);color:var(--tx0);min-height:44px;min-width:44px;transition:all var(--t)}
+.tbtn:hover,.tbtn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+[data-theme="dark"] .tbtn:hover{color:#0F1419}
+
+/* layout */
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px}
+.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shd);margin:-36px 0 26px;position:relative;z-index:2}
+.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px}
+.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 18px;padding-left:1.3em}
+.toc a{color:var(--tx0);text-decoration:none;font-size:.95rem}
+.toc a:hover{color:var(--ac);text-decoration:underline}
+section.blk{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:26px 28px;margin-bottom:22px;box-shadow:var(--shd)}
+section.blk>h2{font-family:var(--fH);font-size:1.4rem;font-weight:900;color:var(--tx0);margin-bottom:14px;display:flex;align-items:center;gap:12px;line-height:1.3}
+section.blk>h2 .n{flex:none;font-family:var(--fM);font-size:.8rem;background:var(--acG);color:var(--ac);border-radius:50px;padding:3px 11px}
+h3{font-family:var(--fH);font-size:1.08rem;color:var(--tx0);margin:22px 0 8px}
+section.blk p,section.blk li{color:var(--tx1)}
+section.blk p+p{margin-top:10px}
+section.blk ul,section.blk ol{padding-left:1.4em;margin:8px 0}
+section.blk li{margin:4px 0}
+strong,b{color:var(--tx0)}
+code{font-family:var(--fM);font-size:.86em;background:var(--bg2);border:1px solid var(--bdr);border-radius:5px;padding:1px 6px;color:var(--tx0);word-break:break-word}
+kbd{font-family:var(--fM);font-size:.82em;background:var(--bg1);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:0 6px}
+.path{font-family:var(--fM);font-size:.84em;color:var(--ac);word-break:break-word}
+
+/* task + steps */
+.task{border-top:1px dashed var(--bdr);padding-top:6px;margin-top:18px}
+.task:first-of-type{border-top:0;margin-top:4px}
+.task>h3{display:flex;gap:10px;align-items:baseline}
+.task>h3 .tn{font-family:var(--fM);font-size:.75rem;color:var(--ac);text-transform:uppercase;letter-spacing:1.5px;flex:none}
+ol.steps{counter-reset:s;list-style:none;padding-left:0 !important}
+ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 46px;border-bottom:1px solid var(--bg2)}
+ol.steps>li:last-child{border-bottom:0}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--acG);color:var(--ac);font:700 .85rem var(--fM);display:flex;align-items:center;justify-content:center}
+
+/* commands */
+.cmd{margin:10px 0;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bdr)}
+.cmd-bar{display:flex;justify-content:space-between;align-items:center;background:var(--bg2);padding:4px 6px 4px 12px;font-family:var(--fM);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
+.copy{background:var(--bg1);border:1px solid var(--bdr);border-radius:6px;font:600 .75rem var(--fB);color:var(--tx0);padding:4px 12px;cursor:pointer;min-height:32px;min-width:64px}
+.copy:hover,.copy:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+.cmd pre{background:var(--codeBg);color:var(--codeTx);padding:12px 14px;overflow-x:auto;font-family:var(--fM);font-size:.86rem;line-height:1.55;white-space:pre}
+.cmd pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+
+/* callouts */
+.call{border-left:4px solid var(--ac);background:var(--tipBg);border-radius:0 var(--rs) var(--rs) 0;padding:10px 14px;margin:12px 0}
+.call .k{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--ac);margin-bottom:2px}
+.call p{margin:0 !important}
+.call.warn{border-color:var(--warn);background:var(--warnBg)}.call.warn .k{color:var(--warn)}
+.call.fix{border-color:var(--hi);background:var(--fixBg)}.call.fix .k{color:var(--hi)}
+.call.court{border-color:var(--ok);background:var(--okBg)}.call.court .k{color:var(--ok)}
+.shot{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--ac2);border-radius:var(--rs);padding:8px 12px;margin:10px 0;font-size:.92rem;color:var(--tx1);background:var(--bg0)}
+.shot-ico{font-size:1.1rem;line-height:1.4}
+
+/* tables */
+.tblwrap{overflow-x:auto;margin:12px 0;border:1px solid var(--bdr);border-radius:var(--rs)}
+table.tbl{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
+table.tbl th{background:var(--bg2);text-align:left;font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx1);padding:9px 12px;border-bottom:1px solid var(--bdr)}
+table.tbl td{padding:9px 12px;border-bottom:1px solid var(--bg2);vertical-align:top;color:var(--tx1)}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl td:first-child{color:var(--tx0);font-weight:600}
+
+/* env grid */
+.env{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:12px 0}
+.env div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 14px}
+.env b{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2);font-weight:600}
+.env span{color:var(--tx0);font-size:.95rem}
+
+/* done rows */
+.done-row{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--bg2);font-size:.92rem;color:var(--tx2)}
+.done-row input,.evidence input{width:22px;height:22px;accent-color:var(--ac);cursor:pointer;flex:none}
+.done-row label{cursor:pointer}
+
+/* Q&A */
+.q{border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px;margin:10px 0;background:var(--bg0)}
+.q .ask{color:var(--tx0) !important;font-weight:600}
+.reveal{margin-top:8px;background:var(--bg1);border:1px solid var(--ac);color:var(--ac);border-radius:50px;padding:4px 14px;font:600 .82rem var(--fB);cursor:pointer;min-height:36px}
+.reveal:hover,.reveal:focus-visible{background:var(--ac);color:#fff}
+.ans{display:none;margin-top:8px;padding:8px 12px;border-left:3px solid var(--ok);background:var(--okBg);border-radius:0 6px 6px 0;color:var(--tx1)}
+.ans.open{display:block}
+
+/* evidence */
+.evidence ul{list-style:none;padding-left:0 !important}
+.evidence li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rs);margin:8px 0;background:var(--bg0)}
+.evidence .shotname{font-weight:700;color:var(--tx0)}
+.evline{margin-top:14px;font-size:.9rem;color:var(--tx2)}
+.evline span{display:inline-block;min-width:220px;border-bottom:1px solid var(--tx2);margin-left:6px}
+
+/* cheat */
+.cheat .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.cheat .grid>div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px}
+.cheat h3{margin-top:0;font-size:.98rem;color:var(--ac)}
+.cheat li{font-size:.92rem}
+
+/* lab nav + footer */
+.labnav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
+.labnav a{flex:1;min-width:220px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;text-decoration:none;color:var(--tx0);box-shadow:var(--shd);transition:all var(--t)}
+.labnav a:hover{border-color:var(--ac);transform:translateY(-2px)}
+.labnav small{display:block;font-family:var(--fM);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2)}
+.labnav a.nx{text-align:right}
+.site-footer{text-align:center;padding:28px 24px;border-top:1px solid var(--bdr);font-size:.85rem;color:var(--tx2);margin-top:30px}
+.site-footer a{color:var(--ac);text-decoration:none}
+
+@media(max-width:640px){
+  .hero{padding:36px 16px 48px}
+  section.blk{padding:20px 16px}
+  ol.steps>li{padding-left:40px}
+  .toolbar{padding:6px 12px}
+  .prog{order:3;max-width:none;min-width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
+@media print{
+  :root{--bg0:#fff;--bg1:#fff;--bg2:#f2f2f2;--tx0:#000;--tx1:#222;--tx2:#444;--codeBg:#f4f4f4;--codeTx:#000}
+  .toolbar,.toc,.labnav,.copy,.reveal,.skip-link,#df-assistant-root{display:none !important}
+  .hero{background:none;padding:10px 0;color:#000}.hero h1,.hero p.sub,.hero p.sub a{color:#000}.hero-badge,.chip{color:#000;border-color:#999;background:none}
+  .hero::after{display:none}
+  section.blk{box-shadow:none;break-inside:auto;border-color:#bbb}
+  .ans{display:block}
+  .cmd pre{white-space:pre-wrap}
+  a{color:#000}
+}
+</style>
+</head>
+<body data-prefix="df-lab09-">
+<a href="#main" class="skip-link">Skip to main content</a>
+<header class="hero">
+  <div class="hero-badge">Lab 09 &middot; Hands-on Companion</div>
+  <h1>Recycle Bin Forensics</h1>
+  <p class="sub">Supports <a href="module5_lesson.html" target="_blank" rel="noopener">Module 5 &mdash; Working with Windows and CLI Systems<span class="sr-only"> (opens in new tab)</span></a></p>
+  <div class="meta"><span class="chip">&#128187; CSI-Linux</span><span class="chip">&#128295; Autopsy 4, Rifiuti / Rifiuti-Vista</span><span class="chip">&#9201; 45–60 min</span></div>
+</header>
+<div class="toolbar" role="navigation" aria-label="Lab tools">
+  <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&lsaquo; All labs<span class="sr-only"> (opens in new tab)</span></a>
+  <div class="prog"><div class="bar" id="progressbar" role="progressbar" aria-label="Sections reviewed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar-fill"></span></div><span id="bar-txt">0/7 reviewed</span></div>
+  <div class="tools">
+    <button class="tbtn" id="fs-down" type="button" aria-label="Smaller text">A&minus;</button>
+    <button class="tbtn" id="fs-up" type="button" aria-label="Larger text">A+</button>
+    <button class="tbtn" id="print-btn" type="button" aria-label="Print this page">&#128424;&#65039; Print</button>
+    <button class="tbtn" id="theme-toggle" type="button" aria-pressed="false">&#127769; Dark</button>
+    <button class="tbtn" id="reset-btn" type="button">Clear progress</button>
+  </div>
+</div>
+<main id="main" class="wrap">
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#environment">Before you start</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#corrections">Manual corrections</a></li><li><a href="#defensible">Making it defensible</a></li><li><a href="#module">Course connection</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav>
+<section class="blk" id="overview" aria-labelledby="h-overview"><h2 id="h-overview"><span class="n">01</span>Overview &mdash; what this lab is really teaching</h2><p>Deleting a file to the Recycle Bin doesn't destroy it &mdash; it moves and renames it, and Windows keeps an index recording <strong>what it was, where it came from, how big it was, and exactly when it was deleted</strong>. Better still, the Recycle Bin is organized <strong>per user by SID</strong>, so a deleted file can be tied to a specific account. This lab reads both the old and new Recycle Bin formats.</p><p>You'll use <strong>Autopsy</strong> to find the Recycle Bin on two images &mdash; the legacy <code>RECYCLER</code> (Windows XP and earlier) and the modern <code>$Recycle.bin</code> (Vista+) &mdash; then export the index files and parse them with <strong>Rifiuti</strong> and <strong>Rifiuti-Vista</strong> on the command line to recover the deletion metadata.</p><p>The two formats encode the same facts differently. <strong>RECYCLER / INFO2:</strong> deleted files are renamed <code>D&lt;drive&gt;&lt;seq&gt;.ext</code> (so <code>Dc1.exe</code> = first file deleted from C:), and a single <code>INFO2</code> index holds all the original paths, drives, sizes, and deletion times. <strong>$Recycle.bin:</strong> each deletion makes a <code>$R&hellip;</code> file (the data) and a matching <code>$I&hellip;</code> file (the metadata index). Reading the <strong>SID folder name</strong> is what attributes the deletion to a user &mdash; and because SIDs are never reused, gaps in the RID range reveal deleted accounts too.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section>
+<section class="blk" id="environment" aria-labelledby="h-environment"><h2 id="h-environment"><span class="n">02</span>Before you start</h2><div class="env"><div><b>Machine</b><span>CSI-Linux</span></div><div><b>Login</b><span>csi</span></div><div><b>Tools</b><span>Autopsy 4.13, rifiuti / rifiuti-vista (Terminal)</span></div><div><b>Datasets</b><span><code>Lab9-1.E01</code> (XP), <code>Lab9-2.E01</code> (Win10)</span></div><div><b>Export</b><span>Autopsy case Export folder</span></div></div><div class="call tip"><span class="k">Tip</span><p>The SID folder is the attribution key. Its tail is the <strong>RID</strong>: 500=Administrator, 501=Guest, 1000+=created accounts. A missing RID in the sequence means a user account was created and later deleted &mdash; SIDs are never recycled.</p></div></section>
+<section class="blk" id="walkthrough" aria-labelledby="h-walkthrough"><h2 id="h-walkthrough"><span class="n">03</span>Walkthrough</h2><div class="task"><h3><span class="tn">Task 1</span>Parse the legacy RECYCLER (INFO2)</h3><p>Windows XP and earlier: one INFO2 index for the whole bin, files renamed by drive+sequence.</p><ol class="steps"><li>Autopsy &rarr; new case &rarr; add <code>Lab9-1.E01</code> &rarr; navigate <code>vol2 &gt; RECYCLER</code>.</li><li>Inside is one SID folder &mdash; its RID 1003 tells you this is the 4th created account (Mr. Evil). Open it to see renamed files like <code>Dc1.exe</code> (D=deleted, c=from C:, 1=first deleted), plus <code>INFO2</code> and <code>desktop.ini</code> system files.</li><li>Extract <code>INFO2</code> to the case Export folder. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The RECYCLER SID folder contents including INFO2 and the Dc-named files.</span></div></li><li>In Terminal, parse it:</li><li><div class="cmd"><div class="cmd-bar"><span>Terminal</span><button class="copy" type="button" data-copy="rifiuti ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-1/INFO2 &gt; ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-1/INFO2.txt">Copy</button></div><pre><code>rifiuti ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-1/INFO2 &gt; ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-1/INFO2.txt</code></pre></div></li><li>Open <code>INFO2.txt</code>: index number, <strong>deletion time</strong>, drive number, <strong>original path</strong>, and size per file. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The parsed INFO2.txt showing deletion times and original paths.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 2</span>Parse the modern $Recycle.bin ($I files)</h3><p>Vista+: each deletion makes a $R (data) and $I (metadata) pair.</p><ol class="steps"><li>Add Data Source &rarr; <code>Lab9-2.E01</code> &rarr; navigate to <code>$Recycle.bin</code>.</li><li>There are three SID folders &mdash; two share a Local Computer Identifier (same machine, different users), one is from a different computer. Open the target SID.</li><li>Each deleted item is a <code>$R&hellip;</code>/<code>$I&hellip;</code> pair; the <code>$I</code> file holds the metadata. Ctrl-select all <code>$I</code> files &rarr; Extract to the Export folder.</li><li>Autopsy prefixes exported names with an offset, so rename before parsing:</li><li><div class="cmd"><div class="cmd-bar"><span>Terminal</span><button class="copy" type="button" data-copy="cd ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-2/">Copy</button></div><pre><code>cd ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-2/</code></pre></div></li><li><div class="cmd"><div class="cmd-bar"><span>Terminal</span><button class="copy" type="button" data-copy="mv 20156-\$IEYEZMZ.exe \$IEYEZMZ.exe">Copy</button></div><pre><code>mv 20156-\$IEYEZMZ.exe \$IEYEZMZ.exe</code></pre></div></li><li><div class="call fix"><span class="k">Manual correction</span><p><code>ls</code> first &mdash; the numeric prefix differs every run. Type the real filename shown, and use <kbd>Tab</kbd> completion (the <code>\</code> escapes the <code>$</code>).</p></div></li><li>Then parse the whole folder with the Vista variant:</li><li><div class="cmd"><div class="cmd-bar"><span>Terminal</span><button class="copy" type="button" data-copy="rifiuti-vista ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-2/ &gt; ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-2/Index.txt">Copy</button></div><pre><code>rifiuti-vista ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-2/ &gt; ~/Desktop/Cases/FOR_LAB_009/Export/Lab9-2/Index.txt</code></pre></div></li><li>Open <code>Index.txt</code>: same facts as INFO2 but no drive-number column, plus a guess at source OS and the time zone used. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The parsed Index.txt from the $I files.</span></div></li></ol></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section>
+<section class="blk" id="reference" aria-labelledby="h-reference"><h2 id="h-reference"><span class="n">04</span>Reference &mdash; two Recycle Bin formats</h2><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col"></th><th scope="col">RECYCLER (XP and earlier)</th><th scope="col">$Recycle.bin (Vista+)</th></tr></thead><tbody><tr><td>Folder</td><td><code>RECYCLER\&lt;SID&gt;\</code></td><td><code>$Recycle.bin\&lt;SID&gt;\</code></td></tr><tr><td>Renamed as</td><td><code>D&lt;drive&gt;&lt;seq&gt;.ext</code> (Dc1.exe)</td><td><code>$R&hellip;</code> (data) + <code>$I&hellip;</code> (index)</td></tr><tr><td>Index</td><td>One <code>INFO2</code> for the whole bin</td><td>One <code>$I</code> per deleted file</td></tr><tr><td>Parse with</td><td><code>rifiuti</code></td><td><code>rifiuti-vista</code></td></tr><tr><td>Records</td><td>orig path, drive #, size, delete time</td><td>orig path, size, delete time (no drive #)</td></tr></tbody></table></div><h3>SID / RID attribution</h3><ul><li><strong>SID</strong> = <code>S-1-5-21-&lt;computer id&gt;-&lt;RID&gt;</code>. The computer-id portion ties the bin to a specific machine; shared computer-ids on two SIDs mean the same machine.</li><li><strong>RID</strong>: 500=Administrator, 501=Guest, 1000+=created accounts. A gap (e.g. 1000, 1002) means a created account was deleted &mdash; RIDs are never reused.</li><li>Reading the SID folder name is what attributes a deleted file to a <em>user</em>, not just a machine.</li></ul><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section>
+<section class="blk" id="stuck" aria-labelledby="h-stuck"><h2 id="h-stuck"><span class="n">05</span>Where people get stuck</h2><p>Most problems in this lab fall into one of these.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Symptom</th><th scope="col">Likely cause</th><th scope="col">Fix</th></tr></thead><tbody><tr><td>rifiuti-vista finds no data</td><td>$I files still have Autopsy's numeric prefix</td><td>ls the folder, then mv each file to its real $I name (Tab-complete) before parsing.</td></tr><tr><td>'No such file' errors in Terminal</td><td>Linux is case-sensitive; $ needs escaping</td><td>Match case exactly and escape $ as \$ (or Tab-complete the name).</td></tr><tr><td>Only see $R files, no $I</td><td>$I files hidden or not selected</td><td>Both are in the SID folder; select the $I (index) files for metadata &mdash; $R is just the data.</td></tr><tr><td>SID folders but empty bins</td><td>Nothing was deleted under those users</td><td>Normal &mdash; in real work review every SID folder, but ignore empty ones here.</td></tr><tr><td>Can't tell which SIDs are the same machine</td><td>Not reading the computer-id portion</td><td>Compare the long middle number (Local Computer Identifier); matching = same machine, differing RIDs = different users.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section>
+<section class="blk" id="corrections" aria-labelledby="h-corrections"><h2 id="h-corrections"><span class="n">06</span>Manual corrections &amp; currency notes</h2><p>The NDG manual was written in 2020&ndash;21. These are the places where it is wrong, inconsistent, or out of date &mdash; worth knowing before you trust a screenshot.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Where</th><th scope="col">The manual says</th><th scope="col">What's actually true</th></tr></thead><tbody><tr><td>Rifiuti</td><td>Uses rifiuti / rifiuti-vista</td><td>Rifiuti2 (the maintained successor) is current and handles both INFO2 and $I formats in one tool. Eric Zimmerman's RBCmd is the modern Windows equivalent. The parsed data is the same.</td></tr><tr><td>'$Recycle.bin = Vista+' </td><td>Correct split at Vista</td><td>Accurate. Note that Windows 10/11 $I files use a slightly updated format (version 2, with a variable-length original filename) &mdash; modern parsers handle it; very old rifiuti builds may not.</td></tr><tr><td>Export prefix</td><td>Autopsy prepends an offset number to exported files</td><td>Still true in current Autopsy for bulk exports &mdash; the rename step remains necessary. The prefix value changes every export.</td></tr><tr><td>desktop.ini / INFO2 as 'system files'</td><td>Dismisses them</td><td>INFO2 is the whole point (the index); desktop.ini is genuinely just a folder-view config. Don't confuse the two.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-corrections" data-done="corrections"><label for="done-corrections">Mark this section reviewed</label></div></section>
+<section class="blk" id="defensible" aria-labelledby="h-defensible"><h2 id="h-defensible"><span class="n">07</span>Making it defensible</h2><p>The Recycle Bin is strong evidence of intentional deletion tied to a user &mdash; handle the attribution carefully:</p><ul><li><strong>The SID attributes to an account, not a person.</strong> A deletion under Mr. Evil's SID means that account did it &mdash; tie the account to a human with other evidence.</li><li><strong>Deletion time is a real timestamp.</strong> Convert to local zone and corroborate with the timeline (Lab 14) and registry (Lab 4).</li><li><strong>Emptying the bin doesn't erase everything.</strong> The data may survive in unallocated space (carve it, Lab 7); the index may be gone but artifacts remain.</li><li><strong>Hash recovered files</strong> (Lab 20) and document that they came from the Recycle Bin, with their original path from the index.</li></ul><div class="call court"><span class="k">On the stand</span><p>The Recycle Bin shows a file was <em>deliberately</em> sent there by a specific account &mdash; powerful for intent. But 'the account deleted it' is not yet 'the defendant deleted it'; close that gap with corroborating artifacts.</p></div><div class="done-row"><input type="checkbox" id="done-defensible" data-done="defensible"><label for="done-defensible">Mark this section reviewed</label></div></section>
+<section class="blk" id="module" aria-labelledby="h-module"><h2 id="h-module"><span class="n">08</span>Course connection</h2><p>This lab is the hands-on side of <a href="module5_lesson.html" target="_blank" rel="noopener"><strong>Module 5: Working with Windows and CLI Systems</strong></a> &middot; also touches <a href="module9_lesson.html" target="_blank" rel="noopener">Module 9</a>.</p><p>Recycle Bin forensics sits in the Windows/CLI module and ties together much of the course: the SIDs/RIDs come straight from Lab 4's SAM analysis, the original files can be carved with Lab 7's techniques, and every deletion time feeds the Lab 14 timeline.</p></section>
+<section class="blk" id="check" aria-labelledby="h-check"><h2 id="h-check"><span class="n">09</span>Check yourself</h2><div class="q"><p class="ask">1. What does the filename Dc1.exe tell you in a legacy RECYCLER folder?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">D = the file was deleted, c = it was deleted from the C: drive, 1 = it was the first file deleted (sequence). The INFO2 index holds its original path, size, and deletion time.</div></div><div class="q"><p class="ask">2. How does the modern $Recycle.bin store deletion metadata, and which file do you parse?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Each deletion creates a $R file (the data) and a matching $I file (the metadata index). You parse the $I files &mdash; with rifiuti-vista &mdash; to recover the original path, size, and deletion time.</div></div><div class="q"><p class="ask">3. You see RIDs 1000 and 1002 under one computer's SIDs but no 1001. What can you infer?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">A created user account (RID 1001) existed and was deleted &mdash; SIDs/RIDs are never reused, so the gap marks a removed account.</div></div><div class="q"><p class="ask">4. A file was deleted under a specific user's SID. Can you conclude that person deleted it? Why or why not?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Not by itself. The SID attributes the deletion to an <em>account</em>, not a human. You need other evidence (login records, context) to tie the account to a specific person.</div></div><div class="done-row"><input type="checkbox" id="done-check" data-done="check"><label for="done-check">Mark this section reviewed</label></div></section>
+<section class="blk" id="evidence" aria-labelledby="h-evidence"><h2 id="h-evidence"><span class="n">10</span>Evidence to capture</h2><p>Your instructor wants screenshots of these key steps as proof you ran the lab. Capture them as you go (the &#128248; markers in the walkthrough show where), tick each one off, then print this page or submit the list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" id="ev-1" data-evidence="1"><label for="ev-1"><span class="shotname">Legacy bin contents.</span> The RECYCLER SID folder showing INFO2 and Dc-named deleted files.</label></li><li><input type="checkbox" id="ev-2" data-evidence="2"><label for="ev-2"><span class="shotname">INFO2 parsed.</span> The INFO2.txt output showing deletion times and original paths.</label></li><li><input type="checkbox" id="ev-3" data-evidence="3"><label for="ev-3"><span class="shotname">Modern bin pairs.</span> A $Recycle.bin SID folder showing $R/$I file pairs.</label></li><li><input type="checkbox" id="ev-4" data-evidence="4"><label for="ev-4"><span class="shotname">$I parsed.</span> The Index.txt output from rifiuti-vista.</label></li><li><input type="checkbox" id="ev-5" data-evidence="5"><label for="ev-5"><span class="shotname">SID attribution.</span> A SID folder name with the RID visible, tying deletions to an account.</label></li></ul></div><p class="evline">Student name:<span></span> &nbsp; Date:<span style="min-width:120px"></span></p></section>
+<section class="blk" id="cheat" aria-labelledby="h-cheat"><h2 id="h-cheat"><span class="n">11</span>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Two formats</h3><ul><li>RECYCLER (XP): Dc1.exe + one INFO2 → rifiuti</li><li>$Recycle.bin (Vista+): $R + $I pairs → rifiuti-vista</li><li>Both: orig path, size, delete time</li><li>Organized per user by SID</li></ul></div><div><h3>SID / RID</h3><ul><li>S-1-5-21-<computer>-<RID></li><li>500=Admin 501=Guest 1000+=created</li><li>Missing RID = deleted account</li><li>SID attributes to account, not person</li></ul></div></div></div></section>
+<nav class="labnav" aria-label="Lab navigation"><a href="forensics_lab08_companion.html" target="_blank" rel="noopener"><small>&lsaquo; Previous lab</small>Lab 08: Metadata and Link File Analysis<span class="sr-only"> (opens in new tab)</span></a><a class="nx" href="forensics_lab10_companion.html" target="_blank" rel="noopener"><small>Next lab &rsaquo;</small>Lab 10: Steganography and Alternate Data Streams<span class="sr-only"> (opens in new tab)</span></a></nav>
+</main>
+<footer class="site-footer">
+  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="index.html" target="_blank" rel="noopener">Course hub<span class="sr-only"> (opens in new tab)</span></a></p>
+  <p style="margin-top:4px">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College &middot; 2026</p>
+</footer>
+<div id="live" class="sr-only" aria-live="polite"></div>
+<script>
+(function(){
+  "use strict";
+  var body=document.body, root=document.documentElement;
+  var P=body.getAttribute("data-prefix")||"df-lab-";
+  function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function del(k){try{localStorage.removeItem(k);}catch(e){}}
+
+  /* theme: shares the course hub's key so the choice follows students across the site */
+  var tb=document.getElementById("theme-toggle");
+  function applyTheme(m){
+    if(m==="dark"){root.setAttribute("data-theme","dark");}else{root.removeAttribute("data-theme");}
+    if(tb){tb.innerHTML=m==="dark"?"&#9728;&#65039; Light":"&#127769; Dark";tb.setAttribute("aria-pressed",m==="dark"?"true":"false");}
+  }
+  applyTheme(load("df-theme")==="dark"?"dark":"light");
+  if(tb){tb.addEventListener("click",function(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";save("df-theme",n);applyTheme(n);});}
+
+  /* text size */
+  var fs=parseFloat(load("df-lab-fs")||"1");
+  function applyFs(){fs=Math.min(1.4,Math.max(0.85,fs));root.style.setProperty("--fs",fs);save("df-lab-fs",String(fs));}
+  applyFs();
+  var up=document.getElementById("fs-up"),dn=document.getElementById("fs-down");
+  if(up){up.addEventListener("click",function(){fs+=0.1;applyFs();});}
+  if(dn){dn.addEventListener("click",function(){fs-=0.1;applyFs();});}
+
+  var pr=document.getElementById("print-btn");
+  if(pr){pr.addEventListener("click",function(){window.print();});}
+
+  /* progress */
+  var dones=document.querySelectorAll("[data-done]");
+  var barFill=document.getElementById("bar-fill"),barTxt=document.getElementById("bar-txt");
+  function refresh(){
+    var n=0;for(var i=0;i<dones.length;i++){if(dones[i].checked){n++;}}
+    var pct=dones.length?Math.round(100*n/dones.length):0;
+    if(barFill){barFill.style.width=pct+"%";}
+    if(barTxt){barTxt.textContent=n+"/"+dones.length+" reviewed";}
+    var pb=document.getElementById("progressbar");
+    if(pb){pb.setAttribute("aria-valuenow",String(pct));}
+    save(P+"total",String(dones.length));save(P+"count",String(n));
+  }
+  for(var i=0;i<dones.length;i++){(function(cb){
+    var k=P+"done-"+cb.getAttribute("data-done");
+    cb.checked=load(k)==="1";
+    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}refresh();});
+  })(dones[i]);}
+  refresh();
+
+  /* evidence checklist */
+  var evs=document.querySelectorAll("[data-evidence]");
+  for(var j=0;j<evs.length;j++){(function(cb){
+    var k=P+"ev-"+cb.getAttribute("data-evidence");
+    cb.checked=load(k)==="1";
+    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}});
+  })(evs[j]);}
+
+  /* reset */
+  var rs=document.getElementById("reset-btn");
+  if(rs){rs.addEventListener("click",function(){
+    if(!window.confirm("Clear your progress and evidence ticks for this lab?")){return;}
+    var ks=[];try{for(var a=0;a<localStorage.length;a++){var kk=localStorage.key(a);if(kk&&kk.indexOf(P)===0){ks.push(kk);}}}catch(e){}
+    for(var b=0;b<ks.length;b++){del(ks[b]);}
+    for(var c=0;c<dones.length;c++){dones[c].checked=false;}
+    for(var d=0;d<evs.length;d++){evs[d].checked=false;}
+    refresh();
+  });}
+
+  /* reveal answers */
+  var rv=document.querySelectorAll(".reveal");
+  for(var r=0;r<rv.length;r++){(function(btn){
+    btn.addEventListener("click",function(){
+      var a=btn.nextElementSibling;var open=a.classList.toggle("open");
+      btn.setAttribute("aria-expanded",open?"true":"false");btn.textContent=open?"Hide answer":"Show answer";
+    });
+  })(rv[r]);}
+
+  /* copy buttons: copy the clean text stored in data-copy */
+  var live=document.getElementById("live");
+  function announce(t){if(live){live.textContent="";setTimeout(function(){live.textContent=t;},30);}}
+  function fallback(t){var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
+  var cps=document.querySelectorAll(".copy");
+  for(var q=0;q<cps.length;q++){(function(btn){
+    btn.addEventListener("click",function(){
+      var t=btn.getAttribute("data-copy");
+      function done(){btn.textContent="Copied";announce("Command copied");setTimeout(function(){btn.textContent="Copy";},1500);}
+      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done();});}else{fallback(t);done();}
+    });
+  })(cps[q]);}
+})();
+</script>
+<script src="assistant.js" defer></script>
+</body>
+</html>
