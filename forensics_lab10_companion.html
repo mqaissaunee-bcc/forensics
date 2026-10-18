@@ -3,308 +3,321 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab 10: Steganography and Alternate Data Streams &mdash; Digital Forensics Lab Companion</title>
-<meta name="description" content="Student companion for NDG Forensics v2 Lab 10 (Steganography and Alternate Data Streams): walkthrough, reference, troubleshooting, manual corrections, self-check and evidence checklist.">
+<title>Lab 10 Companion — Steganography &amp; ADS &middot; Forensics</title>
+<meta name="description" content="Companion for Forensics Lab 10: appended and embedded steganography, NTFS Alternate Data Streams, detection with hex view and dir /r, anti-forensic awareness, evidence to submit, and course relevance.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 :root{
   --bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;
-  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#6A6A7A;
+  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#7A7A8A;
   --ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);
-  --hi:#C44536;--hi2:#E76F51;--ok:#2D6A4F;--ok2:#52B788;--warn:#B7791F;--warnBg:rgba(233,196,106,.18);
-  --fixBg:rgba(196,69,54,.08);--okBg:rgba(45,106,79,.09);--tipBg:rgba(13,92,99,.07);
-  --codeBg:#1A2028;--codeTx:#E8E6E3;
-  --bdr:#D5CEC7;--shd:0 2px 16px rgba(26,26,46,.06);--shd2:0 8px 32px rgba(26,26,46,.12);
-  --r:12px;--rs:8px;--t:.3s cubic-bezier(.4,0,.2,1);
-  --fH:'Merriweather',Georgia,serif;--fB:'Source Sans 3','Segoe UI',system-ui,sans-serif;--fM:'JetBrains Mono','Consolas','Courier New',monospace;
+  --hi:#C44536;--hi2:#E76F51;
+  --ok:#2D6A4F;--ok2:#52B788;
+  --warn:#E9C46A;--warnG:rgba(233,196,106,.16);
+  --bdr:#D5CEC7;
+  --shd:0 2px 16px rgba(26,26,46,.06);
+  --shd2:0 8px 32px rgba(26,26,46,.12);
+  --r:12px;--rs:8px;
+  --t:.3s cubic-bezier(.4,0,.2,1);
+  --fH:'Merriweather',Georgia,serif;
+  --fB:'Source Sans 3','Segoe UI',sans-serif;
+  --fM:'JetBrains Mono','Courier New',monospace;
   --fs:1;
 }
 [data-theme="dark"]{
   --bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;
-  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#8F8C86;
-  --ac:#44C7D0;--ac2:#14919B;--acG:rgba(20,145,155,.18);
-  --hi:#F4A261;--hi2:#E76F51;--ok:#95D5B2;--ok2:#52B788;--warn:#E9C46A;--warnBg:rgba(233,196,106,.12);
-  --fixBg:rgba(231,111,81,.12);--okBg:rgba(82,183,136,.12);--tipBg:rgba(20,145,155,.12);
-  --codeBg:#0B0F13;--codeTx:#E8E6E3;
-  --bdr:#2E3A47;--shd:0 2px 16px rgba(0,0,0,.3);--shd2:0 8px 32px rgba(0,0,0,.5);
+  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#7A7872;
+  --ac:#14919B;--ac2:#44C7D0;--acG:rgba(20,145,155,.15);
+  --hi:#E76F51;--hi2:#F4A261;
+  --ok:#52B788;--ok2:#95D5B2;
+  --warn:#F4A261;--warnG:rgba(244,162,97,.14);
+  --bdr:#2E3A47;
+  --shd:0 2px 16px rgba(0,0,0,.3);
+  --shd2:0 8px 32px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;font-size:calc(16px * var(--fs))}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--fs));scroll-padding-top:70px}
 body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t);min-height:100vh}
-a{color:var(--ac)}
-.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none;transition:top .2s}
 .skip-link:focus{top:0}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--ac);border-radius:4px}
 *:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
-
-/* hero */
-.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 40%,#0D5C63 100%);padding:48px 24px 56px;text-align:center;position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,var(--bg0),transparent);pointer-events:none}
-.hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 20px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:rgba(255,255,255,.9);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;position:relative}
-.hero h1{font-family:var(--fH);font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;color:#fff;line-height:1.25;max-width:820px;margin:0 auto 12px;position:relative}
-.hero p.sub{font-size:1.05rem;color:rgba(255,255,255,.88);max-width:680px;margin:0 auto;position:relative}
-.hero p.sub a{color:#fff}
-.meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;position:relative;z-index:1}
-.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50px;padding:4px 14px;font-size:.82rem}
+a{color:var(--ac)}
 
 /* toolbar */
-.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.toolbar a.back{font-family:var(--fH);font-weight:700;font-size:.92rem;color:var(--tx0);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
-.toolbar a.back:hover{color:var(--ac)}
-.prog{flex:1;min-width:160px;max-width:340px;display:flex;align-items:center;gap:10px;font-family:var(--fM);font-size:.72rem;color:var(--tx2);letter-spacing:1px;text-transform:uppercase}
-.bar{flex:1;height:8px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--bdr)}
-.bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .4s}
-.tools{display:flex;gap:6px;flex-wrap:wrap}
-.tbtn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:6px 14px;cursor:pointer;font:600 .85rem var(--fB);color:var(--tx0);min-height:44px;min-width:44px;transition:all var(--t)}
-.tbtn:hover,.tbtn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
-[data-theme="dark"] .tbtn:hover{color:#0F1419}
+.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background var(--t);flex-wrap:wrap}
+.tb-left{display:flex;align-items:center;gap:12px;min-width:0}
+.tb-left .back{font-family:var(--fM);font-size:.78rem;color:var(--ac);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--bdr);border-radius:50px;transition:all var(--t)}
+.tb-left .back:hover{background:var(--acG);border-color:var(--ac)}
+.tb-crumb{font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tb-btn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:7px 13px;cursor:pointer;font-size:.95rem;color:var(--tx0);transition:all var(--t);display:flex;align-items:center;gap:6px;min-height:36px;font-family:var(--fB)}
+.tb-btn:hover,.tb-btn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tb-sizes{display:flex;gap:3px;align-items:center}
+.tb-sizes .tb-btn{padding:7px 11px;font-family:var(--fM);font-weight:600}
+
+/* progress rail */
+.prog-wrap{position:sticky;top:57px;z-index:99;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 20px}
+.prog-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:8px 0}
+.prog-bar{flex:1;height:6px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;transition:width .4s ease}
+.prog-txt{font-family:var(--fM);font-size:.74rem;color:var(--tx2);min-width:116px;text-align:right}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 45%,#0D5C63 100%);padding:40px 24px 34px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-inner{max-width:900px;margin:0 auto;position:relative}
+.hero .labno{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);padding:5px 16px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:#fff;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-family:var(--fH);font-size:clamp(1.5rem,3.6vw,2.35rem);font-weight:900;color:#fff;line-height:1.22;margin-bottom:12px}
+.hero .lede{font-size:1.05rem;color:rgba(255,255,255,.9);max-width:720px;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:.78rem;padding:5px 12px;border-radius:50px;font-family:var(--fB)}
+.chip b{font-weight:700}
 
 /* layout */
-.wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px}
-.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shd);margin:-36px 0 26px;position:relative;z-index:2}
-.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px}
-.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 18px;padding-left:1.3em}
-.toc a{color:var(--tx0);text-decoration:none;font-size:.95rem}
-.toc a:hover{color:var(--ac);text-decoration:underline}
-section.blk{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:26px 28px;margin-bottom:22px;box-shadow:var(--shd)}
-section.blk>h2{font-family:var(--fH);font-size:1.4rem;font-weight:900;color:var(--tx0);margin-bottom:14px;display:flex;align-items:center;gap:12px;line-height:1.3}
-section.blk>h2 .n{flex:none;font-family:var(--fM);font-size:.8rem;background:var(--acG);color:var(--ac);border-radius:50px;padding:3px 11px}
-h3{font-family:var(--fH);font-size:1.08rem;color:var(--tx0);margin:22px 0 8px}
-section.blk p,section.blk li{color:var(--tx1)}
-section.blk p+p{margin-top:10px}
-section.blk ul,section.blk ol{padding-left:1.4em;margin:8px 0}
-section.blk li{margin:4px 0}
-strong,b{color:var(--tx0)}
-code{font-family:var(--fM);font-size:.86em;background:var(--bg2);border:1px solid var(--bdr);border-radius:5px;padding:1px 6px;color:var(--tx0);word-break:break-word}
-kbd{font-family:var(--fM);font-size:.82em;background:var(--bg1);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:0 6px}
-.path{font-family:var(--fM);font-size:.84em;color:var(--ac);word-break:break-word}
+main{max-width:900px;margin:0 auto;padding:28px 24px 90px}
+.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;margin-bottom:28px;box-shadow:var(--shd)}
+.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:12px;font-weight:600}
+.toc ol{list-style:none;columns:2;column-gap:28px}
+.toc li{margin-bottom:7px;break-inside:avoid}
+.toc a{color:var(--tx1);text-decoration:none;font-size:.9rem;display:inline-block;transition:color var(--t)}
+.toc a:hover{color:var(--ac)}
+.toc a::before{content:'›';color:var(--ac);margin-right:7px;font-weight:700}
 
-/* task + steps */
-.task{border-top:1px dashed var(--bdr);padding-top:6px;margin-top:18px}
-.task:first-of-type{border-top:0;margin-top:4px}
-.task>h3{display:flex;gap:10px;align-items:baseline}
-.task>h3 .tn{font-family:var(--fM);font-size:.75rem;color:var(--ac);text-transform:uppercase;letter-spacing:1.5px;flex:none}
-ol.steps{counter-reset:s;list-style:none;padding-left:0 !important}
-ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 46px;border-bottom:1px solid var(--bg2)}
-ol.steps>li:last-child{border-bottom:0}
-ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--acG);color:var(--ac);font:700 .85rem var(--fM);display:flex;align-items:center;justify-content:center}
+section{margin-bottom:34px;scroll-margin-top:70px}
+section h2{font-family:var(--fH);font-size:1.5rem;font-weight:900;color:var(--tx0);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+section p{margin-bottom:14px;color:var(--tx1)}
+section h3{font-family:var(--fH);font-size:1.12rem;font-weight:700;margin:4px 0 8px;color:var(--tx0)}
+strong{color:var(--tx0);font-weight:700}
+em{color:var(--tx0)}
+ul,ol{margin:0 0 14px 2px;padding-left:22px;color:var(--tx1)}
+li{margin-bottom:8px}
+code.inl,code{font-family:var(--fM);font-size:.86em;background:var(--acG);color:var(--ac);padding:2px 7px;border-radius:5px;word-break:break-word}
+[data-theme="dark"] code.inl,[data-theme="dark"] code{color:var(--ac2)}
+kbd{font-family:var(--fM);font-size:.82em;background:var(--bg2);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--tx0)}
 
-/* commands */
-.cmd{margin:10px 0;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bdr)}
-.cmd-bar{display:flex;justify-content:space-between;align-items:center;background:var(--bg2);padding:4px 6px 4px 12px;font-family:var(--fM);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
-.copy{background:var(--bg1);border:1px solid var(--bdr);border-radius:6px;font:600 .75rem var(--fB);color:var(--tx0);padding:4px 12px;cursor:pointer;min-height:32px;min-width:64px}
-.copy:hover,.copy:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
-.cmd pre{background:var(--codeBg);color:var(--codeTx);padding:12px 14px;overflow-x:auto;font-family:var(--fM);font-size:.86rem;line-height:1.55;white-space:pre}
-.cmd pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.task-head{font-family:var(--fM);font-size:.76rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ac);font-weight:600;margin:24px 0 10px;padding-left:12px;border-left:3px solid var(--ac)}
+
+.step{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shd)}
+.step h3{display:flex;align-items:baseline;gap:11px;margin-top:0}
+.step h3 .n{font-family:var(--fM);font-size:.8rem;font-weight:600;color:#fff;background:var(--ac);min-width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
+.step p:last-child{margin-bottom:0}
+
+/* command block */
+.cmd{position:relative;margin:12px 0}
+.cmd pre{background:#0F1C22;color:#D8E6E4;font-family:var(--fM);font-size:.84rem;line-height:1.75;padding:14px 48px 14px 16px;border-radius:var(--rs);overflow-x:auto;border:1px solid #1C2E35;white-space:pre}
+.cmd .p{color:#52B788;user-select:none}
+.cmd .fl{color:#44C7D0}
+.cmd .ar{color:#F4A261}
+.cmd .cm{color:#7A8A88;font-style:italic}
+.cmd .copy{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#D8E6E4;border-radius:6px;padding:4px 9px;font-size:.72rem;font-family:var(--fM);cursor:pointer;transition:all var(--t);min-height:28px}
+.cmd .copy:hover{background:var(--ac);border-color:var(--ac);color:#fff}
+.cmd .copy.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.path{font-family:var(--fM);font-size:.82rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:9px 13px;margin:10px 0;color:var(--tx1);display:block;word-break:break-word}
+.path b{color:var(--ac)}
 
 /* callouts */
-.call{border-left:4px solid var(--ac);background:var(--tipBg);border-radius:0 var(--rs) var(--rs) 0;padding:10px 14px;margin:12px 0}
-.call .k{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--ac);margin-bottom:2px}
-.call p{margin:0 !important}
-.call.warn{border-color:var(--warn);background:var(--warnBg)}.call.warn .k{color:var(--warn)}
-.call.fix{border-color:var(--hi);background:var(--fixBg)}.call.fix .k{color:var(--hi)}
-.call.court{border-color:var(--ok);background:var(--okBg)}.call.court .k{color:var(--ok)}
-.shot{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--ac2);border-radius:var(--rs);padding:8px 12px;margin:10px 0;font-size:.92rem;color:var(--tx1);background:var(--bg0)}
-.shot-ico{font-size:1.1rem;line-height:1.4}
+.call{border-radius:var(--rs);padding:14px 18px;margin:14px 0;border-left:4px solid var(--ac);background:var(--acG)}
+.call .k{display:block;font-weight:700;color:var(--tx0);margin-bottom:5px;font-size:.95rem}
+.call p{margin-bottom:0;color:var(--tx1)}
+.call.tip{border-left-color:var(--ac2);background:var(--acG)}
+.call.capture{border-left-color:var(--hi);background:rgba(196,69,54,.08)}
+[data-theme="dark"] .call.capture{background:rgba(231,111,81,.1)}
+.call.capture .k{color:var(--hi)}
+.call.stuck,.call.warn{border-left-color:var(--warn);background:var(--warnG)}
+.call.defend{border-left-color:var(--ok);background:rgba(45,106,79,.09)}
+[data-theme="dark"] .call.defend{background:rgba(82,183,136,.1)}
+.call.court{border-left-color:var(--ac);background:var(--acG)}
+
+details.go{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:0;margin:12px 0}
+details.go summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--ac);font-size:.92rem;list-style:none}
+details.go summary::-webkit-details-marker{display:none}
+details.go summary::before{content:'▸ ';color:var(--ac)}
+details.go[open] summary::before{content:'▾ '}
+details.go[open] summary{border-bottom:1px solid var(--bdr)}
+details.go p{padding:12px 16px 14px;margin:0;color:var(--tx1)}
 
 /* tables */
-.tblwrap{overflow-x:auto;margin:12px 0;border:1px solid var(--bdr);border-radius:var(--rs)}
-table.tbl{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
-table.tbl th{background:var(--bg2);text-align:left;font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx1);padding:9px 12px;border-bottom:1px solid var(--bdr)}
-table.tbl td{padding:9px 12px;border-bottom:1px solid var(--bg2);vertical-align:top;color:var(--tx1)}
-table.tbl tr:last-child td{border-bottom:0}
-table.tbl td:first-child{color:var(--tx0);font-weight:600}
+.tbl-wrap{overflow-x:auto;margin:14px 0;border-radius:var(--rs);border:1px solid var(--bdr)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:420px}
+thead th{background:var(--ac);color:#fff;padding:11px 14px;text-align:left;font-family:var(--fB);font-weight:600;font-size:.82rem}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--bdr);color:var(--tx1);vertical-align:top}
+tbody tr:nth-child(even) td{background:var(--bg2)}
+tbody tr:last-child td{border-bottom:none}
+table code{white-space:nowrap}
 
-/* env grid */
-.env{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:12px 0}
-.env div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 14px}
-.env b{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2);font-weight:600}
-.env span{color:var(--tx0);font-size:.95rem}
+/* check yourself */
+.q{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);padding:15px 18px;margin-bottom:12px;box-shadow:var(--shd)}
+.q .ask{font-weight:600;color:var(--tx0);margin-bottom:10px}
+.reveal{background:var(--bg2);border:1px solid var(--bdr);color:var(--ac);border-radius:50px;padding:6px 16px;font-size:.82rem;font-family:var(--fB);font-weight:600;cursor:pointer;transition:all var(--t);min-height:34px}
+.reveal:hover{background:var(--ac);color:#fff;border-color:var(--ac)}
+.ans{display:none;margin-top:12px;padding:12px 15px;background:var(--acG);border-radius:var(--rs);color:var(--tx1);font-size:.94rem;border-left:3px solid var(--ac)}
+.ans.show{display:block}
 
-/* done rows */
-.done-row{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--bg2);font-size:.92rem;color:var(--tx2)}
-.done-row input,.evidence input{width:22px;height:22px;accent-color:var(--ac);cursor:pointer;flex:none}
-.done-row label{cursor:pointer}
+/* evidence + progress checkboxes */
+.evidence{background:var(--bg1);border:1px solid var(--bdr);border-left:4px solid var(--hi);border-radius:var(--rs);padding:16px 20px;box-shadow:var(--shd)}
+[data-theme="dark"] .evidence{border-left-color:var(--hi)}
+.evidence ul{list-style:none;padding:0;margin:0}
+.evidence li{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px}
+.evidence li:last-child{margin-bottom:0}
+.evidence input[type=checkbox],.done-row input[type=checkbox]{width:19px;height:19px;margin-top:2px;accent-color:var(--ac);flex-shrink:0;cursor:pointer}
+.evidence .shot{font-weight:700;color:var(--hi)}
+.shot-marker{display:inline-flex;align-items:center;gap:5px;font-family:var(--fM);font-size:.72rem;color:var(--hi);font-weight:600;letter-spacing:.5px}
+.done-row{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--bdr)}
+.done-row label{font-size:.82rem;color:var(--tx2);font-family:var(--fM);cursor:pointer}
 
-/* Q&A */
-.q{border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px;margin:10px 0;background:var(--bg0)}
-.q .ask{color:var(--tx0) !important;font-weight:600}
-.reveal{margin-top:8px;background:var(--bg1);border:1px solid var(--ac);color:var(--ac);border-radius:50px;padding:4px 14px;font:600 .82rem var(--fB);cursor:pointer;min-height:36px}
-.reveal:hover,.reveal:focus-visible{background:var(--ac);color:#fff}
-.ans{display:none;margin-top:8px;padding:8px 12px;border-left:3px solid var(--ok);background:var(--okBg);border-radius:0 6px 6px 0;color:var(--tx1)}
-.ans.open{display:block}
+/* cheat sheet */
+.cheat{background:#0F1C22;border-radius:var(--r);padding:20px 22px;margin-top:6px}
+.cheat .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.cheat h3{color:#44C7D0;font-family:var(--fM);font-size:.8rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;border:none;padding:0}
+.cheat ul{list-style:none;padding:0;margin:0}
+.cheat li{color:#C3D4D2;font-size:.85rem;margin-bottom:7px;line-height:1.5}
+.cheat code{background:rgba(68,199,208,.12);color:#9BE4EA;padding:1px 6px}
 
-/* evidence */
-.evidence ul{list-style:none;padding-left:0 !important}
-.evidence li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rs);margin:8px 0;background:var(--bg0)}
-.evidence .shotname{font-weight:700;color:var(--tx0)}
-.evline{margin-top:14px;font-size:.9rem;color:var(--tx2)}
-.evline span{display:inline-block;min-width:220px;border-bottom:1px solid var(--tx2);margin-left:6px}
+.printbar{text-align:center;color:var(--tx2);font-size:.82rem;margin-top:30px;padding-top:20px;border-top:1px solid var(--bdr)}
+.printbar a{color:var(--ac);text-decoration:none}
 
-/* cheat */
-.cheat .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.cheat .grid>div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px}
-.cheat h3{margin-top:0;font-size:.98rem;color:var(--ac)}
-.cheat li{font-size:.92rem}
-
-/* lab nav + footer */
-.labnav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
-.labnav a{flex:1;min-width:220px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;text-decoration:none;color:var(--tx0);box-shadow:var(--shd);transition:all var(--t)}
-.labnav a:hover{border-color:var(--ac);transform:translateY(-2px)}
-.labnav small{display:block;font-family:var(--fM);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2)}
-.labnav a.nx{text-align:right}
-.site-footer{text-align:center;padding:28px 24px;border-top:1px solid var(--bdr);font-size:.85rem;color:var(--tx2);margin-top:30px}
-.site-footer a{color:var(--ac);text-decoration:none}
+footer.sf{text-align:center;padding:26px 24px;border-top:1px solid var(--bdr);font-size:.82rem;color:var(--tx2);background:var(--bg1)}
+footer.sf a{color:var(--ac);text-decoration:none}
 
 @media(max-width:640px){
-  .hero{padding:36px 16px 48px}
-  section.blk{padding:20px 16px}
-  ol.steps>li{padding-left:40px}
-  .toolbar{padding:6px 12px}
-  .prog{order:3;max-width:none;min-width:100%}
+  .toc ol{columns:1}
+  .cheat .grid{grid-template-columns:1fr;gap:18px}
+  .hero{padding:30px 18px 26px}
+  main{padding:22px 16px 70px}
+  .prog-txt{min-width:84px;font-size:.68rem}
+  .tb-crumb{display:none}
 }
-@media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
 @media print{
-  :root{--bg0:#fff;--bg1:#fff;--bg2:#f2f2f2;--tx0:#000;--tx1:#222;--tx2:#444;--codeBg:#f4f4f4;--codeTx:#000}
-  .toolbar,.toc,.labnav,.copy,.reveal,.skip-link,#df-assistant-root{display:none !important}
-  .hero{background:none;padding:10px 0;color:#000}.hero h1,.hero p.sub,.hero p.sub a{color:#000}.hero-badge,.chip{color:#000;border-color:#999;background:none}
-  .hero::after{display:none}
-  section.blk{box-shadow:none;break-inside:auto;border-color:#bbb}
-  .ans{display:block}
-  .cmd pre{white-space:pre-wrap}
-  a{color:#000}
+  .toolbar,.prog-wrap,.cmd .copy,.reveal,.skip-link,.done-row,footer.sf .noprint{display:none!important}
+  body{background:#fff;color:#000}
+  .ans{display:block!important}
+  .hero{background:#0D5C63!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .step,.q,.evidence,.toc{break-inside:avoid;box-shadow:none}
+  .cmd pre{white-space:pre-wrap;word-break:break-all}
+  a[href]::after{content:''}
 }
 </style>
 </head>
-<body data-prefix="df-lab10-">
+<body>
 <a href="#main" class="skip-link">Skip to main content</a>
-<header class="hero">
-  <div class="hero-badge">Lab 10 &middot; Hands-on Companion</div>
-  <h1>Steganography and Alternate Data Streams</h1>
-  <p class="sub">Supports <a href="module9_lesson.html" target="_blank" rel="noopener">Module 9 &mdash; Digital Forensics Analysis and Validation<span class="sr-only"> (opens in new tab)</span></a></p>
-  <div class="meta"><span class="chip">&#128187; WinOS</span><span class="chip">&#128295; HxD Hex Editor, Windows command line</span><span class="chip">&#9201; 60–75 min</span></div>
-</header>
-<div class="toolbar" role="navigation" aria-label="Lab tools">
-  <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&lsaquo; All labs<span class="sr-only"> (opens in new tab)</span></a>
-  <div class="prog"><div class="bar" id="progressbar" role="progressbar" aria-label="Sections reviewed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar-fill"></span></div><span id="bar-txt">0/7 reviewed</span></div>
-  <div class="tools">
-    <button class="tbtn" id="fs-down" type="button" aria-label="Smaller text">A&minus;</button>
-    <button class="tbtn" id="fs-up" type="button" aria-label="Larger text">A+</button>
-    <button class="tbtn" id="print-btn" type="button" aria-label="Print this page">&#128424;&#65039; Print</button>
-    <button class="tbtn" id="theme-toggle" type="button" aria-pressed="false">&#127769; Dark</button>
-    <button class="tbtn" id="reset-btn" type="button">Clear progress</button>
+
+<div class="toolbar" role="navigation" aria-label="Page toolbar">
+  <div class="tb-left">
+    <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&#8592; All labs</a>
+    <span class="tb-crumb">Forensics &middot; LAB 10</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-sizes" role="group" aria-label="Text size">
+      <button class="tb-btn" id="fsDec" aria-label="Decrease text size">A&#8722;</button>
+      <button class="tb-btn" id="fsRst" aria-label="Reset text size">A</button>
+      <button class="tb-btn" id="fsInc" aria-label="Increase text size">A+</button>
+    </div>
+    <button class="tb-btn" id="printBtn" aria-label="Print or save as PDF">&#128424;&#65039; <span>Print</span></button>
+    <button class="tb-btn" id="themeBtn" aria-label="Toggle dark mode">&#127769; <span>Dark</span></button>
   </div>
 </div>
-<main id="main" class="wrap">
-<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#environment">Before you start</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#corrections">Manual corrections</a></li><li><a href="#defensible">Making it defensible</a></li><li><a href="#module">Course connection</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav>
-<section class="blk" id="overview" aria-labelledby="h-overview"><h2 id="h-overview"><span class="n">01</span>Overview &mdash; what this lab is really teaching</h2><p>Not everyone wants their data found. <strong>Steganography</strong> hides information <em>inside</em> an innocent-looking file &mdash; a secret message or an entire second file tucked behind a photo's end-of-image marker, where normal viewers never look. <strong>Alternate Data Streams (ADS)</strong> hide data in a parallel 'fork' of an NTFS file that doesn't show up in Explorer or a plain <code>dir</code>. Both are anti-forensic techniques, and both are detectable if you know where to look.</p><p>You'll append a hidden message past a JPEG's <code>FF D9</code> footer in <strong>HxD</strong>, extract a complete PNG that was concealed inside a JPEG, then create and &mdash; crucially &mdash; <em>detect</em> an ADS from the Windows command line with <code>dir /r</code>.</p><p>The reason to practice the hiding is to understand the detecting. Once you've seen that image viewers <strong>stop at the end-of-file marker and ignore everything after it</strong>, you know to always inspect past the footer. Once you've created an ADS and seen it vanish from <code>dir</code> but appear under <code>dir /r</code> as <code>file:stream:$DATA</code>, you'll never again trust a plain directory listing on an NTFS volume.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section>
-<section class="blk" id="environment" aria-labelledby="h-environment"><h2 id="h-environment"><span class="n">02</span>Before you start</h2><div class="env"><div><b>Machine</b><span>WinOS (Windows)</span></div><div><b>Login</b><span>Administrator</span></div><div><b>Tools</b><span>HxD, Windows CMD</span></div><div><b>Dataset</b><span><code>Steganography Files</code>, <code>ADS\Exercise1</code> on E:</span></div><div><b>FS</b><span>NTFS (required for ADS)</span></div></div><div class="call warn"><span class="k">Watch out</span><p>This lab has you <em>create</em> hidden data for learning. Never do this to evidence &mdash; editing a file changes its hash and size and destroys authenticity. HxD even writes a <code>.bak</code> backup when you edit; that itself is an artifact.</p></div></section>
-<section class="blk" id="walkthrough" aria-labelledby="h-walkthrough"><h2 id="h-walkthrough"><span class="n">03</span>Walkthrough</h2><div class="task"><h3><span class="tn">Task 1</span>Hide a message past the JPEG footer</h3><p>Viewers stop at FF D9, so anything after it is invisible to them but plain in hex.</p><ol class="steps"><li>Open <code>WhatsApp-Encryption.jpg</code> in HxD. Search &gt; Go to &rarr; <strong>end (backwards)</strong> &rarr; confirm the <code>FF D9</code> footer.</li><li>Click after the last byte in the text pane and type a message. HxD warns the file size will change &mdash; acknowledge and continue.</li><li>Save. Reopen the image &mdash; it displays normally; the message is only visible in hex/text view because viewers ignore data past <code>FF D9</code>. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The appended message visible after FF D9 in HxD's text pane.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 2</span>Extract a file hidden inside a file</h3><p>A whole PNG can be appended behind a JPEG &mdash; find it by signature and carve it (Lab 7 skills).</p><ol class="steps"><li>Open <code>PlanC.jpg</code> in HxD. Find the PNG header <code>89 50 4E 47 0D 0A 1A 0A</code> &rarr; note offset (0x191F9).</li><li>Find the PNG footer <code>49 45 4E 44 AE 42 60 82</code> &rarr; note the last byte's offset.</li><li>Edit &gt; Select block between the two offsets &rarr; File &gt; Save selection &rarr; <code>Exported picture.png</code>. Open it &mdash; a complete image was hidden inside the JPEG. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The extracted PNG open, showing the hidden image.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 3</span>Create and detect an ADS</h3><p>ADS hides data in a named stream Explorer and plain dir never show.</p><ol class="steps"><li>Open CMD, <code>E:</code>, then:</li><li><div class="cmd"><div class="cmd-bar"><span>Command Prompt</span><button class="copy" type="button" data-copy="cd FOR_LAB_010\ADS\Exercise1">Copy</button></div><pre><code>cd FOR_LAB_010\ADS\Exercise1</code></pre></div></li><li>Hide a text stream inside a program:</li><li><div class="cmd"><div class="cmd-bar"><span>Command Prompt</span><button class="copy" type="button" data-copy="type legitimate_program.exe &gt; Legitimate_program.exe:secret.txt">Copy</button></div><pre><code>type legitimate_program.exe &gt; Legitimate_program.exe:secret.txt</code></pre></div></li><li>Open and edit the hidden stream directly (it's invisible to a normal dir):</li><li><div class="cmd"><div class="cmd-bar"><span>Command Prompt</span><button class="copy" type="button" data-copy="notepad legitimate_program.exe:secret.txt">Copy</button></div><pre><code>notepad legitimate_program.exe:secret.txt</code></pre></div></li><li>Detect it &mdash; this is the forensic point:</li><li><div class="cmd"><div class="cmd-bar"><span>Command Prompt</span><button class="copy" type="button" data-copy="dir /r">Copy</button></div><pre><code>dir /r</code></pre></div></li><li>The listing now shows <code>Legitimate_program.exe:secret.txt:$DATA</code> with its own size and no timestamps &mdash; the ADS giveaway. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The dir /r output revealing the :secret.txt:$DATA stream.</span></div></li></ol></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section>
-<section class="blk" id="reference" aria-labelledby="h-reference"><h2 id="h-reference"><span class="n">04</span>Reference &mdash; detecting hidden data</h2><h3>Steganography detection</h3><ul><li><strong>Always inspect past the end-of-file marker.</strong> Data after <code>FF D9</code> (JPEG), <code>IEND</code> (PNG), or <code>%%EOF</code> (PDF) is a red flag.</li><li><strong>Compare file size to expected.</strong> An image far larger than its visible content suggests appended data.</li><li><strong>Hash mismatch against known-good.</strong> If you have the original's hash (Lab 20), a changed hash on a 'system' file is suspicious.</li><li><strong>Scan for nested signatures</strong> (Lab 7): a file signature <em>inside</em> another file means an embedded file.</li><li>Note: this lab covers <em>appended</em> steganography. True steganography that alters pixel/LSB data needs statistical tools (StegDetect, zsteg) &mdash; harder to spot.</li></ul><h3>ADS detection</h3><ul><li><code>dir /r</code> reveals streams as <code>filename:streamname:$DATA</code>.</li><li>PowerShell: <code>Get-Item file -Stream *</code> lists all streams.</li><li>Streams have their <strong>own size but no independent timestamps</strong>; editing a stream updates the host file's modified time.</li><li><strong>ADS only exists on NTFS.</strong> Copy the file to FAT/exFAT/a non-NTFS medium and the stream is silently dropped &mdash; which is both a detection trick and a reason to image, not copy.</li><li>Legitimate uses exist too (e.g. <code>Zone.Identifier</code>, the 'downloaded from the internet' mark), so a stream isn't automatically malicious.</li></ul><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section>
-<section class="blk" id="stuck" aria-labelledby="h-stuck"><h2 id="h-stuck"><span class="n">05</span>Where people get stuck</h2><p>Most problems in this lab fall into one of these.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Symptom</th><th scope="col">Likely cause</th><th scope="col">Fix</th></tr></thead><tbody><tr><td>Hidden message isn't visible in the image</td><td>That's expected</td><td>Viewers stop at the footer. View the file in HxD's hex/text pane to see appended data.</td></tr><tr><td>Extracted PNG won't open</td><td>Missed the exact header or footer offsets</td><td>Re-verify the PNG header (89 50 4E 47...) and footer (49 45 4E 44 AE 42 60 82) and re-select the block.</td></tr><tr><td>dir /r shows no stream</td><td>Not on NTFS, or stream wasn't created</td><td>ADS requires NTFS. Confirm you're on E: (NTFS) and that the type > redirection command ran without error.</td></tr><tr><td>Can't open the ADS in Notepad</td><td>Stream name/path typo</td><td>The syntax is notepad host.exe:stream.txt &mdash; exact names, no spaces around the colon.</td></tr><tr><td>HxD made a .bak file</td><td>HxD backs up on edit</td><td>Normal &mdash; and itself an artifact worth noting; never edit real evidence this way.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section>
-<section class="blk" id="corrections" aria-labelledby="h-corrections"><h2 id="h-corrections"><span class="n">06</span>Manual corrections &amp; currency notes</h2><p>The NDG manual was written in 2020&ndash;21. These are the places where it is wrong, inconsistent, or out of date &mdash; worth knowing before you trust a screenshot.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Where</th><th scope="col">The manual says</th><th scope="col">What's actually true</th></tr></thead><tbody><tr><td>Steganography scope</td><td>Covers appended-data stego only</td><td>True pixel/LSB steganography (hiding bits in image data itself) is invisible to signature search and needs statistical/steganalysis tools &mdash; the lab's technique is the easy-to-detect kind. Know the harder kind exists.</td></tr><tr><td>ADS persistence</td><td>Doesn't stress the NTFS-only limit</td><td>Critical point: copy an ADS file to FAT/exFAT/email/cloud and the stream is silently lost. This is why you image (preserving streams) rather than copy evidence.</td></tr><tr><td>WhatsApp framing</td><td>Uses WhatsApp-named sample files</td><td>Just sample names &mdash; nothing to do with WhatsApp's actual encryption. Don't infer anything about the app from the filenames.</td></tr><tr><td>Detection tools</td><td>Only uses dir /r</td><td>Fine for learning, but real exams use Autopsy/EnCase stream detection, PowerShell Get-Item -Stream, and dedicated steganalysis. dir /r is the manual baseline.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-corrections" data-done="corrections"><label for="done-corrections">Mark this section reviewed</label></div></section>
-<section class="blk" id="defensible" aria-labelledby="h-defensible"><h2 id="h-defensible"><span class="n">07</span>Making it defensible</h2><p>Finding hidden data is impressive; proving it was deliberately hidden is the real work:</p><ul><li><strong>Document how you found it.</strong> The offset of appended data, the dir /r output, the extraction method &mdash; reproducibility matters doubly for anti-forensic findings.</li><li><strong>Hash both host and hidden file</strong> (Lab 20). You'll need to prove the hidden content hasn't changed since recovery.</li><li><strong>Distinguish deliberate from benign.</strong> A Zone.Identifier ADS is normal; a program carrying a hidden text file is not. Say which and why.</li><li><strong>Image, never copy.</strong> Copying to non-NTFS destroys ADS &mdash; if you lose a stream in handling, you've destroyed evidence.</li></ul><div class="call court"><span class="k">On the stand</span><p>Hidden data cuts toward intent &mdash; 'why conceal it unless you knew it was wrong?' But be precise: appended data could be accidental, and an ADS could be benign. Show the deliberate-concealment indicators rather than asserting intent.</p></div><div class="done-row"><input type="checkbox" id="done-defensible" data-done="defensible"><label for="done-defensible">Mark this section reviewed</label></div></section>
-<section class="blk" id="module" aria-labelledby="h-module"><h2 id="h-module"><span class="n">08</span>Course connection</h2><p>This lab is the hands-on side of <a href="module9_lesson.html" target="_blank" rel="noopener"><strong>Module 9: Digital Forensics Analysis and Validation</strong></a> &middot; also touches <a href="module8_lesson.html" target="_blank" rel="noopener">Module 8</a>.</p><p>Steganography and ADS sit in the analysis-and-validation module. The extraction is pure Lab 7 carving; detecting a tampered file leans on the Lab 20 hashing; and ADS is a direct consequence of the NTFS structure you read in Lab 5. Data hiding is exactly what Lab 6's keyword searches and Lab 14's timelines help surface.</p></section>
-<section class="blk" id="check" aria-labelledby="h-check"><h2 id="h-check"><span class="n">09</span>Check yourself</h2><div class="q"><p class="ask">1. Why can a message hidden after a JPEG's FF D9 footer be invisible in an image viewer but obvious in a hex editor?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Image viewers stop parsing at the end-of-image marker (FF D9) and ignore everything after it, so appended data never renders. A hex editor shows the raw bytes, so the appended text is plainly visible.</div></div><div class="q"><p class="ask">2. What command reveals Alternate Data Streams, and what do they look like in the output?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">dir /r. Streams appear as filename:streamname:$DATA, with their own size but no independent timestamps.</div></div><div class="q"><p class="ask">3. Why does copying an ADS file to a USB stick often destroy the hidden stream?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">ADS is an NTFS feature. FAT/exFAT (common on USB) and most transfer paths (email, cloud) don't support streams, so the alternate stream is silently dropped. This is why you image evidence rather than copy it.</div></div><div class="q"><p class="ask">4. The lab hides appended data. What harder form of steganography does its signature-search method miss?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">True pixel/LSB steganography, which alters the image data itself rather than appending after the footer. It leaves no nested file signature and requires statistical steganalysis tools to detect.</div></div><div class="done-row"><input type="checkbox" id="done-check" data-done="check"><label for="done-check">Mark this section reviewed</label></div></section>
-<section class="blk" id="evidence" aria-labelledby="h-evidence"><h2 id="h-evidence"><span class="n">10</span>Evidence to capture</h2><p>Your instructor wants screenshots of these key steps as proof you ran the lab. Capture them as you go (the &#128248; markers in the walkthrough show where), tick each one off, then print this page or submit the list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" id="ev-1" data-evidence="1"><label for="ev-1"><span class="shotname">Hidden message.</span> The appended text visible after FF D9 in HxD's text pane.</label></li><li><input type="checkbox" id="ev-2" data-evidence="2"><label for="ev-2"><span class="shotname">Extracted file.</span> The PNG carved out of PlanC.jpg, open and showing the hidden image.</label></li><li><input type="checkbox" id="ev-3" data-evidence="3"><label for="ev-3"><span class="shotname">ADS created.</span> The CMD session showing the type > file:stream command.</label></li><li><input type="checkbox" id="ev-4" data-evidence="4"><label for="ev-4"><span class="shotname">ADS detected.</span> The dir /r output revealing the :secret.txt:$DATA stream.</label></li><li><input type="checkbox" id="ev-5" data-evidence="5"><label for="ev-5"><span class="shotname">Stream contents.</span> The hidden stream open in Notepad via file.exe:stream.txt.</label></li></ul></div><p class="evline">Student name:<span></span> &nbsp; Date:<span style="min-width:120px"></span></p></section>
-<section class="blk" id="cheat" aria-labelledby="h-cheat"><h2 id="h-cheat"><span class="n">11</span>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Steganography</h3><ul><li>Inspect PAST the EOF marker (FF D9, IEND, %%EOF)</li><li>Nested signature = embedded file (Lab 7)</li><li>Size bigger than content = suspicious</li><li>LSB/pixel stego needs steganalysis tools</li></ul></div><div><h3>ADS</h3><ul><li>NTFS only — lost on copy to FAT/cloud</li><li>dir /r → file:stream:$DATA</li><li>Get-Item -Stream * (PowerShell)</li><li>Own size, no timestamps; Zone.Identifier is benign</li></ul></div></div></div></section>
-<nav class="labnav" aria-label="Lab navigation"><a href="forensics_lab09_companion.html" target="_blank" rel="noopener"><small>&lsaquo; Previous lab</small>Lab 09: Recycle Bin Forensics<span class="sr-only"> (opens in new tab)</span></a><a class="nx" href="forensics_lab11_companion.html" target="_blank" rel="noopener"><small>Next lab &rsaquo;</small>Lab 11: Picture File Analysis<span class="sr-only"> (opens in new tab)</span></a></nav>
+
+<div class="prog-wrap" aria-hidden="false">
+  <div class="prog-inner">
+    <div class="prog-bar" role="progressbar" aria-label="Section progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="prog-fill" id="progFill"></div></div>
+    <span class="prog-txt" id="progTxt">0 / 0 sections</span>
+  </div>
+</div>
+
+<header class="hero" role="banner">
+  <div class="hero-inner">
+    <span class="labno">LAB 10</span>
+    <h1>Steganography &amp; Alternate Data Streams</h1>
+    <p class="lede">Evidence can hide in plain sight. See how data is tucked after a file's footer, embedded whole inside another file, or buried in an NTFS alternate data stream — and, crucially, how to detect each.</p>
+    <div class="chips"><span class="chip">&#9201; <b>50 min</b></span><span class="chip">&#128202; Difficulty: <b>Intermediate</b></span><span class="chip">&#129514; Tools: <b>HxD · Command Prompt</b></span><span class="chip">&#128421; VM: <b>WinOS</b></span><span class="chip">&#128218; Maps to: <b>Module 9 — Analysis &amp; Validation</b></span></div>
+  </div>
+</header>
+
+<main id="main">
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#tools">Tools &amp; environment</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#court">Why it matters in court</a></li><li><a href="#exam">Course relevance</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav><section id="overview" data-track><h2>Overview — what this lab is really teaching</h2><p>Not all evidence sits in plain view. <strong>Steganography</strong> hides data inside another file; <strong>Alternate Data Streams (ADS)</strong> hide data inside an NTFS file's hidden streams. This lab shows you both — how they're made and, more importantly, how they're <em>detected</em>.</p><p>These are <strong>anti-forensic</strong> techniques. You learn to create them only so you recognize them in the wild: a message appended after a JPEG's <code>FF D9</code> footer, a whole file tucked after it, or a secret hidden in <code>file.exe:secret.txt</code> that <code>dir</code> won't show but <code>dir /r</code> will.</p><div class="call stuck"><span class="k">Don't practice these on real evidence</span><p>Appending to a file changes its hash and size and destroys its integrity. Do this only on practice files, never on an evidence item.</p></div><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section><section id="tools" data-track><h2>Tools &amp; environment</h2><p>On <strong>WinOS</strong>: <strong>HxD</strong> for the steganography work and the Windows <strong>command prompt</strong> for ADS.</p><div class="done-row"><input type="checkbox" id="done-tools" data-done="tools"><label for="done-tools">Mark this section reviewed</label></div></section><section id="walkthrough" data-track><h2>Walkthrough</h2><p class="task-head">Task 1 — Steganography: a message after the footer</p><div class="step"><h3><span class="n">1</span> Find the end of a JPEG</h3><p>Open <code>WhatsApp-Encryption.jpg</code> in HxD, jump to the end, and locate the JPEG footer <code>FF D9</code>. Picture viewers stop reading there — so anything after it is invisible to them.</p></div><div class="step"><h3><span class="n">2</span> Append and save a hidden message</h3><p>Type a message after the footer and save. Reopen the image — it displays normally; only a hex view reveals the text.</p><div class="call tip"><span class="k">Why it's invisible</span><p>Most image renderers halt at <code>FF D9</code>. Appended bytes ride along in the file but never get drawn, so the picture looks untouched.</p></div><div class="call stuck"><span class="k">HxD leaves a <code>.bak</code></span><p>Editing in HxD creates a backup file with a <code>.bak</code> extension in the same folder — a tell an examiner can look for.</p></div></div><p class="task-head">Task 2 — Extract a file hidden inside another</p><div class="step"><h3><span class="n">3</span> Find the embedded PNG in PlanC.jpg</h3><p>Search <code>PlanC.jpg</code> for the PNG header <code>89 50 4E 47 0D 0A 1A 0A</code> (found mid-file), note the offset, then the PNG footer <code>49 45 4E 44 AE 42 60 82</code> at the end.</p></div><div class="step"><h3><span class="n">4</span> Carve the hidden file out</h3><p><strong>Select block</strong> between the two offsets and <strong>Save selection</strong> as <code>Exported picture.png</code>. Open it — a complete second image was hiding inside the first.</p><div class="call capture"><span class="k">&#128248; Screenshot for your report</span><p>The PNG you carved out of PlanC.jpg, open and rendering.</p></div><div class="call tip"><span class="k">Any file type can hide here</span><p>The lab uses a PNG, but ZIP, DOCX, XLSX and others are commonly embedded. Recognizing their signatures (Lab 07) is what lets you find them.</p></div></div><p class="task-head">Task 3 — Alternate Data Streams</p><div class="step"><h3><span class="n">5</span> Hide a file in an ADS</h3><p>At the command prompt in <code>E:\FOR_LAB_010\ADS\Exercise1</code>:</p><div class="cmd"><pre><span class="p">C:\&gt;</span> <span class="fl">type</span> <span class="ar">legitimate_program.exe &gt; Legitimate_program.exe:secret.txt</span></pre></div><p>creates a hidden stream. A normal <code>dir</code> won't show it; you open it with <code>notepad legitimate_program.exe:secret.txt</code>.</p></div><div class="step"><h3><span class="n">6</span> Detect it with dir /r</h3><p>The detection move:</p><div class="cmd"><pre><span class="p">C:\&gt;</span> <span class="fl">dir</span> <span class="fl">/r</span></pre></div><p>reveals <code>Legitimate_Program:secret.txt:$DATA</code> — the <code>:$DATA</code> attribute marks an ADS. ADS exist only on NTFS and are a classic malware hiding spot.</p><div class="call capture"><span class="k">&#128248; Screenshot for your report</span><p>The <code>dir /r</code> output revealing the hidden <code>:secret.txt:$DATA</code> stream.</p></div></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section><section id="reference" data-track><h2>Reference — the two techniques</h2><div class="tbl-wrap"><table><thead><tr><th>Technique</th><th>Hides data…</th><th>Detect by</th></tr></thead><tbody><tr><td>Append after footer</td><td>After a file's end-of-file marker</td><td>Hex view past the footer (<code>FF D9</code> for JPEG)</td></tr><tr><td>Embed a file</td><td>Full file inside another</td><td>Searching for a second file's header/footer signatures</td></tr><tr><td>Alternate Data Stream</td><td>In an NTFS file's extra stream</td><td><code>dir /r</code> (shows <code>:name:$DATA</code>); file size vs. anchor</td></tr></tbody></table></div><div class="call court"><span class="k">Why these matter</span><p>Both techniques carry no dates on the hidden payload and are easy to miss. An examiner who routinely checks past footers and runs <code>dir /r</code> catches data a casual review would walk right past.</p></div><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section><section id="stuck" data-track><h2>Where people get stuck</h2><div class="tbl-wrap"><table><thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead><tbody><tr><td>Image looks normal but something's off</td><td>Appended/embedded data after the footer</td><td>Open in a hex editor and read past <code>FF D9</code>.</td></tr><tr><td>Carved embedded file won't open</td><td>Wrong offsets</td><td>Re-select from the exact header to the exact footer.</td></tr><tr><td>ADS invisible in Explorer / dir</td><td>That's by design</td><td>Use <code>dir /r</code>; the stream shows as <code>:$DATA</code>.</td></tr><tr><td>ADS "disappeared"</td><td>The anchor file was deleted/moved off NTFS</td><td>ADS only survive on NTFS and die with the host file.</td></tr><tr><td>Unexpected <code>.bak</code> files</td><td>HxD backs up on edit</td><td>Note them — they can reveal that a file was altered.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section><section id="court" data-track><h2>Why it matters in court</h2><div class="call defend"><span class="k">Absence of a finding isn't absence of evidence</span><p>Steganography and ADS are designed to make an examiner conclude 'nothing here.' Checking past footers and running <code>dir /r</code> are the habits that turn a missed case into a made one.</p></div><ul><li><strong>NTFS-only ADS</strong> — a reason to know the file system (Lab 05).</li><li><strong>Signature knowledge</strong> (Lab 07) is what finds embedded files.</li><li><strong>Chain-of-custody caution</strong> — never create these on real evidence; they alter integrity.</li></ul><div class="done-row"><input type="checkbox" id="done-court" data-done="court"><label for="done-court">Mark this section reviewed</label></div></section><section id="exam"><h2>Course relevance</h2><p>Core data-hiding content in <strong>Module 9 (Analysis and Validation)</strong>. Know steganography basics, ADS, that ADS is NTFS-only, and the <code>dir /r</code> detection.</p></section><section id="check"><h2>Check yourself</h2><div class="q"><p class="ask">1. How can a message hide in a JPEG yet the image still display normally?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Image viewers stop reading at the JPEG footer <code>FF D9</code>; data appended after it is never rendered but still rides inside the file, visible only in a hex view.</div></div><div class="q"><p class="ask">2. Which command reveals an Alternate Data Stream, and what marks it in the output?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans"><code>dir /r</code>; the stream appears with the <code>:name:$DATA</code> attribute.</div></div><div class="q"><p class="ask">3. On which file system do Alternate Data Streams exist, and what happens if the host file leaves it?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">NTFS only. The ADS is bound to its anchor file — delete/move the host (or move it off NTFS) and the stream is lost.</div></div><div class="q"><p class="ask">4. What lets you find a whole file embedded inside another file?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Searching for the embedded file's signature — its header and footer bytes — within the host, then carving between them.</div></div></section><section id="evidence"><h2>Evidence to capture</h2><p>Your instructor wants screenshots of the key steps as proof you completed the lab. Grab these as you go, tick each one off, then use <strong>Print</strong> to submit this list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" data-evidence="l10-1"><span><span class="shot">Hidden message.</span> The appended text visible in HxD past the JPEG footer.</span></li><li><input type="checkbox" data-evidence="l10-2"><span><span class="shot">Carved embedded file.</span> The PNG extracted from PlanC.jpg, open.</span></li><li><input type="checkbox" data-evidence="l10-3"><span><span class="shot">ADS detection.</span> The <code>dir /r</code> output showing the <code>:$DATA</code> stream.</span></li></ul></div></section><section id="cheat"><h2>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Steganography</h3><ul><li>Data rides after <code>FF D9</code> (JPEG EOF)</li><li>Detect: hex view past the footer</li><li>Embedded file = header+footer inside</li><li>HxD Select block → Save selection</li></ul></div><div><h3>ADS (NTFS only)</h3><ul><li>Create: <code>type f &gt; host:stream</code></li><li>Open: <code>notepad host:stream</code></li><li>Detect: <code>dir /r</code> → <code>:$DATA</code></li><li>Dies with the host file</li></ul></div></div></div></section>
+  <div class="printbar noprint">
+    <p>Tip: use <strong>Print</strong> above to save this companion (with your ticked checkboxes and revealed answers) as a PDF to submit.</p>
+  </div>
 </main>
-<footer class="site-footer">
-  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="index.html" target="_blank" rel="noopener">Course hub<span class="sr-only"> (opens in new tab)</span></a></p>
-  <p style="margin-top:4px">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College &middot; 2026</p>
+
+<footer class="sf">
+  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="https://mqaissaunee-bcc.github.io/forensics/" target="_blank" rel="noopener">Course home</a></p>
+  <p style="margin-top:4px" class="noprint">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College</p>
 </footer>
-<div id="live" class="sr-only" aria-live="polite"></div>
+
 <script>
 (function(){
-  "use strict";
-  var body=document.body, root=document.documentElement;
-  var P=body.getAttribute("data-prefix")||"df-lab-";
-  function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-  function del(k){try{localStorage.removeItem(k);}catch(e){}}
-
-  /* theme: shares the course hub's key so the choice follows students across the site */
-  var tb=document.getElementById("theme-toggle");
-  function applyTheme(m){
-    if(m==="dark"){root.setAttribute("data-theme","dark");}else{root.removeAttribute("data-theme");}
-    if(tb){tb.innerHTML=m==="dark"?"&#9728;&#65039; Light":"&#127769; Dark";tb.setAttribute("aria-pressed",m==="dark"?"true":"false");}
-  }
-  applyTheme(load("df-theme")==="dark"?"dark":"light");
-  if(tb){tb.addEventListener("click",function(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";save("df-theme",n);applyTheme(n);});}
-
-  /* text size */
-  var fs=parseFloat(load("df-lab-fs")||"1");
-  function applyFs(){fs=Math.min(1.4,Math.max(0.85,fs));root.style.setProperty("--fs",fs);save("df-lab-fs",String(fs));}
+  var KEY="df-lab10";
+  var root=document.documentElement;
+  // theme (light default; honor saved)
+  try{var th=localStorage.getItem('df-theme');if(th==='dark')root.setAttribute('data-theme','dark');}catch(e){}
+  function setTheme(d){if(d){root.setAttribute('data-theme','dark');}else{root.removeAttribute('data-theme');}try{localStorage.setItem('df-theme',d?'dark':'light');}catch(e){}updThemeBtn();}
+  function updThemeBtn(){var b=document.getElementById('themeBtn');if(!b)return;var d=root.getAttribute('data-theme')==='dark';b.innerHTML=d?'\u2600\ufe0f <span>Light</span>':'\u{1F319} <span>Dark</span>';}
+  // text size
+  var fs=1;try{var s=localStorage.getItem('df-fs');if(s)fs=parseFloat(s);}catch(e){}
+  function applyFs(){root.style.setProperty('--fs',fs);try{localStorage.setItem('df-fs',fs);}catch(e){}}
   applyFs();
-  var up=document.getElementById("fs-up"),dn=document.getElementById("fs-down");
-  if(up){up.addEventListener("click",function(){fs+=0.1;applyFs();});}
-  if(dn){dn.addEventListener("click",function(){fs-=0.1;applyFs();});}
 
-  var pr=document.getElementById("print-btn");
-  if(pr){pr.addEventListener("click",function(){window.print();});}
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+  function save(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+  var state=load();
 
-  /* progress */
-  var dones=document.querySelectorAll("[data-done]");
-  var barFill=document.getElementById("bar-fill"),barTxt=document.getElementById("bar-txt");
-  function refresh(){
-    var n=0;for(var i=0;i<dones.length;i++){if(dones[i].checked){n++;}}
-    var pct=dones.length?Math.round(100*n/dones.length):0;
-    if(barFill){barFill.style.width=pct+"%";}
-    if(barTxt){barTxt.textContent=n+"/"+dones.length+" reviewed";}
-    var pb=document.getElementById("progressbar");
-    if(pb){pb.setAttribute("aria-valuenow",String(pct));}
-    save(P+"total",String(dones.length));save(P+"count",String(n));
-  }
-  for(var i=0;i<dones.length;i++){(function(cb){
-    var k=P+"done-"+cb.getAttribute("data-done");
-    cb.checked=load(k)==="1";
-    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}refresh();});
-  })(dones[i]);}
-  refresh();
+  document.addEventListener('DOMContentLoaded',function(){
+    updThemeBtn();
+    var tb=document.getElementById('themeBtn');if(tb)tb.addEventListener('click',function(){setTheme(root.getAttribute('data-theme')!=='dark');});
+    var inc=document.getElementById('fsInc'),dec=document.getElementById('fsDec'),rst=document.getElementById('fsRst');
+    if(inc)inc.addEventListener('click',function(){fs=Math.min(1.4,Math.round((fs+0.1)*10)/10);applyFs();});
+    if(dec)dec.addEventListener('click',function(){fs=Math.max(0.85,Math.round((fs-0.1)*10)/10);applyFs();});
+    if(rst)rst.addEventListener('click',function(){fs=1;applyFs();});
+    var pb=document.getElementById('printBtn');if(pb)pb.addEventListener('click',function(){window.print();});
 
-  /* evidence checklist */
-  var evs=document.querySelectorAll("[data-evidence]");
-  for(var j=0;j<evs.length;j++){(function(cb){
-    var k=P+"ev-"+cb.getAttribute("data-evidence");
-    cb.checked=load(k)==="1";
-    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}});
-  })(evs[j]);}
-
-  /* reset */
-  var rs=document.getElementById("reset-btn");
-  if(rs){rs.addEventListener("click",function(){
-    if(!window.confirm("Clear your progress and evidence ticks for this lab?")){return;}
-    var ks=[];try{for(var a=0;a<localStorage.length;a++){var kk=localStorage.key(a);if(kk&&kk.indexOf(P)===0){ks.push(kk);}}}catch(e){}
-    for(var b=0;b<ks.length;b++){del(ks[b]);}
-    for(var c=0;c<dones.length;c++){dones[c].checked=false;}
-    for(var d=0;d<evs.length;d++){evs[d].checked=false;}
-    refresh();
-  });}
-
-  /* reveal answers */
-  var rv=document.querySelectorAll(".reveal");
-  for(var r=0;r<rv.length;r++){(function(btn){
-    btn.addEventListener("click",function(){
-      var a=btn.nextElementSibling;var open=a.classList.toggle("open");
-      btn.setAttribute("aria-expanded",open?"true":"false");btn.textContent=open?"Hide answer":"Show answer";
+    // reveal answers
+    document.querySelectorAll('.reveal').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var ans=btn.nextElementSibling;var open=ans.classList.toggle('show');
+        btn.setAttribute('aria-expanded',open?'true':'false');
+        btn.textContent=open?'Hide answer':'Show answer';
+      });
     });
-  })(rv[r]);}
 
-  /* copy buttons: copy the clean text stored in data-copy */
-  var live=document.getElementById("live");
-  function announce(t){if(live){live.textContent="";setTimeout(function(){live.textContent=t;},30);}}
-  function fallback(t){var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
-  var cps=document.querySelectorAll(".copy");
-  for(var q=0;q<cps.length;q++){(function(btn){
-    btn.addEventListener("click",function(){
-      var t=btn.getAttribute("data-copy");
-      function done(){btn.textContent="Copied";announce("Command copied");setTimeout(function(){btn.textContent="Copy";},1500);}
-      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done();});}else{fallback(t);done();}
+    // restore + wire all tracked checkboxes
+    function wire(box,id){
+      if(state[id])box.checked=true;
+      box.addEventListener('change',function(){state[id]=box.checked;save(state);updProg();});
+    }
+    document.querySelectorAll('[data-done]').forEach(function(b){wire(b,'done:'+b.getAttribute('data-done'));});
+    document.querySelectorAll('[data-evidence]').forEach(function(b){wire(b,'ev:'+b.getAttribute('data-evidence'));});
+
+    function updProg(){
+      var dones=document.querySelectorAll('[data-done]');
+      var n=0;dones.forEach(function(b){if(b.checked)n++;});
+      var total=dones.length||1;var pct=Math.round(n/total*100);
+      var f=document.getElementById('progFill'),t=document.getElementById('progTxt');
+      if(f)f.style.width=pct+'%';
+      if(t)t.textContent=n+' / '+total+' sections ('+pct+'%)';
+    }
+    updProg();
+
+    // copy buttons
+    document.querySelectorAll('.cmd').forEach(function(block){
+      var pre=block.querySelector('pre');if(!pre)return;
+      var btn=document.createElement('button');btn.className='copy';btn.type='button';btn.textContent='Copy';
+      btn.setAttribute('aria-label','Copy command');
+      btn.addEventListener('click',function(){
+        var txt=pre.innerText.replace(/^root@[^#]*#\s?/gm,'').replace(/^(caine|csi|deft)@[^$]*\$\s?/gm,'').replace(/^smb:[^>]*>\s?/gm,'');
+        txt=txt.replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,'-');
+        function done(){btn.textContent='Copied!';btn.classList.add('ok');setTimeout(function(){btn.textContent='Copy';btn.classList.remove('ok');},1400);}
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback(txt,done);});}
+        else fallback(txt,done);
+      });
+      block.appendChild(btn);
     });
-  })(cps[q]);}
+    function fallback(txt,cb){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){}document.body.removeChild(ta);}
+  });
 })();
 </script>
-<script src="assistant.js" defer></script>
 </body>
 </html>

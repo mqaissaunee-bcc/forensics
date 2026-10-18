@@ -3,308 +3,321 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab 03: Live Forensics &mdash; Digital Forensics Lab Companion</title>
-<meta name="description" content="Student companion for NDG Forensics v2 Lab 03 (Live Forensics): walkthrough, reference, troubleshooting, manual corrections, self-check and evidence checklist.">
+<title>Lab 03 Companion — Live Forensics &middot; Forensics</title>
+<meta name="description" content="Companion for Forensics Lab 03: live response with DART (DriveMan, FTK Imager Lite, TreeSizeFree, WinAudit, BrowsingHistoryView), the footprint trade-off, evidence to submit, and course relevance.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 :root{
   --bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;
-  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#6A6A7A;
+  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#7A7A8A;
   --ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);
-  --hi:#C44536;--hi2:#E76F51;--ok:#2D6A4F;--ok2:#52B788;--warn:#B7791F;--warnBg:rgba(233,196,106,.18);
-  --fixBg:rgba(196,69,54,.08);--okBg:rgba(45,106,79,.09);--tipBg:rgba(13,92,99,.07);
-  --codeBg:#1A2028;--codeTx:#E8E6E3;
-  --bdr:#D5CEC7;--shd:0 2px 16px rgba(26,26,46,.06);--shd2:0 8px 32px rgba(26,26,46,.12);
-  --r:12px;--rs:8px;--t:.3s cubic-bezier(.4,0,.2,1);
-  --fH:'Merriweather',Georgia,serif;--fB:'Source Sans 3','Segoe UI',system-ui,sans-serif;--fM:'JetBrains Mono','Consolas','Courier New',monospace;
+  --hi:#C44536;--hi2:#E76F51;
+  --ok:#2D6A4F;--ok2:#52B788;
+  --warn:#E9C46A;--warnG:rgba(233,196,106,.16);
+  --bdr:#D5CEC7;
+  --shd:0 2px 16px rgba(26,26,46,.06);
+  --shd2:0 8px 32px rgba(26,26,46,.12);
+  --r:12px;--rs:8px;
+  --t:.3s cubic-bezier(.4,0,.2,1);
+  --fH:'Merriweather',Georgia,serif;
+  --fB:'Source Sans 3','Segoe UI',sans-serif;
+  --fM:'JetBrains Mono','Courier New',monospace;
   --fs:1;
 }
 [data-theme="dark"]{
   --bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;
-  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#8F8C86;
-  --ac:#44C7D0;--ac2:#14919B;--acG:rgba(20,145,155,.18);
-  --hi:#F4A261;--hi2:#E76F51;--ok:#95D5B2;--ok2:#52B788;--warn:#E9C46A;--warnBg:rgba(233,196,106,.12);
-  --fixBg:rgba(231,111,81,.12);--okBg:rgba(82,183,136,.12);--tipBg:rgba(20,145,155,.12);
-  --codeBg:#0B0F13;--codeTx:#E8E6E3;
-  --bdr:#2E3A47;--shd:0 2px 16px rgba(0,0,0,.3);--shd2:0 8px 32px rgba(0,0,0,.5);
+  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#7A7872;
+  --ac:#14919B;--ac2:#44C7D0;--acG:rgba(20,145,155,.15);
+  --hi:#E76F51;--hi2:#F4A261;
+  --ok:#52B788;--ok2:#95D5B2;
+  --warn:#F4A261;--warnG:rgba(244,162,97,.14);
+  --bdr:#2E3A47;
+  --shd:0 2px 16px rgba(0,0,0,.3);
+  --shd2:0 8px 32px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;font-size:calc(16px * var(--fs))}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--fs));scroll-padding-top:70px}
 body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t);min-height:100vh}
-a{color:var(--ac)}
-.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none;transition:top .2s}
 .skip-link:focus{top:0}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--ac);border-radius:4px}
 *:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
-
-/* hero */
-.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 40%,#0D5C63 100%);padding:48px 24px 56px;text-align:center;position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,var(--bg0),transparent);pointer-events:none}
-.hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 20px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:rgba(255,255,255,.9);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;position:relative}
-.hero h1{font-family:var(--fH);font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;color:#fff;line-height:1.25;max-width:820px;margin:0 auto 12px;position:relative}
-.hero p.sub{font-size:1.05rem;color:rgba(255,255,255,.88);max-width:680px;margin:0 auto;position:relative}
-.hero p.sub a{color:#fff}
-.meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;position:relative;z-index:1}
-.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50px;padding:4px 14px;font-size:.82rem}
+a{color:var(--ac)}
 
 /* toolbar */
-.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.toolbar a.back{font-family:var(--fH);font-weight:700;font-size:.92rem;color:var(--tx0);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
-.toolbar a.back:hover{color:var(--ac)}
-.prog{flex:1;min-width:160px;max-width:340px;display:flex;align-items:center;gap:10px;font-family:var(--fM);font-size:.72rem;color:var(--tx2);letter-spacing:1px;text-transform:uppercase}
-.bar{flex:1;height:8px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--bdr)}
-.bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .4s}
-.tools{display:flex;gap:6px;flex-wrap:wrap}
-.tbtn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:6px 14px;cursor:pointer;font:600 .85rem var(--fB);color:var(--tx0);min-height:44px;min-width:44px;transition:all var(--t)}
-.tbtn:hover,.tbtn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
-[data-theme="dark"] .tbtn:hover{color:#0F1419}
+.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background var(--t);flex-wrap:wrap}
+.tb-left{display:flex;align-items:center;gap:12px;min-width:0}
+.tb-left .back{font-family:var(--fM);font-size:.78rem;color:var(--ac);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--bdr);border-radius:50px;transition:all var(--t)}
+.tb-left .back:hover{background:var(--acG);border-color:var(--ac)}
+.tb-crumb{font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tb-btn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:7px 13px;cursor:pointer;font-size:.95rem;color:var(--tx0);transition:all var(--t);display:flex;align-items:center;gap:6px;min-height:36px;font-family:var(--fB)}
+.tb-btn:hover,.tb-btn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tb-sizes{display:flex;gap:3px;align-items:center}
+.tb-sizes .tb-btn{padding:7px 11px;font-family:var(--fM);font-weight:600}
+
+/* progress rail */
+.prog-wrap{position:sticky;top:57px;z-index:99;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 20px}
+.prog-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:8px 0}
+.prog-bar{flex:1;height:6px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;transition:width .4s ease}
+.prog-txt{font-family:var(--fM);font-size:.74rem;color:var(--tx2);min-width:116px;text-align:right}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 45%,#0D5C63 100%);padding:40px 24px 34px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-inner{max-width:900px;margin:0 auto;position:relative}
+.hero .labno{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);padding:5px 16px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:#fff;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-family:var(--fH);font-size:clamp(1.5rem,3.6vw,2.35rem);font-weight:900;color:#fff;line-height:1.22;margin-bottom:12px}
+.hero .lede{font-size:1.05rem;color:rgba(255,255,255,.9);max-width:720px;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:.78rem;padding:5px 12px;border-radius:50px;font-family:var(--fB)}
+.chip b{font-weight:700}
 
 /* layout */
-.wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px}
-.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shd);margin:-36px 0 26px;position:relative;z-index:2}
-.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px}
-.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 18px;padding-left:1.3em}
-.toc a{color:var(--tx0);text-decoration:none;font-size:.95rem}
-.toc a:hover{color:var(--ac);text-decoration:underline}
-section.blk{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:26px 28px;margin-bottom:22px;box-shadow:var(--shd)}
-section.blk>h2{font-family:var(--fH);font-size:1.4rem;font-weight:900;color:var(--tx0);margin-bottom:14px;display:flex;align-items:center;gap:12px;line-height:1.3}
-section.blk>h2 .n{flex:none;font-family:var(--fM);font-size:.8rem;background:var(--acG);color:var(--ac);border-radius:50px;padding:3px 11px}
-h3{font-family:var(--fH);font-size:1.08rem;color:var(--tx0);margin:22px 0 8px}
-section.blk p,section.blk li{color:var(--tx1)}
-section.blk p+p{margin-top:10px}
-section.blk ul,section.blk ol{padding-left:1.4em;margin:8px 0}
-section.blk li{margin:4px 0}
-strong,b{color:var(--tx0)}
-code{font-family:var(--fM);font-size:.86em;background:var(--bg2);border:1px solid var(--bdr);border-radius:5px;padding:1px 6px;color:var(--tx0);word-break:break-word}
-kbd{font-family:var(--fM);font-size:.82em;background:var(--bg1);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:0 6px}
-.path{font-family:var(--fM);font-size:.84em;color:var(--ac);word-break:break-word}
+main{max-width:900px;margin:0 auto;padding:28px 24px 90px}
+.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;margin-bottom:28px;box-shadow:var(--shd)}
+.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:12px;font-weight:600}
+.toc ol{list-style:none;columns:2;column-gap:28px}
+.toc li{margin-bottom:7px;break-inside:avoid}
+.toc a{color:var(--tx1);text-decoration:none;font-size:.9rem;display:inline-block;transition:color var(--t)}
+.toc a:hover{color:var(--ac)}
+.toc a::before{content:'›';color:var(--ac);margin-right:7px;font-weight:700}
 
-/* task + steps */
-.task{border-top:1px dashed var(--bdr);padding-top:6px;margin-top:18px}
-.task:first-of-type{border-top:0;margin-top:4px}
-.task>h3{display:flex;gap:10px;align-items:baseline}
-.task>h3 .tn{font-family:var(--fM);font-size:.75rem;color:var(--ac);text-transform:uppercase;letter-spacing:1.5px;flex:none}
-ol.steps{counter-reset:s;list-style:none;padding-left:0 !important}
-ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 46px;border-bottom:1px solid var(--bg2)}
-ol.steps>li:last-child{border-bottom:0}
-ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--acG);color:var(--ac);font:700 .85rem var(--fM);display:flex;align-items:center;justify-content:center}
+section{margin-bottom:34px;scroll-margin-top:70px}
+section h2{font-family:var(--fH);font-size:1.5rem;font-weight:900;color:var(--tx0);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+section p{margin-bottom:14px;color:var(--tx1)}
+section h3{font-family:var(--fH);font-size:1.12rem;font-weight:700;margin:4px 0 8px;color:var(--tx0)}
+strong{color:var(--tx0);font-weight:700}
+em{color:var(--tx0)}
+ul,ol{margin:0 0 14px 2px;padding-left:22px;color:var(--tx1)}
+li{margin-bottom:8px}
+code.inl,code{font-family:var(--fM);font-size:.86em;background:var(--acG);color:var(--ac);padding:2px 7px;border-radius:5px;word-break:break-word}
+[data-theme="dark"] code.inl,[data-theme="dark"] code{color:var(--ac2)}
+kbd{font-family:var(--fM);font-size:.82em;background:var(--bg2);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--tx0)}
 
-/* commands */
-.cmd{margin:10px 0;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bdr)}
-.cmd-bar{display:flex;justify-content:space-between;align-items:center;background:var(--bg2);padding:4px 6px 4px 12px;font-family:var(--fM);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
-.copy{background:var(--bg1);border:1px solid var(--bdr);border-radius:6px;font:600 .75rem var(--fB);color:var(--tx0);padding:4px 12px;cursor:pointer;min-height:32px;min-width:64px}
-.copy:hover,.copy:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
-.cmd pre{background:var(--codeBg);color:var(--codeTx);padding:12px 14px;overflow-x:auto;font-family:var(--fM);font-size:.86rem;line-height:1.55;white-space:pre}
-.cmd pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.task-head{font-family:var(--fM);font-size:.76rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ac);font-weight:600;margin:24px 0 10px;padding-left:12px;border-left:3px solid var(--ac)}
+
+.step{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shd)}
+.step h3{display:flex;align-items:baseline;gap:11px;margin-top:0}
+.step h3 .n{font-family:var(--fM);font-size:.8rem;font-weight:600;color:#fff;background:var(--ac);min-width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
+.step p:last-child{margin-bottom:0}
+
+/* command block */
+.cmd{position:relative;margin:12px 0}
+.cmd pre{background:#0F1C22;color:#D8E6E4;font-family:var(--fM);font-size:.84rem;line-height:1.75;padding:14px 48px 14px 16px;border-radius:var(--rs);overflow-x:auto;border:1px solid #1C2E35;white-space:pre}
+.cmd .p{color:#52B788;user-select:none}
+.cmd .fl{color:#44C7D0}
+.cmd .ar{color:#F4A261}
+.cmd .cm{color:#7A8A88;font-style:italic}
+.cmd .copy{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#D8E6E4;border-radius:6px;padding:4px 9px;font-size:.72rem;font-family:var(--fM);cursor:pointer;transition:all var(--t);min-height:28px}
+.cmd .copy:hover{background:var(--ac);border-color:var(--ac);color:#fff}
+.cmd .copy.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.path{font-family:var(--fM);font-size:.82rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:9px 13px;margin:10px 0;color:var(--tx1);display:block;word-break:break-word}
+.path b{color:var(--ac)}
 
 /* callouts */
-.call{border-left:4px solid var(--ac);background:var(--tipBg);border-radius:0 var(--rs) var(--rs) 0;padding:10px 14px;margin:12px 0}
-.call .k{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--ac);margin-bottom:2px}
-.call p{margin:0 !important}
-.call.warn{border-color:var(--warn);background:var(--warnBg)}.call.warn .k{color:var(--warn)}
-.call.fix{border-color:var(--hi);background:var(--fixBg)}.call.fix .k{color:var(--hi)}
-.call.court{border-color:var(--ok);background:var(--okBg)}.call.court .k{color:var(--ok)}
-.shot{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--ac2);border-radius:var(--rs);padding:8px 12px;margin:10px 0;font-size:.92rem;color:var(--tx1);background:var(--bg0)}
-.shot-ico{font-size:1.1rem;line-height:1.4}
+.call{border-radius:var(--rs);padding:14px 18px;margin:14px 0;border-left:4px solid var(--ac);background:var(--acG)}
+.call .k{display:block;font-weight:700;color:var(--tx0);margin-bottom:5px;font-size:.95rem}
+.call p{margin-bottom:0;color:var(--tx1)}
+.call.tip{border-left-color:var(--ac2);background:var(--acG)}
+.call.capture{border-left-color:var(--hi);background:rgba(196,69,54,.08)}
+[data-theme="dark"] .call.capture{background:rgba(231,111,81,.1)}
+.call.capture .k{color:var(--hi)}
+.call.stuck,.call.warn{border-left-color:var(--warn);background:var(--warnG)}
+.call.defend{border-left-color:var(--ok);background:rgba(45,106,79,.09)}
+[data-theme="dark"] .call.defend{background:rgba(82,183,136,.1)}
+.call.court{border-left-color:var(--ac);background:var(--acG)}
+
+details.go{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:0;margin:12px 0}
+details.go summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--ac);font-size:.92rem;list-style:none}
+details.go summary::-webkit-details-marker{display:none}
+details.go summary::before{content:'▸ ';color:var(--ac)}
+details.go[open] summary::before{content:'▾ '}
+details.go[open] summary{border-bottom:1px solid var(--bdr)}
+details.go p{padding:12px 16px 14px;margin:0;color:var(--tx1)}
 
 /* tables */
-.tblwrap{overflow-x:auto;margin:12px 0;border:1px solid var(--bdr);border-radius:var(--rs)}
-table.tbl{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
-table.tbl th{background:var(--bg2);text-align:left;font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx1);padding:9px 12px;border-bottom:1px solid var(--bdr)}
-table.tbl td{padding:9px 12px;border-bottom:1px solid var(--bg2);vertical-align:top;color:var(--tx1)}
-table.tbl tr:last-child td{border-bottom:0}
-table.tbl td:first-child{color:var(--tx0);font-weight:600}
+.tbl-wrap{overflow-x:auto;margin:14px 0;border-radius:var(--rs);border:1px solid var(--bdr)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:420px}
+thead th{background:var(--ac);color:#fff;padding:11px 14px;text-align:left;font-family:var(--fB);font-weight:600;font-size:.82rem}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--bdr);color:var(--tx1);vertical-align:top}
+tbody tr:nth-child(even) td{background:var(--bg2)}
+tbody tr:last-child td{border-bottom:none}
+table code{white-space:nowrap}
 
-/* env grid */
-.env{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:12px 0}
-.env div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 14px}
-.env b{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2);font-weight:600}
-.env span{color:var(--tx0);font-size:.95rem}
+/* check yourself */
+.q{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);padding:15px 18px;margin-bottom:12px;box-shadow:var(--shd)}
+.q .ask{font-weight:600;color:var(--tx0);margin-bottom:10px}
+.reveal{background:var(--bg2);border:1px solid var(--bdr);color:var(--ac);border-radius:50px;padding:6px 16px;font-size:.82rem;font-family:var(--fB);font-weight:600;cursor:pointer;transition:all var(--t);min-height:34px}
+.reveal:hover{background:var(--ac);color:#fff;border-color:var(--ac)}
+.ans{display:none;margin-top:12px;padding:12px 15px;background:var(--acG);border-radius:var(--rs);color:var(--tx1);font-size:.94rem;border-left:3px solid var(--ac)}
+.ans.show{display:block}
 
-/* done rows */
-.done-row{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--bg2);font-size:.92rem;color:var(--tx2)}
-.done-row input,.evidence input{width:22px;height:22px;accent-color:var(--ac);cursor:pointer;flex:none}
-.done-row label{cursor:pointer}
+/* evidence + progress checkboxes */
+.evidence{background:var(--bg1);border:1px solid var(--bdr);border-left:4px solid var(--hi);border-radius:var(--rs);padding:16px 20px;box-shadow:var(--shd)}
+[data-theme="dark"] .evidence{border-left-color:var(--hi)}
+.evidence ul{list-style:none;padding:0;margin:0}
+.evidence li{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px}
+.evidence li:last-child{margin-bottom:0}
+.evidence input[type=checkbox],.done-row input[type=checkbox]{width:19px;height:19px;margin-top:2px;accent-color:var(--ac);flex-shrink:0;cursor:pointer}
+.evidence .shot{font-weight:700;color:var(--hi)}
+.shot-marker{display:inline-flex;align-items:center;gap:5px;font-family:var(--fM);font-size:.72rem;color:var(--hi);font-weight:600;letter-spacing:.5px}
+.done-row{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--bdr)}
+.done-row label{font-size:.82rem;color:var(--tx2);font-family:var(--fM);cursor:pointer}
 
-/* Q&A */
-.q{border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px;margin:10px 0;background:var(--bg0)}
-.q .ask{color:var(--tx0) !important;font-weight:600}
-.reveal{margin-top:8px;background:var(--bg1);border:1px solid var(--ac);color:var(--ac);border-radius:50px;padding:4px 14px;font:600 .82rem var(--fB);cursor:pointer;min-height:36px}
-.reveal:hover,.reveal:focus-visible{background:var(--ac);color:#fff}
-.ans{display:none;margin-top:8px;padding:8px 12px;border-left:3px solid var(--ok);background:var(--okBg);border-radius:0 6px 6px 0;color:var(--tx1)}
-.ans.open{display:block}
+/* cheat sheet */
+.cheat{background:#0F1C22;border-radius:var(--r);padding:20px 22px;margin-top:6px}
+.cheat .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.cheat h3{color:#44C7D0;font-family:var(--fM);font-size:.8rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;border:none;padding:0}
+.cheat ul{list-style:none;padding:0;margin:0}
+.cheat li{color:#C3D4D2;font-size:.85rem;margin-bottom:7px;line-height:1.5}
+.cheat code{background:rgba(68,199,208,.12);color:#9BE4EA;padding:1px 6px}
 
-/* evidence */
-.evidence ul{list-style:none;padding-left:0 !important}
-.evidence li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rs);margin:8px 0;background:var(--bg0)}
-.evidence .shotname{font-weight:700;color:var(--tx0)}
-.evline{margin-top:14px;font-size:.9rem;color:var(--tx2)}
-.evline span{display:inline-block;min-width:220px;border-bottom:1px solid var(--tx2);margin-left:6px}
+.printbar{text-align:center;color:var(--tx2);font-size:.82rem;margin-top:30px;padding-top:20px;border-top:1px solid var(--bdr)}
+.printbar a{color:var(--ac);text-decoration:none}
 
-/* cheat */
-.cheat .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.cheat .grid>div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px}
-.cheat h3{margin-top:0;font-size:.98rem;color:var(--ac)}
-.cheat li{font-size:.92rem}
-
-/* lab nav + footer */
-.labnav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
-.labnav a{flex:1;min-width:220px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;text-decoration:none;color:var(--tx0);box-shadow:var(--shd);transition:all var(--t)}
-.labnav a:hover{border-color:var(--ac);transform:translateY(-2px)}
-.labnav small{display:block;font-family:var(--fM);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2)}
-.labnav a.nx{text-align:right}
-.site-footer{text-align:center;padding:28px 24px;border-top:1px solid var(--bdr);font-size:.85rem;color:var(--tx2);margin-top:30px}
-.site-footer a{color:var(--ac);text-decoration:none}
+footer.sf{text-align:center;padding:26px 24px;border-top:1px solid var(--bdr);font-size:.82rem;color:var(--tx2);background:var(--bg1)}
+footer.sf a{color:var(--ac);text-decoration:none}
 
 @media(max-width:640px){
-  .hero{padding:36px 16px 48px}
-  section.blk{padding:20px 16px}
-  ol.steps>li{padding-left:40px}
-  .toolbar{padding:6px 12px}
-  .prog{order:3;max-width:none;min-width:100%}
+  .toc ol{columns:1}
+  .cheat .grid{grid-template-columns:1fr;gap:18px}
+  .hero{padding:30px 18px 26px}
+  main{padding:22px 16px 70px}
+  .prog-txt{min-width:84px;font-size:.68rem}
+  .tb-crumb{display:none}
 }
-@media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
 @media print{
-  :root{--bg0:#fff;--bg1:#fff;--bg2:#f2f2f2;--tx0:#000;--tx1:#222;--tx2:#444;--codeBg:#f4f4f4;--codeTx:#000}
-  .toolbar,.toc,.labnav,.copy,.reveal,.skip-link,#df-assistant-root{display:none !important}
-  .hero{background:none;padding:10px 0;color:#000}.hero h1,.hero p.sub,.hero p.sub a{color:#000}.hero-badge,.chip{color:#000;border-color:#999;background:none}
-  .hero::after{display:none}
-  section.blk{box-shadow:none;break-inside:auto;border-color:#bbb}
-  .ans{display:block}
-  .cmd pre{white-space:pre-wrap}
-  a{color:#000}
+  .toolbar,.prog-wrap,.cmd .copy,.reveal,.skip-link,.done-row,footer.sf .noprint{display:none!important}
+  body{background:#fff;color:#000}
+  .ans{display:block!important}
+  .hero{background:#0D5C63!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .step,.q,.evidence,.toc{break-inside:avoid;box-shadow:none}
+  .cmd pre{white-space:pre-wrap;word-break:break-all}
+  a[href]::after{content:''}
 }
 </style>
 </head>
-<body data-prefix="df-lab03-">
+<body>
 <a href="#main" class="skip-link">Skip to main content</a>
-<header class="hero">
-  <div class="hero-badge">Lab 03 &middot; Hands-on Companion</div>
-  <h1>Live Forensics</h1>
-  <p class="sub">Supports <a href="module10_lesson.html" target="_blank" rel="noopener">Module 10 &mdash; Virtual Machine Forensics, Live Acquisitions, and Network Forensics<span class="sr-only"> (opens in new tab)</span></a></p>
-  <div class="meta"><span class="chip">&#128187; WinOS</span><span class="chip">&#128295; DEFT 8 / DART 2.0 (Drive Manager, FTK Imager Lite, TreeSizeFree, WinAudit, BrowsingHistoryView)</span><span class="chip">&#9201; 60–75 min</span></div>
-</header>
-<div class="toolbar" role="navigation" aria-label="Lab tools">
-  <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&lsaquo; All labs<span class="sr-only"> (opens in new tab)</span></a>
-  <div class="prog"><div class="bar" id="progressbar" role="progressbar" aria-label="Sections reviewed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar-fill"></span></div><span id="bar-txt">0/7 reviewed</span></div>
-  <div class="tools">
-    <button class="tbtn" id="fs-down" type="button" aria-label="Smaller text">A&minus;</button>
-    <button class="tbtn" id="fs-up" type="button" aria-label="Larger text">A+</button>
-    <button class="tbtn" id="print-btn" type="button" aria-label="Print this page">&#128424;&#65039; Print</button>
-    <button class="tbtn" id="theme-toggle" type="button" aria-pressed="false">&#127769; Dark</button>
-    <button class="tbtn" id="reset-btn" type="button">Clear progress</button>
+
+<div class="toolbar" role="navigation" aria-label="Page toolbar">
+  <div class="tb-left">
+    <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&#8592; All labs</a>
+    <span class="tb-crumb">Forensics &middot; LAB 03</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-sizes" role="group" aria-label="Text size">
+      <button class="tb-btn" id="fsDec" aria-label="Decrease text size">A&#8722;</button>
+      <button class="tb-btn" id="fsRst" aria-label="Reset text size">A</button>
+      <button class="tb-btn" id="fsInc" aria-label="Increase text size">A+</button>
+    </div>
+    <button class="tb-btn" id="printBtn" aria-label="Print or save as PDF">&#128424;&#65039; <span>Print</span></button>
+    <button class="tb-btn" id="themeBtn" aria-label="Toggle dark mode">&#127769; <span>Dark</span></button>
   </div>
 </div>
-<main id="main" class="wrap">
-<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#environment">Before you start</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#corrections">Manual corrections</a></li><li><a href="#defensible">Making it defensible</a></li><li><a href="#module">Course connection</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav>
-<section class="blk" id="overview" aria-labelledby="h-overview"><h2 id="h-overview"><span class="n">01</span>Overview &mdash; what this lab is really teaching</h2><p>Sometimes you can't pull the plug. The machine is running full-disk encryption whose key lives only in RAM, it's a server you can't take offline, or you need fast triage to decide whether a deeper exam is even warranted. <strong>Live forensics</strong> is the art of pulling useful evidence from a running system while disturbing it as little as possible.</p><p>You'll work entirely from the <strong>DART</strong> toolkit inside <strong>DEFT 8</strong> &mdash; a portable live-response suite &mdash; using <strong>Drive Manager</strong> for disk serials, <strong>FTK Imager Lite</strong> to map user directories, <strong>TreeSizeFree</strong> to find big/hidden caches of data by size, <strong>WinAudit</strong> for a full system inventory, and <strong>BrowsingHistoryView</strong> to grab web history on the spot.</p><p>The through-line: <strong>run your tools from external media, write your output to external media, and log everything.</strong> DART keeps its own action log for exactly this reason. Every tool you run leaves a trace on the subject system; your job is to keep that footprint small, known, and documented.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section>
-<section class="blk" id="environment" aria-labelledby="h-environment"><h2 id="h-environment"><span class="n">02</span>Before you start</h2><div class="env"><div><b>Machine</b><span>WinOS (Windows)</span></div><div><b>Login</b><span>Administrator</span></div><div><b>Toolkit</b><span>DEFT 8 &rarr; DART 2.0</span></div><div><b>Source</b><span>Local Disk (C:)</span></div><div><b>Output + logs</b><span>Evidence Repository (E:)</span></div></div><div class="call warn"><span class="k">Watch out</span><p>Live-response tools are frequently flagged as false positives by antivirus. In a real engagement you may need to document (and sometimes disable) AV so it doesn't quarantine your toolkit &mdash; and note that you did.</p></div></section>
-<section class="blk" id="walkthrough" aria-labelledby="h-walkthrough"><h2 id="h-walkthrough"><span class="n">03</span>Walkthrough</h2><div class="task"><h3><span class="tn">Task 1</span>Open DART and set its log path</h3><p>DART logs every action &mdash; this log is part of your documentation and must live on external media.</p><ol class="steps"><li>Browse to <code>Desktop\Toolbox\deft-8.2-002</code> and run <code>dart.exe</code>. Read and accept the DART DISCLAIMER.</li><li>When prompted, point DART's log at <code>E:\FOR_LAB_003\DART_LOGS</code> &mdash; never the computer under examination.</li><li>Note DART's categories: Acquire, Data Recovery, Forensics, Incident Resp., Networking, Password, Visualize, Utility.</li></ol></div><div class="task"><h3><span class="tn">Task 2</span>Pull disk identity with Drive Manager</h3><p>Serial numbers tie the physical device to your case documentation.</p><ol class="steps"><li>Incident Resp. &rarr; System Info &rarr; <strong>DriveMan</strong> &rarr; Start as Admin.</li><li>Select (C:) &rarr; <strong>Disk Info</strong>: record hard-drive serial, volume serial, total size, allocated/unallocated clusters, physical name, fixed/removable. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The Disk Info window with the C: serial numbers.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 3</span>Map user directories with FTK Imager Lite</h3><p>Live users' files are the richest evidence; know where they live.</p><ol class="steps"><li>Acquire &rarr; Image &rarr; <strong>FTK Imager</strong> &rarr; Start as Admin.</li><li><span class='path'>File &gt; Add Evidence Item &gt; Physical Drive &gt; PHYSICALDRIVE0</span>, expand to the largest partition &rarr; <code>NONAME [NTFS]</code> &rarr; <code>root</code> &rarr; <code>Users</code> &rarr; <code>Administrator</code>.</li><li>Note that FTK shows hidden/system folders (e.g. <code>AppData</code>) that Windows Explorer hides &mdash; a live-triage advantage.</li></ol></div><div class="task"><h3><span class="tn">Task 4</span>Find data by size with TreeSizeFree</h3><p>Big files hide in plain sight; sorting by size surfaces downloaded media and caches fast.</p><ol class="steps"><li>Incident Resp. &rarr; System Info &rarr; <strong>TreeSizeFree</strong> &rarr; Start as Admin.</li><li>Scan Local Disk (C:), expand <code>Users &gt; Administrator</code>, and check <code>Downloads</code> for any large video file. Note its name.</li></ol></div><div class="task"><h3><span class="tn">Task 5</span>Inventory the system with WinAudit</h3><p>A full system snapshot (OS, installed software, install dates) in one report.</p><ol class="steps"><li>Incident Resp. &rarr; System Info &rarr; <strong>WinAudit</strong> &rarr; Start as Admin &rarr; Audit.</li><li>Review System Overview and Installed Software (Active Setup vs user-installed Programs, with install dates).</li><li>Save as a <strong>Web Page (HTML, include images)</strong> to <code>E:\FOR_LAB_003\FOR_LAB_003_Audit</code>. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The WinAudit report with Installed Software showing install dates.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 6</span>Capture web history with BrowsingHistoryView</h3><p>Often the single most telling live artifact &mdash; where the user went and when.</p><ol class="steps"><li>Forensics &rarr; Browser &rarr; <strong>BrowsingHistoryView 64-bit</strong> &rarr; Start as Admin &rarr; OK (default options).</li><li>Review URL, title, visit time, visit count, 'visited from', browser, and user columns.</li><li>Edit &gt; Select All, File &gt; Save Selected Items &rarr; <strong>HTML - Vertical</strong> to <code>E:\FOR_LAB_003</code>.</li></ol></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section>
-<section class="blk" id="reference" aria-labelledby="h-reference"><h2 id="h-reference"><span class="n">04</span>Reference &mdash; when to go live, and DART's toolset</h2><h3>When live forensics is the right call</h3><ul><li><strong>Full-disk encryption</strong> whose key is only in RAM &mdash; power off and the disk is unreadable.</li><li><strong>Can't take it offline</strong> &mdash; production servers, critical infrastructure.</li><li><strong>Triage</strong> &mdash; decide fast whether a full exam is justified.</li><li><strong>Volatile-only evidence</strong> &mdash; network connections, running malware, open handles (see Lab 2).</li></ul><h3>DART categories you'll reach for</h3><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Category</th><th scope="col">Use it for</th></tr></thead><tbody><tr><td>Acquire</td><td>Imaging on the live box (FTK Imager Lite).</td></tr><tr><td>Forensics</td><td>Browser history, email, hashing, IM parsing &mdash; the biggest toolset.</td></tr><tr><td>Incident Resp.</td><td>System info, antivirus, compromise triage.</td></tr><tr><td>Networking</td><td>Connections, cookies, packet sniffing.</td></tr><tr><td>Password</td><td>Revealing stored browser/Wi-Fi/app passwords.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section>
-<section class="blk" id="stuck" aria-labelledby="h-stuck"><h2 id="h-stuck"><span class="n">05</span>Where people get stuck</h2><p>Most problems in this lab fall into one of these.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Symptom</th><th scope="col">Likely cause</th><th scope="col">Fix</th></tr></thead><tbody><tr><td>Antivirus quarantines a DART tool</td><td>Live-response tools trip AV heuristics</td><td>Document it; in a sanctioned engagement, disable AV and note that you did. Never silently work around it.</td></tr><tr><td>Tool won't launch / access denied</td><td>Not elevated</td><td>Use 'Start as Admin' in DART, not a plain double-click.</td></tr><tr><td>Can't find AppData under a user</td><td>It's hidden in Explorer but visible in FTK</td><td>That's the point &mdash; FTK Imager shows hidden/system folders Explorer hides.</td></tr><tr><td>Saved report lands on C:</td><td>Wrong destination picked</td><td>Always target E:. Writing output to the subject drive overwrites unallocated space and pollutes the evidence.</td></tr><tr><td>PHYSICALDRIVE0 has no OS structure</td><td>Secondary drive enumerated as drive 0 (rare)</td><td>Confirm you selected the drive that actually holds the OS partition.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section>
-<section class="blk" id="corrections" aria-labelledby="h-corrections"><h2 id="h-corrections"><span class="n">06</span>Manual corrections &amp; currency notes</h2><p>The NDG manual was written in 2020&ndash;21. These are the places where it is wrong, inconsistent, or out of date &mdash; worth knowing before you trust a screenshot.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Where</th><th scope="col">The manual says</th><th scope="col">What's actually true</th></tr></thead><tbody><tr><td>DEFT / DART</td><td>Built around DEFT 8 and DART 2.0</td><td>DEFT is discontinued (last release ~2018). The current live Linux forensic distro is <strong>CAINE</strong> (also in this pod). The <em>concepts</em> &mdash; run from external media, log everything, write out externally &mdash; are what transfer, not the specific suite.</td></tr><tr><td>BrowsingHistoryView / NirSoft tools</td><td>Used as live browser-history tools</td><td>Still maintained and widely used, but many AV engines flag NirSoft utilities &mdash; expect to document that.</td></tr><tr><td>WinAudit</td><td>Used for system inventory</td><td>Still functional but effectively unmaintained; modern live-triage often uses KAPE, CyLR, or velociraptor to collect artifacts for offline parsing.</td></tr><tr><td>'Live analysis won't alter much'</td><td>Implied by the lab's gentle framing</td><td>Every live tool alters the system &mdash; access times, prefetch, memory. Live forensics is a documented trade-off, not a zero-impact method.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-corrections" data-done="corrections"><label for="done-corrections">Mark this section reviewed</label></div></section>
-<section class="blk" id="defensible" aria-labelledby="h-defensible"><h2 id="h-defensible"><span class="n">07</span>Making it defensible</h2><p>Live work is inherently invasive, so defensibility rests on discipline:</p><ul><li><strong>Tools from external media, output to external media.</strong> Never install on, or write to, the subject system.</li><li><strong>Keep DART's log.</strong> It's a contemporaneous record of exactly what you ran &mdash; store it on E:, treat it as evidence.</li><li><strong>Record disk serials up front.</strong> They link this running machine to your chain-of-custody paperwork (Lab 21).</li><li><strong>Account for AV changes.</strong> If you disabled antivirus, say so, when, and why.</li></ul><div class="call court"><span class="k">On the stand</span><p>'You ran software on a running machine &mdash; how do we know you didn't plant or alter evidence?' Your answer is the DART action log plus your own contemporaneous notes, both stored off the subject system.</p></div><div class="done-row"><input type="checkbox" id="done-defensible" data-done="defensible"><label for="done-defensible">Mark this section reviewed</label></div></section>
-<section class="blk" id="module" aria-labelledby="h-module"><h2 id="h-module"><span class="n">08</span>Course connection</h2><p>This lab is the hands-on side of <a href="module10_lesson.html" target="_blank" rel="noopener"><strong>Module 10: Virtual Machine Forensics, Live Acquisitions, and Network Forensics</strong></a> &middot; also touches <a href="module5_lesson.html" target="_blank" rel="noopener">Module 5</a>, <a href="module11_lesson.html" target="_blank" rel="noopener">Module 11</a>.</p><p>Live forensics anchors the live/network-forensics module alongside Lab 2. The user-directory mapping here feeds Lab 4 (registry), Lab 8 (link files), and Lab 13 (browser forensics); the WinAudit inventory supports the hardware documentation you formalize in Lab 21.</p></section>
-<section class="blk" id="check" aria-labelledby="h-check"><h2 id="h-check"><span class="n">09</span>Check yourself</h2><div class="q"><p class="ask">1. Name two situations where live forensics beats pulling the plug.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Full-disk encryption whose key lives only in RAM (powering off makes the disk unreadable), and a system that can't be taken offline such as a production server. Fast triage and volatile-only evidence are two more.</div></div><div class="q"><p class="ask">2. Where must DART's log and all your output go, and why?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">On external media (E:), never the computer under examination. Writing to the subject drive overwrites unallocated space and alters the evidence; the external log is your defensible record of what you did.</div></div><div class="q"><p class="ask">3. Why does FTK Imager Lite show folders Windows Explorer doesn't?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">It reads the file system directly and displays hidden and system folders (like AppData) and even deleted entries, which Explorer suppresses &mdash; useful for finding user artifacts during live triage.</div></div><div class="q"><p class="ask">4. Your AV quarantines a live-response tool. What's the correct response?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Document it, and in a sanctioned engagement disable AV and record that you did so and why. Never silently bypass controls &mdash; the goal is a defensible, documented process.</div></div><div class="done-row"><input type="checkbox" id="done-check" data-done="check"><label for="done-check">Mark this section reviewed</label></div></section>
-<section class="blk" id="evidence" aria-labelledby="h-evidence"><h2 id="h-evidence"><span class="n">10</span>Evidence to capture</h2><p>Your instructor wants screenshots of these key steps as proof you ran the lab. Capture them as you go (the &#128248; markers in the walkthrough show where), tick each one off, then print this page or submit the list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" id="ev-1" data-evidence="1"><label for="ev-1"><span class="shotname">Disk identity.</span> Drive Manager's Disk Info window showing the C: hard-drive and volume serial numbers.</label></li><li><input type="checkbox" id="ev-2" data-evidence="2"><label for="ev-2"><span class="shotname">User directories.</span> FTK Imager Lite expanded to a user's folder, with a hidden folder like AppData visible.</label></li><li><input type="checkbox" id="ev-3" data-evidence="3"><label for="ev-3"><span class="shotname">Large file by size.</span> TreeSizeFree showing the Downloads folder expanded with its largest file.</label></li><li><input type="checkbox" id="ev-4" data-evidence="4"><label for="ev-4"><span class="shotname">System inventory.</span> The WinAudit Installed Software view with install dates.</label></li><li><input type="checkbox" id="ev-5" data-evidence="5"><label for="ev-5"><span class="shotname">Web history export.</span> BrowsingHistoryView results, or the saved HTML report open.</label></li></ul></div><p class="evline">Student name:<span></span> &nbsp; Date:<span style="min-width:120px"></span></p></section>
-<section class="blk" id="cheat" aria-labelledby="h-cheat"><h2 id="h-cheat"><span class="n">11</span>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Live-response rules</h3><ul><li>Tools + output on external media only</li><li>Log every action (DART log on E:)</li><li>Minimal footprint, document the footprint</li><li>Record disk serials first</li></ul></div><div><h3>DART quick map</h3><ul><li>DriveMan → disk serials</li><li>FTK Imager → user dirs (shows hidden)</li><li>TreeSizeFree → find data by size</li><li>WinAudit → system inventory</li><li>BrowsingHistoryView → web history</li></ul></div></div></div></section>
-<nav class="labnav" aria-label="Lab navigation"><a href="forensics_lab02_companion.html" target="_blank" rel="noopener"><small>&lsaquo; Previous lab</small>Lab 02: Live Acquisition<span class="sr-only"> (opens in new tab)</span></a><a class="nx" href="forensics_lab04_companion.html" target="_blank" rel="noopener"><small>Next lab &rsaquo;</small>Lab 04: Registry Forensics<span class="sr-only"> (opens in new tab)</span></a></nav>
+
+<div class="prog-wrap" aria-hidden="false">
+  <div class="prog-inner">
+    <div class="prog-bar" role="progressbar" aria-label="Section progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="prog-fill" id="progFill"></div></div>
+    <span class="prog-txt" id="progTxt">0 / 0 sections</span>
+  </div>
+</div>
+
+<header class="hero" role="banner">
+  <div class="hero-inner">
+    <span class="labno">LAB 03</span>
+    <h1>Live Forensics</h1>
+    <p class="lede">Sometimes you can't power down. Collect evidence from a running machine with the DART live-response suite while leaving the smallest footprint — and documenting every step.</p>
+    <div class="chips"><span class="chip">&#9201; <b>50 min</b></span><span class="chip">&#128202; Difficulty: <b>Intermediate</b></span><span class="chip">&#129514; Tools: <b>DART suite (DEFT)</b></span><span class="chip">&#128421; VM: <b>WinOS</b></span><span class="chip">&#128218; Maps to: <b>Module 10 — Live &amp; Network Forensics</b></span></div>
+  </div>
+</header>
+
+<main id="main">
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#tools">Tools &amp; environment</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#court">Why it matters in court</a></li><li><a href="#exam">Course relevance</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav><section id="overview" data-track><h2>Overview — what this lab is really teaching</h2><p>Sometimes you can't pull the plug and image a drive — the system must stay running, or it's encrypted and shutting down loses access. <strong>Live forensics</strong> is the art of collecting evidence from a powered-on machine while leaving the smallest possible footprint and documenting every step.</p><p>The core tension here is identical to Lab 02's: acting on a live system changes it. The skill is choosing lightweight tools, running them from external media, writing output to an external drive, and <strong>taking meticulous notes</strong> so every change you cause is accounted for.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section><section id="tools" data-track><h2>Tools &amp; environment</h2><p>On <strong>WinOS</strong>, you drive a suite called <strong>DART</strong> (Digital Advanced Response Toolkit), bundled with the <strong>DEFT</strong> forensics OS. DART groups live-response tools by category (Acquire, Data Recovery, Forensics, Incident Resp., Networking, Password, Visualize, Utility).</p><div class="tbl-wrap"><table><thead><tr><th>DART tool</th><th>Shows you</th></tr></thead><tbody><tr><td><b>DriveMan</b></td><td>Connected drives — serials, size, allocated/unallocated clusters (for documentation).</td></tr><tr><td><b>FTK Imager Lite</b></td><td>Browse the live file system and identify user directories.</td></tr><tr><td><b>TreeSizeFree</b></td><td>Where the big files are, by folder — fast triage for caches of illicit data.</td></tr><tr><td><b>WinAudit</b></td><td>A full system/software inventory exported to HTML.</td></tr><tr><td><b>BrowsingHistoryView</b></td><td>Web history across browsers, exportable to HTML.</td></tr></tbody></table></div><div class="call stuck"><span class="k">DART logs go on the evidence drive, never the suspect's</span><p>DART writes a log of your actions — which is exactly the documentation you want — but store it on the external <em>Evidence Repository (E:)</em>, not on the machine under examination.</p></div><div class="done-row"><input type="checkbox" id="done-tools" data-done="tools"><label for="done-tools">Mark this section reviewed</label></div></section><section id="walkthrough" data-track><h2>Walkthrough</h2><div class="step"><h3><span class="n">1</span> Open DART and set the log path</h3><p>From <em>Desktop &gt; Toolbox &gt; deft-8.2-002</em>, run <code>dart.exe</code>, accept the disclaimer, and point its log to <em>E:\FOR_LAB_003\DART_LOGS</em>.</p></div><div class="step"><h3><span class="n">2</span> Document the drive with DriveMan</h3><p><strong>Incident Resp. &gt; System Info &gt; DriveMan &gt; Start as Admin</strong>. Select <code>C:</code> and open <strong>Disk Info</strong> to read the physical and volume serial numbers, total size, and allocated/unallocated clusters — all needed for chain-of-custody documentation.</p></div><div class="step"><h3><span class="n">3</span> Identify user directories with FTK Imager Lite</h3><p><strong>Acquire &gt; Image &gt; FTK Imager</strong>. Add <code>PHYSICALDRIVE0</code>, find the main data partition (the largest one), expand <code>root &gt; Users &gt; Administrator</code>. FTK Imager shows <em>hidden</em> folders like <code>AppData</code> that Windows Explorer conceals — a reminder to look where the user can't.</p></div><div class="step"><h3><span class="n">4</span> Triage by size with TreeSizeFree</h3><p><strong>Scan &gt; Local Disk (C:)</strong>, then drill into <code>Users &gt; Administrator</code>. Large files cluster where interesting data hides; note any video file in the Downloads folder.</p></div><div class="step"><h3><span class="n">5</span> Inventory the system with WinAudit</h3><p>Run the audit, review <strong>System Overview</strong> and <strong>Installed Software</strong> (it even separates default OS components from user-installed programs with install dates), then <strong>Save</strong> as an HTML report to <em>E:\FOR_LAB_003\FOR_LAB_003_Audit</em>.</p><div class="call capture"><span class="k">&#128248; Screenshot for your report</span><p>The WinAudit Installed Software view, then the saved HTML report.</p></div></div><div class="step"><h3><span class="n">6</span> Capture web history with BrowsingHistoryView</h3><p><strong>Forensics &gt; Browser &gt; BrowsingHistoryView</strong>. It aggregates history across browsers with URL, title, visit time, visit count, browser, and user. <strong>Edit &gt; Select All</strong>, then <strong>File &gt; Save Selected Items</strong> as HTML to the evidence drive.</p><div class="call capture"><span class="k">&#128248; Screenshot for your report</span><p>The BrowsingHistoryView results, and the saved HTML export.</p></div></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section><section id="reference" data-track><h2>Reference — live vs. dead acquisition</h2><div class="tbl-wrap"><table><thead><tr><th></th><th>Live (this lab)</th><th>Dead / static (Lab 01)</th></tr></thead><tbody><tr><td>System state</td><td>Powered on, running</td><td>Powered off, imaged</td></tr><tr><td>Footprint</td><td>Unavoidable; minimize + document</td><td>None on the original</td></tr><tr><td>Access to volatile data</td><td>Yes (RAM, connections, running apps)</td><td>No</td></tr><tr><td>Encrypted volumes</td><td>Accessible while mounted</td><td>Locked once powered off</td></tr><tr><td>When to use</td><td>Can't power down, encryption in play, time-critical triage</td><td>The default when you safely can</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section><section id="stuck" data-track><h2>Where people get stuck</h2><div class="tbl-wrap"><table><thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead><tbody><tr><td>AV quarantines a DART tool</td><td>Legitimate tools flagged as false positives</td><td>Expected in the pod; in the field, disable AV deliberately and note it.</td></tr><tr><td>Can't see AppData / hidden folders in Explorer</td><td>Windows hides them by default</td><td>Use FTK Imager, which shows all files and folders.</td></tr><tr><td>Output accidentally on the suspect's C:</td><td>Wrong save path</td><td>Always write exports (and DART logs) to the external E: drive.</td></tr><tr><td>"Physical Drive 0" has no OS folders</td><td>Rare, but 0 can be a secondary disk</td><td>Pick the drive whose largest partition holds the OS/user files.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section><section id="court" data-track><h2>Why it matters in court</h2><div class="call defend"><span class="k">Notes are the evidence of your process</span><p>On a live system you can't claim "nothing changed." What you <em>can</em> show is a complete, timestamped record of every tool you ran and every action you took — which is why DART logs and your own notes carry real weight.</p></div><ul><li><strong>Minimize and disclose.</strong> Smallest footprint, fully documented.</li><li><strong>Keep output off the subject.</strong> Exports and logs on external media only.</li><li><strong>Serial numbers tie the evidence to the device.</strong> DriveMan's physical serial is chain-of-custody gold.</li></ul><div class="done-row"><input type="checkbox" id="done-court" data-done="court"><label for="done-court">Mark this section reviewed</label></div></section><section id="exam"><h2>Course relevance</h2><p>Supports <strong>Module 10</strong> (live acquisitions) and <strong>Module 3</strong> (acquisition strategy). Know when live beats dead, the footprint trade-off, and the discipline of documenting a running system.</p></section><section id="check"><h2>Check yourself</h2><div class="q"><p class="ask">1. Give two situations where live acquisition is the right call over imaging a powered-off disk.</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Any two: the system can't be shut down (critical service), the disk is encrypted and powering off loses access, you need volatile data like RAM or network connections, or you're doing fast triage.</div></div><div class="q"><p class="ask">2. Why store DART logs and exports on the E: drive rather than the C: drive being examined?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Writing to the subject's drive creates more artifacts and risks overwriting evidence. External media keeps your activity off the evidence and preserves it.</div></div><div class="q"><p class="ask">3. Why use FTK Imager to browse the file system instead of Windows Explorer?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">FTK Imager reveals hidden and system files and folders (like AppData) and deleted entries that Explorer conceals from a normal user view.</div></div><div class="q"><p class="ask">4. You can't guarantee a live system is unchanged. What makes your live acquisition defensible anyway?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">A minimal footprint using lightweight tools plus a complete, timestamped record (DART logs and your notes) of exactly what you ran and when.</div></div></section><section id="evidence"><h2>Evidence to capture</h2><p>Your instructor wants screenshots of the key steps as proof you completed the lab. Grab these as you go, tick each one off, then use <strong>Print</strong> to submit this list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" data-evidence="l3-1"><span><span class="shot">Drive info.</span> DriveMan's Disk Info for C: with serials and size.</span></li><li><input type="checkbox" data-evidence="l3-2"><span><span class="shot">System audit.</span> The saved WinAudit HTML (System Overview or Installed Software).</span></li><li><input type="checkbox" data-evidence="l3-3"><span><span class="shot">Web history.</span> The BrowsingHistoryView export showing captured history.</span></li></ul></div></section><section id="cheat"><h2>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>DART tools</h3><ul><li>DriveMan → Disk Info (serials)</li><li>FTK Imager Lite → user dirs</li><li>TreeSizeFree → size triage</li><li>WinAudit → HTML inventory</li><li>BrowsingHistoryView → web history</li></ul></div><div><h3>Discipline</h3><ul><li>Minimize footprint</li><li>Log path → E:\FOR_LAB_003</li><li>Exports → external drive only</li><li>Note every action + time</li></ul></div></div></div></section>
+  <div class="printbar noprint">
+    <p>Tip: use <strong>Print</strong> above to save this companion (with your ticked checkboxes and revealed answers) as a PDF to submit.</p>
+  </div>
 </main>
-<footer class="site-footer">
-  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="index.html" target="_blank" rel="noopener">Course hub<span class="sr-only"> (opens in new tab)</span></a></p>
-  <p style="margin-top:4px">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College &middot; 2026</p>
+
+<footer class="sf">
+  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="https://mqaissaunee-bcc.github.io/forensics/" target="_blank" rel="noopener">Course home</a></p>
+  <p style="margin-top:4px" class="noprint">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College</p>
 </footer>
-<div id="live" class="sr-only" aria-live="polite"></div>
+
 <script>
 (function(){
-  "use strict";
-  var body=document.body, root=document.documentElement;
-  var P=body.getAttribute("data-prefix")||"df-lab-";
-  function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-  function del(k){try{localStorage.removeItem(k);}catch(e){}}
-
-  /* theme: shares the course hub's key so the choice follows students across the site */
-  var tb=document.getElementById("theme-toggle");
-  function applyTheme(m){
-    if(m==="dark"){root.setAttribute("data-theme","dark");}else{root.removeAttribute("data-theme");}
-    if(tb){tb.innerHTML=m==="dark"?"&#9728;&#65039; Light":"&#127769; Dark";tb.setAttribute("aria-pressed",m==="dark"?"true":"false");}
-  }
-  applyTheme(load("df-theme")==="dark"?"dark":"light");
-  if(tb){tb.addEventListener("click",function(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";save("df-theme",n);applyTheme(n);});}
-
-  /* text size */
-  var fs=parseFloat(load("df-lab-fs")||"1");
-  function applyFs(){fs=Math.min(1.4,Math.max(0.85,fs));root.style.setProperty("--fs",fs);save("df-lab-fs",String(fs));}
+  var KEY="df-lab03";
+  var root=document.documentElement;
+  // theme (light default; honor saved)
+  try{var th=localStorage.getItem('df-theme');if(th==='dark')root.setAttribute('data-theme','dark');}catch(e){}
+  function setTheme(d){if(d){root.setAttribute('data-theme','dark');}else{root.removeAttribute('data-theme');}try{localStorage.setItem('df-theme',d?'dark':'light');}catch(e){}updThemeBtn();}
+  function updThemeBtn(){var b=document.getElementById('themeBtn');if(!b)return;var d=root.getAttribute('data-theme')==='dark';b.innerHTML=d?'\u2600\ufe0f <span>Light</span>':'\u{1F319} <span>Dark</span>';}
+  // text size
+  var fs=1;try{var s=localStorage.getItem('df-fs');if(s)fs=parseFloat(s);}catch(e){}
+  function applyFs(){root.style.setProperty('--fs',fs);try{localStorage.setItem('df-fs',fs);}catch(e){}}
   applyFs();
-  var up=document.getElementById("fs-up"),dn=document.getElementById("fs-down");
-  if(up){up.addEventListener("click",function(){fs+=0.1;applyFs();});}
-  if(dn){dn.addEventListener("click",function(){fs-=0.1;applyFs();});}
 
-  var pr=document.getElementById("print-btn");
-  if(pr){pr.addEventListener("click",function(){window.print();});}
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+  function save(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+  var state=load();
 
-  /* progress */
-  var dones=document.querySelectorAll("[data-done]");
-  var barFill=document.getElementById("bar-fill"),barTxt=document.getElementById("bar-txt");
-  function refresh(){
-    var n=0;for(var i=0;i<dones.length;i++){if(dones[i].checked){n++;}}
-    var pct=dones.length?Math.round(100*n/dones.length):0;
-    if(barFill){barFill.style.width=pct+"%";}
-    if(barTxt){barTxt.textContent=n+"/"+dones.length+" reviewed";}
-    var pb=document.getElementById("progressbar");
-    if(pb){pb.setAttribute("aria-valuenow",String(pct));}
-    save(P+"total",String(dones.length));save(P+"count",String(n));
-  }
-  for(var i=0;i<dones.length;i++){(function(cb){
-    var k=P+"done-"+cb.getAttribute("data-done");
-    cb.checked=load(k)==="1";
-    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}refresh();});
-  })(dones[i]);}
-  refresh();
+  document.addEventListener('DOMContentLoaded',function(){
+    updThemeBtn();
+    var tb=document.getElementById('themeBtn');if(tb)tb.addEventListener('click',function(){setTheme(root.getAttribute('data-theme')!=='dark');});
+    var inc=document.getElementById('fsInc'),dec=document.getElementById('fsDec'),rst=document.getElementById('fsRst');
+    if(inc)inc.addEventListener('click',function(){fs=Math.min(1.4,Math.round((fs+0.1)*10)/10);applyFs();});
+    if(dec)dec.addEventListener('click',function(){fs=Math.max(0.85,Math.round((fs-0.1)*10)/10);applyFs();});
+    if(rst)rst.addEventListener('click',function(){fs=1;applyFs();});
+    var pb=document.getElementById('printBtn');if(pb)pb.addEventListener('click',function(){window.print();});
 
-  /* evidence checklist */
-  var evs=document.querySelectorAll("[data-evidence]");
-  for(var j=0;j<evs.length;j++){(function(cb){
-    var k=P+"ev-"+cb.getAttribute("data-evidence");
-    cb.checked=load(k)==="1";
-    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}});
-  })(evs[j]);}
-
-  /* reset */
-  var rs=document.getElementById("reset-btn");
-  if(rs){rs.addEventListener("click",function(){
-    if(!window.confirm("Clear your progress and evidence ticks for this lab?")){return;}
-    var ks=[];try{for(var a=0;a<localStorage.length;a++){var kk=localStorage.key(a);if(kk&&kk.indexOf(P)===0){ks.push(kk);}}}catch(e){}
-    for(var b=0;b<ks.length;b++){del(ks[b]);}
-    for(var c=0;c<dones.length;c++){dones[c].checked=false;}
-    for(var d=0;d<evs.length;d++){evs[d].checked=false;}
-    refresh();
-  });}
-
-  /* reveal answers */
-  var rv=document.querySelectorAll(".reveal");
-  for(var r=0;r<rv.length;r++){(function(btn){
-    btn.addEventListener("click",function(){
-      var a=btn.nextElementSibling;var open=a.classList.toggle("open");
-      btn.setAttribute("aria-expanded",open?"true":"false");btn.textContent=open?"Hide answer":"Show answer";
+    // reveal answers
+    document.querySelectorAll('.reveal').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var ans=btn.nextElementSibling;var open=ans.classList.toggle('show');
+        btn.setAttribute('aria-expanded',open?'true':'false');
+        btn.textContent=open?'Hide answer':'Show answer';
+      });
     });
-  })(rv[r]);}
 
-  /* copy buttons: copy the clean text stored in data-copy */
-  var live=document.getElementById("live");
-  function announce(t){if(live){live.textContent="";setTimeout(function(){live.textContent=t;},30);}}
-  function fallback(t){var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
-  var cps=document.querySelectorAll(".copy");
-  for(var q=0;q<cps.length;q++){(function(btn){
-    btn.addEventListener("click",function(){
-      var t=btn.getAttribute("data-copy");
-      function done(){btn.textContent="Copied";announce("Command copied");setTimeout(function(){btn.textContent="Copy";},1500);}
-      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done();});}else{fallback(t);done();}
+    // restore + wire all tracked checkboxes
+    function wire(box,id){
+      if(state[id])box.checked=true;
+      box.addEventListener('change',function(){state[id]=box.checked;save(state);updProg();});
+    }
+    document.querySelectorAll('[data-done]').forEach(function(b){wire(b,'done:'+b.getAttribute('data-done'));});
+    document.querySelectorAll('[data-evidence]').forEach(function(b){wire(b,'ev:'+b.getAttribute('data-evidence'));});
+
+    function updProg(){
+      var dones=document.querySelectorAll('[data-done]');
+      var n=0;dones.forEach(function(b){if(b.checked)n++;});
+      var total=dones.length||1;var pct=Math.round(n/total*100);
+      var f=document.getElementById('progFill'),t=document.getElementById('progTxt');
+      if(f)f.style.width=pct+'%';
+      if(t)t.textContent=n+' / '+total+' sections ('+pct+'%)';
+    }
+    updProg();
+
+    // copy buttons
+    document.querySelectorAll('.cmd').forEach(function(block){
+      var pre=block.querySelector('pre');if(!pre)return;
+      var btn=document.createElement('button');btn.className='copy';btn.type='button';btn.textContent='Copy';
+      btn.setAttribute('aria-label','Copy command');
+      btn.addEventListener('click',function(){
+        var txt=pre.innerText.replace(/^root@[^#]*#\s?/gm,'').replace(/^(caine|csi|deft)@[^$]*\$\s?/gm,'').replace(/^smb:[^>]*>\s?/gm,'');
+        txt=txt.replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,'-');
+        function done(){btn.textContent='Copied!';btn.classList.add('ok');setTimeout(function(){btn.textContent='Copy';btn.classList.remove('ok');},1400);}
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback(txt,done);});}
+        else fallback(txt,done);
+      });
+      block.appendChild(btn);
     });
-  })(cps[q]);}
+    function fallback(txt,cb){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){}document.body.removeChild(ta);}
+  });
 })();
 </script>
-<script src="assistant.js" defer></script>
 </body>
 </html>

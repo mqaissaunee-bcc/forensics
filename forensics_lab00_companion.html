@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Range &amp; Login Reference &middot; Forensics Lab Companion</title>
+<meta name="description" content="Companion for the NDG Forensics v2 Cyber Range: the four VMs, the login/credential reference used by every lab, how to use the open pod, and good working habits.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;
+  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#7A7A8A;
+  --ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);
+  --hi:#C44536;--hi2:#E76F51;
+  --ok:#2D6A4F;--ok2:#52B788;
+  --warn:#E9C46A;--warnG:rgba(233,196,106,.16);
+  --bdr:#D5CEC7;
+  --shd:0 2px 16px rgba(26,26,46,.06);
+  --shd2:0 8px 32px rgba(26,26,46,.12);
+  --r:12px;--rs:8px;
+  --t:.3s cubic-bezier(.4,0,.2,1);
+  --fH:'Merriweather',Georgia,serif;
+  --fB:'Source Sans 3','Segoe UI',sans-serif;
+  --fM:'JetBrains Mono','Courier New',monospace;
+  --fs:1;
+}
+[data-theme="dark"]{
+  --bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;
+  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#7A7872;
+  --ac:#14919B;--ac2:#44C7D0;--acG:rgba(20,145,155,.15);
+  --hi:#E76F51;--hi2:#F4A261;
+  --ok:#52B788;--ok2:#95D5B2;
+  --warn:#F4A261;--warnG:rgba(244,162,97,.14);
+  --bdr:#2E3A47;
+  --shd:0 2px 16px rgba(0,0,0,.3);
+  --shd2:0 8px 32px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--fs));scroll-padding-top:70px}
+body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t);min-height:100vh}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none;transition:top .2s}
+.skip-link:focus{top:0}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--ac);border-radius:4px}
+*:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+a{color:var(--ac)}
+
+/* toolbar */
+.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background var(--t);flex-wrap:wrap}
+.tb-left{display:flex;align-items:center;gap:12px;min-width:0}
+.tb-left .back{font-family:var(--fM);font-size:.78rem;color:var(--ac);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--bdr);border-radius:50px;transition:all var(--t)}
+.tb-left .back:hover{background:var(--acG);border-color:var(--ac)}
+.tb-crumb{font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tb-btn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:7px 13px;cursor:pointer;font-size:.95rem;color:var(--tx0);transition:all var(--t);display:flex;align-items:center;gap:6px;min-height:36px;font-family:var(--fB)}
+.tb-btn:hover,.tb-btn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tb-sizes{display:flex;gap:3px;align-items:center}
+.tb-sizes .tb-btn{padding:7px 11px;font-family:var(--fM);font-weight:600}
+
+/* progress rail */
+.prog-wrap{position:sticky;top:57px;z-index:99;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 20px}
+.prog-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:8px 0}
+.prog-bar{flex:1;height:6px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;transition:width .4s ease}
+.prog-txt{font-family:var(--fM);font-size:.74rem;color:var(--tx2);min-width:116px;text-align:right}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 45%,#0D5C63 100%);padding:40px 24px 34px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-inner{max-width:900px;margin:0 auto;position:relative}
+.hero .labno{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);padding:5px 16px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:#fff;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-family:var(--fH);font-size:clamp(1.5rem,3.6vw,2.35rem);font-weight:900;color:#fff;line-height:1.22;margin-bottom:12px}
+.hero .lede{font-size:1.05rem;color:rgba(255,255,255,.9);max-width:720px;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:.78rem;padding:5px 12px;border-radius:50px;font-family:var(--fB)}
+.chip b{font-weight:700}
+
+/* layout */
+main{max-width:900px;margin:0 auto;padding:28px 24px 90px}
+.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;margin-bottom:28px;box-shadow:var(--shd)}
+.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:12px;font-weight:600}
+.toc ol{list-style:none;columns:2;column-gap:28px}
+.toc li{margin-bottom:7px;break-inside:avoid}
+.toc a{color:var(--tx1);text-decoration:none;font-size:.9rem;display:inline-block;transition:color var(--t)}
+.toc a:hover{color:var(--ac)}
+.toc a::before{content:'›';color:var(--ac);margin-right:7px;font-weight:700}
+
+section{margin-bottom:34px;scroll-margin-top:70px}
+section h2{font-family:var(--fH);font-size:1.5rem;font-weight:900;color:var(--tx0);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+section p{margin-bottom:14px;color:var(--tx1)}
+section h3{font-family:var(--fH);font-size:1.12rem;font-weight:700;margin:4px 0 8px;color:var(--tx0)}
+strong{color:var(--tx0);font-weight:700}
+em{color:var(--tx0)}
+ul,ol{margin:0 0 14px 2px;padding-left:22px;color:var(--tx1)}
+li{margin-bottom:8px}
+code.inl,code{font-family:var(--fM);font-size:.86em;background:var(--acG);color:var(--ac);padding:2px 7px;border-radius:5px;word-break:break-word}
+[data-theme="dark"] code.inl,[data-theme="dark"] code{color:var(--ac2)}
+kbd{font-family:var(--fM);font-size:.82em;background:var(--bg2);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--tx0)}
+
+.task-head{font-family:var(--fM);font-size:.76rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ac);font-weight:600;margin:24px 0 10px;padding-left:12px;border-left:3px solid var(--ac)}
+
+.step{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shd)}
+.step h3{display:flex;align-items:baseline;gap:11px;margin-top:0}
+.step h3 .n{font-family:var(--fM);font-size:.8rem;font-weight:600;color:#fff;background:var(--ac);min-width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
+.step p:last-child{margin-bottom:0}
+
+/* command block */
+.cmd{position:relative;margin:12px 0}
+.cmd pre{background:#0F1C22;color:#D8E6E4;font-family:var(--fM);font-size:.84rem;line-height:1.75;padding:14px 48px 14px 16px;border-radius:var(--rs);overflow-x:auto;border:1px solid #1C2E35;white-space:pre}
+.cmd .p{color:#52B788;user-select:none}
+.cmd .fl{color:#44C7D0}
+.cmd .ar{color:#F4A261}
+.cmd .cm{color:#7A8A88;font-style:italic}
+.cmd .copy{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#D8E6E4;border-radius:6px;padding:4px 9px;font-size:.72rem;font-family:var(--fM);cursor:pointer;transition:all var(--t);min-height:28px}
+.cmd .copy:hover{background:var(--ac);border-color:var(--ac);color:#fff}
+.cmd .copy.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.path{font-family:var(--fM);font-size:.82rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:9px 13px;margin:10px 0;color:var(--tx1);display:block;word-break:break-word}
+.path b{color:var(--ac)}
+
+/* callouts */
+.call{border-radius:var(--rs);padding:14px 18px;margin:14px 0;border-left:4px solid var(--ac);background:var(--acG)}
+.call .k{display:block;font-weight:700;color:var(--tx0);margin-bottom:5px;font-size:.95rem}
+.call p{margin-bottom:0;color:var(--tx1)}
+.call.tip{border-left-color:var(--ac2);background:var(--acG)}
+.call.capture{border-left-color:var(--hi);background:rgba(196,69,54,.08)}
+[data-theme="dark"] .call.capture{background:rgba(231,111,81,.1)}
+.call.capture .k{color:var(--hi)}
+.call.stuck,.call.warn{border-left-color:var(--warn);background:var(--warnG)}
+.call.defend{border-left-color:var(--ok);background:rgba(45,106,79,.09)}
+[data-theme="dark"] .call.defend{background:rgba(82,183,136,.1)}
+.call.court{border-left-color:var(--ac);background:var(--acG)}
+
+details.go{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:0;margin:12px 0}
+details.go summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--ac);font-size:.92rem;list-style:none}
+details.go summary::-webkit-details-marker{display:none}
+details.go summary::before{content:'▸ ';color:var(--ac)}
+details.go[open] summary::before{content:'▾ '}
+details.go[open] summary{border-bottom:1px solid var(--bdr)}
+details.go p{padding:12px 16px 14px;margin:0;color:var(--tx1)}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:14px 0;border-radius:var(--rs);border:1px solid var(--bdr)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:420px}
+thead th{background:var(--ac);color:#fff;padding:11px 14px;text-align:left;font-family:var(--fB);font-weight:600;font-size:.82rem}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--bdr);color:var(--tx1);vertical-align:top}
+tbody tr:nth-child(even) td{background:var(--bg2)}
+tbody tr:last-child td{border-bottom:none}
+table code{white-space:nowrap}
+
+/* check yourself */
+.q{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);padding:15px 18px;margin-bottom:12px;box-shadow:var(--shd)}
+.q .ask{font-weight:600;color:var(--tx0);margin-bottom:10px}
+.reveal{background:var(--bg2);border:1px solid var(--bdr);color:var(--ac);border-radius:50px;padding:6px 16px;font-size:.82rem;font-family:var(--fB);font-weight:600;cursor:pointer;transition:all var(--t);min-height:34px}
+.reveal:hover{background:var(--ac);color:#fff;border-color:var(--ac)}
+.ans{display:none;margin-top:12px;padding:12px 15px;background:var(--acG);border-radius:var(--rs);color:var(--tx1);font-size:.94rem;border-left:3px solid var(--ac)}
+.ans.show{display:block}
+
+/* evidence + progress checkboxes */
+.evidence{background:var(--bg1);border:1px solid var(--bdr);border-left:4px solid var(--hi);border-radius:var(--rs);padding:16px 20px;box-shadow:var(--shd)}
+[data-theme="dark"] .evidence{border-left-color:var(--hi)}
+.evidence ul{list-style:none;padding:0;margin:0}
+.evidence li{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px}
+.evidence li:last-child{margin-bottom:0}
+.evidence input[type=checkbox],.done-row input[type=checkbox]{width:19px;height:19px;margin-top:2px;accent-color:var(--ac);flex-shrink:0;cursor:pointer}
+.evidence .shot{font-weight:700;color:var(--hi)}
+.shot-marker{display:inline-flex;align-items:center;gap:5px;font-family:var(--fM);font-size:.72rem;color:var(--hi);font-weight:600;letter-spacing:.5px}
+.done-row{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--bdr)}
+.done-row label{font-size:.82rem;color:var(--tx2);font-family:var(--fM);cursor:pointer}
+
+/* cheat sheet */
+.cheat{background:#0F1C22;border-radius:var(--r);padding:20px 22px;margin-top:6px}
+.cheat .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.cheat h3{color:#44C7D0;font-family:var(--fM);font-size:.8rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;border:none;padding:0}
+.cheat ul{list-style:none;padding:0;margin:0}
+.cheat li{color:#C3D4D2;font-size:.85rem;margin-bottom:7px;line-height:1.5}
+.cheat code{background:rgba(68,199,208,.12);color:#9BE4EA;padding:1px 6px}
+
+.printbar{text-align:center;color:var(--tx2);font-size:.82rem;margin-top:30px;padding-top:20px;border-top:1px solid var(--bdr)}
+.printbar a{color:var(--ac);text-decoration:none}
+
+footer.sf{text-align:center;padding:26px 24px;border-top:1px solid var(--bdr);font-size:.82rem;color:var(--tx2);background:var(--bg1)}
+footer.sf a{color:var(--ac);text-decoration:none}
+
+@media(max-width:640px){
+  .toc ol{columns:1}
+  .cheat .grid{grid-template-columns:1fr;gap:18px}
+  .hero{padding:30px 18px 26px}
+  main{padding:22px 16px 70px}
+  .prog-txt{min-width:84px;font-size:.68rem}
+  .tb-crumb{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+@media print{
+  .toolbar,.prog-wrap,.cmd .copy,.reveal,.skip-link,.done-row,footer.sf .noprint{display:none!important}
+  body{background:#fff;color:#000}
+  .ans{display:block!important}
+  .hero{background:#0D5C63!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .step,.q,.evidence,.toc{break-inside:avoid;box-shadow:none}
+  .cmd pre{white-space:pre-wrap;word-break:break-all}
+  a[href]::after{content:''}
+}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<div class="toolbar" role="navigation" aria-label="Page toolbar">
+  <div class="tb-left">
+    <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&#8592; All labs</a>
+    <span class="tb-crumb">Forensics &middot; SETUP</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-sizes" role="group" aria-label="Text size">
+      <button class="tb-btn" id="fsDec" aria-label="Decrease text size">A&#8722;</button>
+      <button class="tb-btn" id="fsRst" aria-label="Reset text size">A</button>
+      <button class="tb-btn" id="fsInc" aria-label="Increase text size">A+</button>
+    </div>
+    <button class="tb-btn" id="printBtn" aria-label="Print or save as PDF">&#128424;&#65039; <span>Print</span></button>
+    <button class="tb-btn" id="themeBtn" aria-label="Toggle dark mode">&#127769; <span>Dark</span></button>
+  </div>
+</div>
+
+<div class="prog-wrap" aria-hidden="false">
+  <div class="prog-inner">
+    <div class="prog-bar" role="progressbar" aria-label="Section progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="prog-fill" id="progFill"></div></div>
+    <span class="prog-txt" id="progTxt">0 / 0 sections</span>
+  </div>
+</div>
+
+<header class="hero" role="banner">
+  <div class="hero-inner">
+    <span class="labno">SETUP</span>
+    <h1>Launch the Cyber Range</h1>
+    <p class="lede">The open practice pod: every forensics VM boots at once, with no graded steps. Use it to explore tools, re-run steps, and build muscle memory before the graded labs.</p>
+    <div class="chips"><span class="chip">&#9201; <b>Open-ended</b></span><span class="chip">&#128202; Difficulty: <b>Orientation</b></span><span class="chip">&#129514; Tools: <b>All pod VMs</b></span><span class="chip">&#128421; VMs: <b>WinOS · CAINE · CSI · DEFT</b></span><span class="chip">&#128218; Supports: <b>Every lab</b></span></div>
+  </div>
+</header>
+
+<main id="main">
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#vms">The four virtual machines</a></li><li><a href="#creds">Login reference</a></li><li><a href="#use">How to use the range</a></li><li><a href="#tips">Working habits</a></li></ol></nav><section id="overview" data-track><h2>Overview — what the Cyber Range is for</h2><p>This isn't a graded lab. The <strong>Cyber Range</strong> is an open pod that boots every virtual machine in the NDG Forensics v2 environment at once, so you can move freely between them. Use it to practice on your own, retry steps from a graded lab without starting a fresh reservation, or explore a tool mentioned in passing.</p><p>Everything you do here stays inside the isolated pod — there is no internet connection, and nothing you touch affects a real system. That's exactly why it's the right place to make mistakes and build muscle memory.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section><section id="vms" data-track><h2>The four virtual machines</h2><p>Each VM is a complete forensic workstation with its own toolset. Knowing which one hosts which tool saves you a lot of hunting during the graded labs.</p><div class="tbl-wrap"><table><thead><tr><th>VM</th><th>OS family</th><th>You'll use it for</th></tr></thead><tbody><tr><td><b>WinOS</b></td><td>Windows</td><td>FTK Imager, HxD, RegRipper, Magnet tools, Autopsy (Windows build), DART/DEFT tools</td></tr><tr><td><b>CAINE</b></td><td>Linux (forensics distro)</td><td>Autopsy, Thunderbird, Email Header Analyzer, browser-history work</td></tr><tr><td><b>CSI-Linux</b></td><td>Linux (investigations distro)</td><td>Autopsy, Rifiuti, Bulk Extractor, pdfcrack / fcrackzip, VeraCrypt</td></tr><tr><td><b>DEFT</b></td><td>Linux (legacy forensics distro)</td><td>ExifTool, DART live-response tools, LXTerminal command-line work</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-vms" data-done="vms"><label for="done-vms">Mark this section reviewed</label></div></section><section id="creds" data-track><h2>Login reference</h2><p>Every graded lab opens with this same table. Keep it handy — a wrong password is the single most common reason a lab stalls on step 1.</p><div class="tbl-wrap"><table><thead><tr><th>Virtual machine</th><th>IP address</th><th>Account</th><th>Password</th></tr></thead><tbody><tr><td>Caine</td><td>172.16.16.30</td><td>caine</td><td><code>Train1ng$</code></td></tr><tr><td>CSI-Linux</td><td>172.16.16.40</td><td>csi</td><td><code>csi</code></td></tr><tr><td>DEFT</td><td>172.16.16.20</td><td>deft</td><td><code>Train1ng$</code></td></tr><tr><td>WinOS</td><td>172.16.16.10</td><td>Administrator</td><td><code>Train1ng$</code></td></tr></tbody></table></div><div class="call stuck"><span class="k">Watch the capital letters</span><p>The Windows/Caine/DEFT password is <code>Train1ng$</code> — capital T, a <em>one</em> in place of the first <em>i</em>, and a trailing dollar sign. CSI-Linux is the odd one out: username and password are both <code>csi</code>.</p></div><div class="done-row"><input type="checkbox" id="done-creds" data-done="creds"><label for="done-creds">Mark this section reviewed</label></div></section><section id="use"><h2>How to use the range</h2><div class="step"><h3><span class="n">1</span> Reserve the Cyber Range pod</h3><p>From NETLAB+, launch the <strong>Cyber Range</strong> reservation rather than a numbered lab. All VMs power on together.</p></div><div class="step"><h3><span class="n">2</span> Send Ctrl+Alt+Del to log in to Windows</h3><p>On the WinOS console, the keystroke is trapped by your own machine, so use the console's <strong>Send CTRL+ALT+DEL</strong> menu item to reach the Windows login screen, then sign in as <code>Administrator</code>.</p></div><div class="step"><h3><span class="n">3</span> Move between VMs from the topology</h3><p>Switch VMs using the pod's topology/console tabs. Each keeps its own state for the length of your reservation.</p></div></section><section id="tips"><h2>Working habits worth building early</h2><ul><li><strong>Treat the E: drive as your evidence repository.</strong> Across the graded labs you'll keep exports off the system drive and in <code>FOR_LAB_0XX</code> folders on <em>Evidence Repository (E:)</em>. Practice that here.</li><li><strong>Take notes as you go.</strong> Forensics is as much about documenting what you did as about the finding itself. Get in the habit of writing down the action before you take it.</li><li><strong>Don't fight antivirus.</strong> Several legitimate forensic tools trip AV as false positives; inside the pod that's expected and harmless.</li></ul></section>
+  <div class="printbar noprint">
+    <p>Tip: use <strong>Print</strong> above to save this companion (with your ticked checkboxes and revealed answers) as a PDF to submit.</p>
+  </div>
+</main>
+
+<footer class="sf">
+  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="https://mqaissaunee-bcc.github.io/forensics/" target="_blank" rel="noopener">Course home</a></p>
+  <p style="margin-top:4px" class="noprint">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College</p>
+</footer>
+
+<script>
+(function(){
+  var KEY="df-lab00";
+  var root=document.documentElement;
+  // theme (light default; honor saved)
+  try{var th=localStorage.getItem('df-theme');if(th==='dark')root.setAttribute('data-theme','dark');}catch(e){}
+  function setTheme(d){if(d){root.setAttribute('data-theme','dark');}else{root.removeAttribute('data-theme');}try{localStorage.setItem('df-theme',d?'dark':'light');}catch(e){}updThemeBtn();}
+  function updThemeBtn(){var b=document.getElementById('themeBtn');if(!b)return;var d=root.getAttribute('data-theme')==='dark';b.innerHTML=d?'\u2600\ufe0f <span>Light</span>':'\u{1F319} <span>Dark</span>';}
+  // text size
+  var fs=1;try{var s=localStorage.getItem('df-fs');if(s)fs=parseFloat(s);}catch(e){}
+  function applyFs(){root.style.setProperty('--fs',fs);try{localStorage.setItem('df-fs',fs);}catch(e){}}
+  applyFs();
+
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+  function save(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+  var state=load();
+
+  document.addEventListener('DOMContentLoaded',function(){
+    updThemeBtn();
+    var tb=document.getElementById('themeBtn');if(tb)tb.addEventListener('click',function(){setTheme(root.getAttribute('data-theme')!=='dark');});
+    var inc=document.getElementById('fsInc'),dec=document.getElementById('fsDec'),rst=document.getElementById('fsRst');
+    if(inc)inc.addEventListener('click',function(){fs=Math.min(1.4,Math.round((fs+0.1)*10)/10);applyFs();});
+    if(dec)dec.addEventListener('click',function(){fs=Math.max(0.85,Math.round((fs-0.1)*10)/10);applyFs();});
+    if(rst)rst.addEventListener('click',function(){fs=1;applyFs();});
+    var pb=document.getElementById('printBtn');if(pb)pb.addEventListener('click',function(){window.print();});
+
+    // reveal answers
+    document.querySelectorAll('.reveal').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var ans=btn.nextElementSibling;var open=ans.classList.toggle('show');
+        btn.setAttribute('aria-expanded',open?'true':'false');
+        btn.textContent=open?'Hide answer':'Show answer';
+      });
+    });
+
+    // restore + wire all tracked checkboxes
+    function wire(box,id){
+      if(state[id])box.checked=true;
+      box.addEventListener('change',function(){state[id]=box.checked;save(state);updProg();});
+    }
+    document.querySelectorAll('[data-done]').forEach(function(b){wire(b,'done:'+b.getAttribute('data-done'));});
+    document.querySelectorAll('[data-evidence]').forEach(function(b){wire(b,'ev:'+b.getAttribute('data-evidence'));});
+
+    function updProg(){
+      var dones=document.querySelectorAll('[data-done]');
+      var n=0;dones.forEach(function(b){if(b.checked)n++;});
+      var total=dones.length||1;var pct=Math.round(n/total*100);
+      var f=document.getElementById('progFill'),t=document.getElementById('progTxt');
+      if(f)f.style.width=pct+'%';
+      if(t)t.textContent=n+' / '+total+' sections ('+pct+'%)';
+    }
+    updProg();
+
+    // copy buttons
+    document.querySelectorAll('.cmd').forEach(function(block){
+      var pre=block.querySelector('pre');if(!pre)return;
+      var btn=document.createElement('button');btn.className='copy';btn.type='button';btn.textContent='Copy';
+      btn.setAttribute('aria-label','Copy command');
+      btn.addEventListener('click',function(){
+        var txt=pre.innerText.replace(/^root@[^#]*#\s?/gm,'').replace(/^(caine|csi|deft)@[^$]*\$\s?/gm,'').replace(/^smb:[^>]*>\s?/gm,'');
+        txt=txt.replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,'-');
+        function done(){btn.textContent='Copied!';btn.classList.add('ok');setTimeout(function(){btn.textContent='Copy';btn.classList.remove('ok');},1400);}
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback(txt,done);});}
+        else fallback(txt,done);
+      });
+      block.appendChild(btn);
+    });
+    function fallback(txt,cb){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){}document.body.removeChild(ta);}
+  });
+})();
+</script>
+</body>
+</html>

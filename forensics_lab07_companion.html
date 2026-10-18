@@ -3,308 +3,321 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab 07: Data Carving &mdash; Digital Forensics Lab Companion</title>
-<meta name="description" content="Student companion for NDG Forensics v2 Lab 07 (Data Carving): walkthrough, reference, troubleshooting, manual corrections, self-check and evidence checklist.">
+<title>Lab 07 Companion — Data Carving &middot; Forensics</title>
+<meta name="description" content="Companion for Forensics Lab 07: file-signature carving of XLSX/PDF/JPEG in HxD, false-positive footers, automated carving with Autopsy PhotoRec and Embedded File Extractor, evidence to submit, and course relevance.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 :root{
   --bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;
-  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#6A6A7A;
+  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#7A7A8A;
   --ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);
-  --hi:#C44536;--hi2:#E76F51;--ok:#2D6A4F;--ok2:#52B788;--warn:#B7791F;--warnBg:rgba(233,196,106,.18);
-  --fixBg:rgba(196,69,54,.08);--okBg:rgba(45,106,79,.09);--tipBg:rgba(13,92,99,.07);
-  --codeBg:#1A2028;--codeTx:#E8E6E3;
-  --bdr:#D5CEC7;--shd:0 2px 16px rgba(26,26,46,.06);--shd2:0 8px 32px rgba(26,26,46,.12);
-  --r:12px;--rs:8px;--t:.3s cubic-bezier(.4,0,.2,1);
-  --fH:'Merriweather',Georgia,serif;--fB:'Source Sans 3','Segoe UI',system-ui,sans-serif;--fM:'JetBrains Mono','Consolas','Courier New',monospace;
+  --hi:#C44536;--hi2:#E76F51;
+  --ok:#2D6A4F;--ok2:#52B788;
+  --warn:#E9C46A;--warnG:rgba(233,196,106,.16);
+  --bdr:#D5CEC7;
+  --shd:0 2px 16px rgba(26,26,46,.06);
+  --shd2:0 8px 32px rgba(26,26,46,.12);
+  --r:12px;--rs:8px;
+  --t:.3s cubic-bezier(.4,0,.2,1);
+  --fH:'Merriweather',Georgia,serif;
+  --fB:'Source Sans 3','Segoe UI',sans-serif;
+  --fM:'JetBrains Mono','Courier New',monospace;
   --fs:1;
 }
 [data-theme="dark"]{
   --bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;
-  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#8F8C86;
-  --ac:#44C7D0;--ac2:#14919B;--acG:rgba(20,145,155,.18);
-  --hi:#F4A261;--hi2:#E76F51;--ok:#95D5B2;--ok2:#52B788;--warn:#E9C46A;--warnBg:rgba(233,196,106,.12);
-  --fixBg:rgba(231,111,81,.12);--okBg:rgba(82,183,136,.12);--tipBg:rgba(20,145,155,.12);
-  --codeBg:#0B0F13;--codeTx:#E8E6E3;
-  --bdr:#2E3A47;--shd:0 2px 16px rgba(0,0,0,.3);--shd2:0 8px 32px rgba(0,0,0,.5);
+  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#7A7872;
+  --ac:#14919B;--ac2:#44C7D0;--acG:rgba(20,145,155,.15);
+  --hi:#E76F51;--hi2:#F4A261;
+  --ok:#52B788;--ok2:#95D5B2;
+  --warn:#F4A261;--warnG:rgba(244,162,97,.14);
+  --bdr:#2E3A47;
+  --shd:0 2px 16px rgba(0,0,0,.3);
+  --shd2:0 8px 32px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;font-size:calc(16px * var(--fs))}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--fs));scroll-padding-top:70px}
 body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t);min-height:100vh}
-a{color:var(--ac)}
-.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none;transition:top .2s}
 .skip-link:focus{top:0}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--ac);border-radius:4px}
 *:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
-
-/* hero */
-.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 40%,#0D5C63 100%);padding:48px 24px 56px;text-align:center;position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,var(--bg0),transparent);pointer-events:none}
-.hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 20px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:rgba(255,255,255,.9);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;position:relative}
-.hero h1{font-family:var(--fH);font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;color:#fff;line-height:1.25;max-width:820px;margin:0 auto 12px;position:relative}
-.hero p.sub{font-size:1.05rem;color:rgba(255,255,255,.88);max-width:680px;margin:0 auto;position:relative}
-.hero p.sub a{color:#fff}
-.meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;position:relative;z-index:1}
-.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50px;padding:4px 14px;font-size:.82rem}
+a{color:var(--ac)}
 
 /* toolbar */
-.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.toolbar a.back{font-family:var(--fH);font-weight:700;font-size:.92rem;color:var(--tx0);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
-.toolbar a.back:hover{color:var(--ac)}
-.prog{flex:1;min-width:160px;max-width:340px;display:flex;align-items:center;gap:10px;font-family:var(--fM);font-size:.72rem;color:var(--tx2);letter-spacing:1px;text-transform:uppercase}
-.bar{flex:1;height:8px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--bdr)}
-.bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .4s}
-.tools{display:flex;gap:6px;flex-wrap:wrap}
-.tbtn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:6px 14px;cursor:pointer;font:600 .85rem var(--fB);color:var(--tx0);min-height:44px;min-width:44px;transition:all var(--t)}
-.tbtn:hover,.tbtn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
-[data-theme="dark"] .tbtn:hover{color:#0F1419}
+.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background var(--t);flex-wrap:wrap}
+.tb-left{display:flex;align-items:center;gap:12px;min-width:0}
+.tb-left .back{font-family:var(--fM);font-size:.78rem;color:var(--ac);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--bdr);border-radius:50px;transition:all var(--t)}
+.tb-left .back:hover{background:var(--acG);border-color:var(--ac)}
+.tb-crumb{font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tb-btn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:7px 13px;cursor:pointer;font-size:.95rem;color:var(--tx0);transition:all var(--t);display:flex;align-items:center;gap:6px;min-height:36px;font-family:var(--fB)}
+.tb-btn:hover,.tb-btn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tb-sizes{display:flex;gap:3px;align-items:center}
+.tb-sizes .tb-btn{padding:7px 11px;font-family:var(--fM);font-weight:600}
+
+/* progress rail */
+.prog-wrap{position:sticky;top:57px;z-index:99;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 20px}
+.prog-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:8px 0}
+.prog-bar{flex:1;height:6px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;transition:width .4s ease}
+.prog-txt{font-family:var(--fM);font-size:.74rem;color:var(--tx2);min-width:116px;text-align:right}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 45%,#0D5C63 100%);padding:40px 24px 34px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-inner{max-width:900px;margin:0 auto;position:relative}
+.hero .labno{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);padding:5px 16px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:#fff;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-family:var(--fH);font-size:clamp(1.5rem,3.6vw,2.35rem);font-weight:900;color:#fff;line-height:1.22;margin-bottom:12px}
+.hero .lede{font-size:1.05rem;color:rgba(255,255,255,.9);max-width:720px;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:.78rem;padding:5px 12px;border-radius:50px;font-family:var(--fB)}
+.chip b{font-weight:700}
 
 /* layout */
-.wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px}
-.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shd);margin:-36px 0 26px;position:relative;z-index:2}
-.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px}
-.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 18px;padding-left:1.3em}
-.toc a{color:var(--tx0);text-decoration:none;font-size:.95rem}
-.toc a:hover{color:var(--ac);text-decoration:underline}
-section.blk{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:26px 28px;margin-bottom:22px;box-shadow:var(--shd)}
-section.blk>h2{font-family:var(--fH);font-size:1.4rem;font-weight:900;color:var(--tx0);margin-bottom:14px;display:flex;align-items:center;gap:12px;line-height:1.3}
-section.blk>h2 .n{flex:none;font-family:var(--fM);font-size:.8rem;background:var(--acG);color:var(--ac);border-radius:50px;padding:3px 11px}
-h3{font-family:var(--fH);font-size:1.08rem;color:var(--tx0);margin:22px 0 8px}
-section.blk p,section.blk li{color:var(--tx1)}
-section.blk p+p{margin-top:10px}
-section.blk ul,section.blk ol{padding-left:1.4em;margin:8px 0}
-section.blk li{margin:4px 0}
-strong,b{color:var(--tx0)}
-code{font-family:var(--fM);font-size:.86em;background:var(--bg2);border:1px solid var(--bdr);border-radius:5px;padding:1px 6px;color:var(--tx0);word-break:break-word}
-kbd{font-family:var(--fM);font-size:.82em;background:var(--bg1);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:0 6px}
-.path{font-family:var(--fM);font-size:.84em;color:var(--ac);word-break:break-word}
+main{max-width:900px;margin:0 auto;padding:28px 24px 90px}
+.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;margin-bottom:28px;box-shadow:var(--shd)}
+.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:12px;font-weight:600}
+.toc ol{list-style:none;columns:2;column-gap:28px}
+.toc li{margin-bottom:7px;break-inside:avoid}
+.toc a{color:var(--tx1);text-decoration:none;font-size:.9rem;display:inline-block;transition:color var(--t)}
+.toc a:hover{color:var(--ac)}
+.toc a::before{content:'›';color:var(--ac);margin-right:7px;font-weight:700}
 
-/* task + steps */
-.task{border-top:1px dashed var(--bdr);padding-top:6px;margin-top:18px}
-.task:first-of-type{border-top:0;margin-top:4px}
-.task>h3{display:flex;gap:10px;align-items:baseline}
-.task>h3 .tn{font-family:var(--fM);font-size:.75rem;color:var(--ac);text-transform:uppercase;letter-spacing:1.5px;flex:none}
-ol.steps{counter-reset:s;list-style:none;padding-left:0 !important}
-ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 46px;border-bottom:1px solid var(--bg2)}
-ol.steps>li:last-child{border-bottom:0}
-ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--acG);color:var(--ac);font:700 .85rem var(--fM);display:flex;align-items:center;justify-content:center}
+section{margin-bottom:34px;scroll-margin-top:70px}
+section h2{font-family:var(--fH);font-size:1.5rem;font-weight:900;color:var(--tx0);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+section p{margin-bottom:14px;color:var(--tx1)}
+section h3{font-family:var(--fH);font-size:1.12rem;font-weight:700;margin:4px 0 8px;color:var(--tx0)}
+strong{color:var(--tx0);font-weight:700}
+em{color:var(--tx0)}
+ul,ol{margin:0 0 14px 2px;padding-left:22px;color:var(--tx1)}
+li{margin-bottom:8px}
+code.inl,code{font-family:var(--fM);font-size:.86em;background:var(--acG);color:var(--ac);padding:2px 7px;border-radius:5px;word-break:break-word}
+[data-theme="dark"] code.inl,[data-theme="dark"] code{color:var(--ac2)}
+kbd{font-family:var(--fM);font-size:.82em;background:var(--bg2);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--tx0)}
 
-/* commands */
-.cmd{margin:10px 0;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bdr)}
-.cmd-bar{display:flex;justify-content:space-between;align-items:center;background:var(--bg2);padding:4px 6px 4px 12px;font-family:var(--fM);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
-.copy{background:var(--bg1);border:1px solid var(--bdr);border-radius:6px;font:600 .75rem var(--fB);color:var(--tx0);padding:4px 12px;cursor:pointer;min-height:32px;min-width:64px}
-.copy:hover,.copy:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
-.cmd pre{background:var(--codeBg);color:var(--codeTx);padding:12px 14px;overflow-x:auto;font-family:var(--fM);font-size:.86rem;line-height:1.55;white-space:pre}
-.cmd pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.task-head{font-family:var(--fM);font-size:.76rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ac);font-weight:600;margin:24px 0 10px;padding-left:12px;border-left:3px solid var(--ac)}
+
+.step{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shd)}
+.step h3{display:flex;align-items:baseline;gap:11px;margin-top:0}
+.step h3 .n{font-family:var(--fM);font-size:.8rem;font-weight:600;color:#fff;background:var(--ac);min-width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
+.step p:last-child{margin-bottom:0}
+
+/* command block */
+.cmd{position:relative;margin:12px 0}
+.cmd pre{background:#0F1C22;color:#D8E6E4;font-family:var(--fM);font-size:.84rem;line-height:1.75;padding:14px 48px 14px 16px;border-radius:var(--rs);overflow-x:auto;border:1px solid #1C2E35;white-space:pre}
+.cmd .p{color:#52B788;user-select:none}
+.cmd .fl{color:#44C7D0}
+.cmd .ar{color:#F4A261}
+.cmd .cm{color:#7A8A88;font-style:italic}
+.cmd .copy{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#D8E6E4;border-radius:6px;padding:4px 9px;font-size:.72rem;font-family:var(--fM);cursor:pointer;transition:all var(--t);min-height:28px}
+.cmd .copy:hover{background:var(--ac);border-color:var(--ac);color:#fff}
+.cmd .copy.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.path{font-family:var(--fM);font-size:.82rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:9px 13px;margin:10px 0;color:var(--tx1);display:block;word-break:break-word}
+.path b{color:var(--ac)}
 
 /* callouts */
-.call{border-left:4px solid var(--ac);background:var(--tipBg);border-radius:0 var(--rs) var(--rs) 0;padding:10px 14px;margin:12px 0}
-.call .k{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--ac);margin-bottom:2px}
-.call p{margin:0 !important}
-.call.warn{border-color:var(--warn);background:var(--warnBg)}.call.warn .k{color:var(--warn)}
-.call.fix{border-color:var(--hi);background:var(--fixBg)}.call.fix .k{color:var(--hi)}
-.call.court{border-color:var(--ok);background:var(--okBg)}.call.court .k{color:var(--ok)}
-.shot{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--ac2);border-radius:var(--rs);padding:8px 12px;margin:10px 0;font-size:.92rem;color:var(--tx1);background:var(--bg0)}
-.shot-ico{font-size:1.1rem;line-height:1.4}
+.call{border-radius:var(--rs);padding:14px 18px;margin:14px 0;border-left:4px solid var(--ac);background:var(--acG)}
+.call .k{display:block;font-weight:700;color:var(--tx0);margin-bottom:5px;font-size:.95rem}
+.call p{margin-bottom:0;color:var(--tx1)}
+.call.tip{border-left-color:var(--ac2);background:var(--acG)}
+.call.capture{border-left-color:var(--hi);background:rgba(196,69,54,.08)}
+[data-theme="dark"] .call.capture{background:rgba(231,111,81,.1)}
+.call.capture .k{color:var(--hi)}
+.call.stuck,.call.warn{border-left-color:var(--warn);background:var(--warnG)}
+.call.defend{border-left-color:var(--ok);background:rgba(45,106,79,.09)}
+[data-theme="dark"] .call.defend{background:rgba(82,183,136,.1)}
+.call.court{border-left-color:var(--ac);background:var(--acG)}
+
+details.go{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:0;margin:12px 0}
+details.go summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--ac);font-size:.92rem;list-style:none}
+details.go summary::-webkit-details-marker{display:none}
+details.go summary::before{content:'▸ ';color:var(--ac)}
+details.go[open] summary::before{content:'▾ '}
+details.go[open] summary{border-bottom:1px solid var(--bdr)}
+details.go p{padding:12px 16px 14px;margin:0;color:var(--tx1)}
 
 /* tables */
-.tblwrap{overflow-x:auto;margin:12px 0;border:1px solid var(--bdr);border-radius:var(--rs)}
-table.tbl{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
-table.tbl th{background:var(--bg2);text-align:left;font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx1);padding:9px 12px;border-bottom:1px solid var(--bdr)}
-table.tbl td{padding:9px 12px;border-bottom:1px solid var(--bg2);vertical-align:top;color:var(--tx1)}
-table.tbl tr:last-child td{border-bottom:0}
-table.tbl td:first-child{color:var(--tx0);font-weight:600}
+.tbl-wrap{overflow-x:auto;margin:14px 0;border-radius:var(--rs);border:1px solid var(--bdr)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:420px}
+thead th{background:var(--ac);color:#fff;padding:11px 14px;text-align:left;font-family:var(--fB);font-weight:600;font-size:.82rem}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--bdr);color:var(--tx1);vertical-align:top}
+tbody tr:nth-child(even) td{background:var(--bg2)}
+tbody tr:last-child td{border-bottom:none}
+table code{white-space:nowrap}
 
-/* env grid */
-.env{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:12px 0}
-.env div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 14px}
-.env b{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2);font-weight:600}
-.env span{color:var(--tx0);font-size:.95rem}
+/* check yourself */
+.q{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);padding:15px 18px;margin-bottom:12px;box-shadow:var(--shd)}
+.q .ask{font-weight:600;color:var(--tx0);margin-bottom:10px}
+.reveal{background:var(--bg2);border:1px solid var(--bdr);color:var(--ac);border-radius:50px;padding:6px 16px;font-size:.82rem;font-family:var(--fB);font-weight:600;cursor:pointer;transition:all var(--t);min-height:34px}
+.reveal:hover{background:var(--ac);color:#fff;border-color:var(--ac)}
+.ans{display:none;margin-top:12px;padding:12px 15px;background:var(--acG);border-radius:var(--rs);color:var(--tx1);font-size:.94rem;border-left:3px solid var(--ac)}
+.ans.show{display:block}
 
-/* done rows */
-.done-row{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--bg2);font-size:.92rem;color:var(--tx2)}
-.done-row input,.evidence input{width:22px;height:22px;accent-color:var(--ac);cursor:pointer;flex:none}
-.done-row label{cursor:pointer}
+/* evidence + progress checkboxes */
+.evidence{background:var(--bg1);border:1px solid var(--bdr);border-left:4px solid var(--hi);border-radius:var(--rs);padding:16px 20px;box-shadow:var(--shd)}
+[data-theme="dark"] .evidence{border-left-color:var(--hi)}
+.evidence ul{list-style:none;padding:0;margin:0}
+.evidence li{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px}
+.evidence li:last-child{margin-bottom:0}
+.evidence input[type=checkbox],.done-row input[type=checkbox]{width:19px;height:19px;margin-top:2px;accent-color:var(--ac);flex-shrink:0;cursor:pointer}
+.evidence .shot{font-weight:700;color:var(--hi)}
+.shot-marker{display:inline-flex;align-items:center;gap:5px;font-family:var(--fM);font-size:.72rem;color:var(--hi);font-weight:600;letter-spacing:.5px}
+.done-row{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--bdr)}
+.done-row label{font-size:.82rem;color:var(--tx2);font-family:var(--fM);cursor:pointer}
 
-/* Q&A */
-.q{border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px;margin:10px 0;background:var(--bg0)}
-.q .ask{color:var(--tx0) !important;font-weight:600}
-.reveal{margin-top:8px;background:var(--bg1);border:1px solid var(--ac);color:var(--ac);border-radius:50px;padding:4px 14px;font:600 .82rem var(--fB);cursor:pointer;min-height:36px}
-.reveal:hover,.reveal:focus-visible{background:var(--ac);color:#fff}
-.ans{display:none;margin-top:8px;padding:8px 12px;border-left:3px solid var(--ok);background:var(--okBg);border-radius:0 6px 6px 0;color:var(--tx1)}
-.ans.open{display:block}
+/* cheat sheet */
+.cheat{background:#0F1C22;border-radius:var(--r);padding:20px 22px;margin-top:6px}
+.cheat .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.cheat h3{color:#44C7D0;font-family:var(--fM);font-size:.8rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;border:none;padding:0}
+.cheat ul{list-style:none;padding:0;margin:0}
+.cheat li{color:#C3D4D2;font-size:.85rem;margin-bottom:7px;line-height:1.5}
+.cheat code{background:rgba(68,199,208,.12);color:#9BE4EA;padding:1px 6px}
 
-/* evidence */
-.evidence ul{list-style:none;padding-left:0 !important}
-.evidence li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rs);margin:8px 0;background:var(--bg0)}
-.evidence .shotname{font-weight:700;color:var(--tx0)}
-.evline{margin-top:14px;font-size:.9rem;color:var(--tx2)}
-.evline span{display:inline-block;min-width:220px;border-bottom:1px solid var(--tx2);margin-left:6px}
+.printbar{text-align:center;color:var(--tx2);font-size:.82rem;margin-top:30px;padding-top:20px;border-top:1px solid var(--bdr)}
+.printbar a{color:var(--ac);text-decoration:none}
 
-/* cheat */
-.cheat .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.cheat .grid>div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px}
-.cheat h3{margin-top:0;font-size:.98rem;color:var(--ac)}
-.cheat li{font-size:.92rem}
-
-/* lab nav + footer */
-.labnav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
-.labnav a{flex:1;min-width:220px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;text-decoration:none;color:var(--tx0);box-shadow:var(--shd);transition:all var(--t)}
-.labnav a:hover{border-color:var(--ac);transform:translateY(-2px)}
-.labnav small{display:block;font-family:var(--fM);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2)}
-.labnav a.nx{text-align:right}
-.site-footer{text-align:center;padding:28px 24px;border-top:1px solid var(--bdr);font-size:.85rem;color:var(--tx2);margin-top:30px}
-.site-footer a{color:var(--ac);text-decoration:none}
+footer.sf{text-align:center;padding:26px 24px;border-top:1px solid var(--bdr);font-size:.82rem;color:var(--tx2);background:var(--bg1)}
+footer.sf a{color:var(--ac);text-decoration:none}
 
 @media(max-width:640px){
-  .hero{padding:36px 16px 48px}
-  section.blk{padding:20px 16px}
-  ol.steps>li{padding-left:40px}
-  .toolbar{padding:6px 12px}
-  .prog{order:3;max-width:none;min-width:100%}
+  .toc ol{columns:1}
+  .cheat .grid{grid-template-columns:1fr;gap:18px}
+  .hero{padding:30px 18px 26px}
+  main{padding:22px 16px 70px}
+  .prog-txt{min-width:84px;font-size:.68rem}
+  .tb-crumb{display:none}
 }
-@media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
 @media print{
-  :root{--bg0:#fff;--bg1:#fff;--bg2:#f2f2f2;--tx0:#000;--tx1:#222;--tx2:#444;--codeBg:#f4f4f4;--codeTx:#000}
-  .toolbar,.toc,.labnav,.copy,.reveal,.skip-link,#df-assistant-root{display:none !important}
-  .hero{background:none;padding:10px 0;color:#000}.hero h1,.hero p.sub,.hero p.sub a{color:#000}.hero-badge,.chip{color:#000;border-color:#999;background:none}
-  .hero::after{display:none}
-  section.blk{box-shadow:none;break-inside:auto;border-color:#bbb}
-  .ans{display:block}
-  .cmd pre{white-space:pre-wrap}
-  a{color:#000}
+  .toolbar,.prog-wrap,.cmd .copy,.reveal,.skip-link,.done-row,footer.sf .noprint{display:none!important}
+  body{background:#fff;color:#000}
+  .ans{display:block!important}
+  .hero{background:#0D5C63!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .step,.q,.evidence,.toc{break-inside:avoid;box-shadow:none}
+  .cmd pre{white-space:pre-wrap;word-break:break-all}
+  a[href]::after{content:''}
 }
 </style>
 </head>
-<body data-prefix="df-lab07-">
+<body>
 <a href="#main" class="skip-link">Skip to main content</a>
-<header class="hero">
-  <div class="hero-badge">Lab 07 &middot; Hands-on Companion</div>
-  <h1>Data Carving</h1>
-  <p class="sub">Supports <a href="module8_lesson.html" target="_blank" rel="noopener">Module 8 &mdash; Recovering Graphics Files<span class="sr-only"> (opens in new tab)</span></a></p>
-  <div class="meta"><span class="chip">&#128187; WinOS</span><span class="chip">&#128295; HxD Hex Editor, Autopsy 4 (PhotoRec)</span><span class="chip">&#9201; 75–90 min</span></div>
-</header>
-<div class="toolbar" role="navigation" aria-label="Lab tools">
-  <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&lsaquo; All labs<span class="sr-only"> (opens in new tab)</span></a>
-  <div class="prog"><div class="bar" id="progressbar" role="progressbar" aria-label="Sections reviewed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar-fill"></span></div><span id="bar-txt">0/7 reviewed</span></div>
-  <div class="tools">
-    <button class="tbtn" id="fs-down" type="button" aria-label="Smaller text">A&minus;</button>
-    <button class="tbtn" id="fs-up" type="button" aria-label="Larger text">A+</button>
-    <button class="tbtn" id="print-btn" type="button" aria-label="Print this page">&#128424;&#65039; Print</button>
-    <button class="tbtn" id="theme-toggle" type="button" aria-pressed="false">&#127769; Dark</button>
-    <button class="tbtn" id="reset-btn" type="button">Clear progress</button>
+
+<div class="toolbar" role="navigation" aria-label="Page toolbar">
+  <div class="tb-left">
+    <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&#8592; All labs</a>
+    <span class="tb-crumb">Forensics &middot; LAB 07</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-sizes" role="group" aria-label="Text size">
+      <button class="tb-btn" id="fsDec" aria-label="Decrease text size">A&#8722;</button>
+      <button class="tb-btn" id="fsRst" aria-label="Reset text size">A</button>
+      <button class="tb-btn" id="fsInc" aria-label="Increase text size">A+</button>
+    </div>
+    <button class="tb-btn" id="printBtn" aria-label="Print or save as PDF">&#128424;&#65039; <span>Print</span></button>
+    <button class="tb-btn" id="themeBtn" aria-label="Toggle dark mode">&#127769; <span>Dark</span></button>
   </div>
 </div>
-<main id="main" class="wrap">
-<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#environment">Before you start</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#corrections">Manual corrections</a></li><li><a href="#defensible">Making it defensible</a></li><li><a href="#module">Course connection</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav>
-<section class="blk" id="overview" aria-labelledby="h-overview"><h2 id="h-overview"><span class="n">01</span>Overview &mdash; what this lab is really teaching</h2><p>When a file is deleted, its directory entry vanishes but its bytes usually linger in <strong>unallocated space</strong> until overwritten. <strong>Data carving</strong> recovers those bytes with no file-system help at all &mdash; by recognizing files from their <strong>signatures</strong> (header and footer byte patterns) rather than from any directory that points to them.</p><p>You'll carve three files by hand in <strong>HxD</strong> &mdash; an XLSX, a PDF, and a JPEG &mdash; finding each header and footer, selecting the exact byte range, and saving it out. Then you'll do the same job automatically with <strong>Autopsy's PhotoRec carver</strong> and compare. The manual pass is the point: once you've hunted headers and footers by hand, you understand exactly what the automated tool is doing &mdash; and why it sometimes fails.</p><p>Carving's hard problems show up immediately. <strong>False-positive footers</strong>: <code>FF D9</code> can appear inside a JPEG's own data, so the first match isn't always the real end. <strong>Headerless/footerless formats</strong>: some files have no clear end marker, so you carve to the end of the cluster and hope. And <strong>fragmentation</strong>: a file split across non-contiguous clusters can't be carved as one contiguous block &mdash; the deepest limitation of the whole technique.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section>
-<section class="blk" id="environment" aria-labelledby="h-environment"><h2 id="h-environment"><span class="n">02</span>Before you start</h2><div class="env"><div><b>Machine</b><span>WinOS (Windows)</span></div><div><b>Login</b><span>Administrator</span></div><div><b>Tools</b><span>HxD, Autopsy 4.15 (PhotoRec)</span></div><div><b>Dataset</b><span><code>Lab007.001</code> / <code>NDG Lab7.001</code></span></div><div><b>Output</b><span>E:\FOR_LAB_007</span></div></div><div class="call tip"><span class="k">Tip</span><p>Use <strong>Edit &gt; Select block</strong> (<kbd>Ctrl</kbd>+<kbd>E</kbd>) to enter the start and end offsets numerically rather than dragging &mdash; precise, repeatable, and far less error-prone. Delete any trailing spaces in the offset fields before clicking OK.</p></div></section>
-<section class="blk" id="walkthrough" aria-labelledby="h-walkthrough"><h2 id="h-walkthrough"><span class="n">03</span>Walkthrough</h2><p>For each file the recipe is the same: Find the header, note its start offset; Find the footer, note the offset of its <em>last</em> byte; Select block from start to end; Save Selection. Keep Offset base on Decimal.</p><div class="task"><h3><span class="tn">Task 1</span>Carve an XLSX</h3><p>Office files (ZIP containers) have a clear header and a footer plus 18 trailing bytes.</p><ol class="steps"><li>Open <code>Lab007.001</code> in HxD (sector size 512). Set Offset base &rarr; Decimal.</li><li>Search &gt; Find &gt; Hex-values &rarr; header <code>50 4B 03 04 14 00 06 00</code> &rarr; note start offset (6917632).</li><li>Find footer <code>50 4B 05 06</code>; the real end is that match <strong>+18 bytes</strong> (6931455).</li><li>Edit &gt; Select block &rarr; start 6917632, end 6931455 (dec) &rarr; File &gt; Save Selection &rarr; <code>Carved.xlsx</code>. Open it to confirm (~14 KB). <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The carved XLSX open without errors.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 2</span>Carve a PDF (beware false footers)</h3><p>PDFs can have multiple %%EOF markers; take the LAST one, and watch for false positives.</p><ol class="steps"><li>Find header <code>25 50 44 46</code> (%PDF) &mdash; search direction All, since this file sits before the XLSX. Note start (3735040).</li><li>Find footer <code>0D 0A 25 25 45 4F 46 0D 0A</code>. The first hit may be a false positive &mdash; the true end has <strong>zeros filling to the end of the sector</strong> after <code>0A</code>. Find Next until you reach it (6911314).</li><li>Select block &rarr; Save Selection &rarr; <code>Carved.pdf</code> &rarr; open to confirm.</li></ol></div><div class="task"><h3><span class="tn">Task 3</span>Carve a JPEG (false footers again)</h3><p>FF D9 appears inside JPEG data; the real footer is followed by zeros to the sector end.</p><ol class="steps"><li>Find header <code>FF D8 FF E0</code> (direction Forward) &rarr; note start (6934016).</li><li>Find footer <code>FF D9</code>; the first hit(s) are false positives inside the image data. Find Next until you see zeros to the sector end after <code>D9</code> (6995053).</li><li>Select block &rarr; Save Selection &rarr; <code>Carved.jpg</code> &rarr; open to confirm. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The carved JPEG rendering correctly.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 4</span>Automate with PhotoRec in Autopsy</h3><p>See the tool do in seconds what you just did by hand.</p><ol class="steps"><li>New case &rarr; add <code>NDG Lab7.001</code> &rarr; Configure Ingest &rarr; Deselect All &rarr; tick only <strong>PhotoRec Carver</strong> &rarr; Finish.</li><li>Expand the volume to <code>$CarvedFiles</code> &mdash; here, 13 files carved from unallocated space (names are cluster-based, not original).</li><li>Run <strong>Embedded File Extractor</strong> afterward to expand ZIP/Office archives into their contents. Compare these results to your hand-carved files. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The $CarvedFiles folder listing in Autopsy.</span></div></li></ol></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section>
-<section class="blk" id="reference" aria-labelledby="h-reference"><h2 id="h-reference"><span class="n">04</span>Reference &mdash; signatures and the limits of carving</h2><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Type</th><th scope="col">Header</th><th scope="col">Footer</th><th scope="col">Gotcha</th></tr></thead><tbody><tr><td>JPEG</td><td><code>FF D8 FF E0</code></td><td><code>FF D9</code></td><td>FF D9 recurs inside data &mdash; real end has zeros to sector end.</td></tr><tr><td>PNG</td><td><code>89 50 4E 47 0D 0A 1A 0A</code></td><td><code>49 45 4E 44 AE 42 60 82</code></td><td>Clean footer, usually reliable.</td></tr><tr><td>GIF</td><td><code>47 49 46 38</code></td><td><code>00 3B</code></td><td>Short footer &mdash; false positives common.</td></tr><tr><td>PDF</td><td><code>25 50 44 46</code></td><td><code>25 25 45 4F 46</code></td><td>Multiple %%EOF &mdash; take the last, zeros follow.</td></tr><tr><td>ZIP/DOCX/XLSX/PPTX</td><td><code>50 4B 03 04</code></td><td><code>50 4B 05 06</code> + 18 bytes</td><td>Footer isn't the file end &mdash; add 18 bytes.</td></tr></tbody></table></div><h3>Why carving is hard</h3><ul><li><strong>Fragmentation</strong> is the killer: a file split across non-contiguous clusters can't be recovered as one contiguous block. Header-footer carving assumes contiguity.</li><li><strong>Footerless formats</strong> (plain text, some containers) have no end marker &mdash; you carve to the cluster end and may get trailing junk.</li><li><strong>Overwriting</strong>: unallocated space is reused over time, so the longer since deletion, the less likely a clean recovery.</li><li><strong>PhotoRec names files by cluster</strong>, not original name &mdash; metadata that could rename them is sometimes embedded, often not.</li></ul><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section>
-<section class="blk" id="stuck" aria-labelledby="h-stuck"><h2 id="h-stuck"><span class="n">05</span>Where people get stuck</h2><p>Most problems in this lab fall into one of these.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Symptom</th><th scope="col">Likely cause</th><th scope="col">Fix</th></tr></thead><tbody><tr><td>Carved file won't open</td><td>Wrong footer (false positive) or missed trailing bytes</td><td>For JPEG/PDF, confirm zeros follow the footer to the sector end; for Office, add the 18 bytes after 50 4B 05 06.</td></tr><tr><td>Can't select the range by dragging</td><td>Range too large to drag accurately</td><td>Use Edit &gt; Select block and type the offsets; delete trailing spaces in the fields.</td></tr><tr><td>Find lands on the wrong occurrence</td><td>Multiple matches, wrong direction</td><td>Mind the Forward/All/Backward direction, and use Find Next to step past false positives.</td></tr><tr><td>PhotoRec names make no sense</td><td>PhotoRec uses cluster/block numbers</td><td>Normal &mdash; carved files lose their original names unless metadata allows a rename.</td></tr><tr><td>Carved file is smaller than expected</td><td>Fragmented source</td><td>A fragmented file can't be carved contiguously &mdash; a known limit, not your error.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section>
-<section class="blk" id="corrections" aria-labelledby="h-corrections"><h2 id="h-corrections"><span class="n">06</span>Manual corrections &amp; currency notes</h2><p>The NDG manual was written in 2020&ndash;21. These are the places where it is wrong, inconsistent, or out of date &mdash; worth knowing before you trust a screenshot.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Where</th><th scope="col">The manual says</th><th scope="col">What's actually true</th></tr></thead><tbody><tr><td>PhotoRec</td><td>Used via Autopsy's PhotoRec module</td><td>PhotoRec (and its sibling TestDisk, by CGSecurity) is current and excellent &mdash; one of the best free carvers, actively maintained. Other strong carvers: Scalpel, Foremost, bulk_extractor (Lab 18).</td></tr><tr><td>Office = ZIP</td><td>Treats XLSX/DOCX as having a PK header</td><td>Correct &mdash; modern Office files (2007+) are ZIP archives, which is why they share the 50 4B signature and why Embedded File Extractor can expand them. Legacy .doc/.xls (OLE2) have a different signature (D0 CF 11 E0).</td></tr><tr><td>Contiguity assumption</td><td>Carving presented as straightforward</td><td>Header-footer carving only works on contiguous files. Modern 'smart carving' tools attempt to reassemble fragments, but it's hard and imperfect &mdash; a limitation the lab understates.</td></tr><tr><td>Autopsy version</td><td>4.15 in screens</td><td>4.2x current; PhotoRec module unchanged.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-corrections" data-done="corrections"><label for="done-corrections">Mark this section reviewed</label></div></section>
-<section class="blk" id="defensible" aria-labelledby="h-defensible"><h2 id="h-defensible"><span class="n">07</span>Making it defensible</h2><p>Carved files come with no file-system provenance, so they need extra care:</p><ul><li><strong>Carved files have no path or timestamps</strong> from the file system &mdash; they were in unallocated space. Don't overstate when or by whom they were created.</li><li><strong>Hash every carved file</strong> (Lab 20) so you can prove it hasn't changed since recovery.</li><li><strong>Document the carve.</strong> Tool, offsets (for manual), and that the file came from unallocated space &mdash; this is what makes it reproducible.</li><li><strong>Don't claim a carved file proves possession</strong> on its own. Corroborate with link files, registry, or browser artifacts before attributing it to a user.</li></ul><div class="call court"><span class="k">On the stand</span><p>'This file was deleted &mdash; how do you know who put it there, or when?' A carved file alone can't answer that; carving recovers content, not context. Be precise about what carving does and doesn't establish.</p></div><div class="done-row"><input type="checkbox" id="done-defensible" data-done="defensible"><label for="done-defensible">Mark this section reviewed</label></div></section>
-<section class="blk" id="module" aria-labelledby="h-module"><h2 id="h-module"><span class="n">08</span>Course connection</h2><p>This lab is the hands-on side of <a href="module8_lesson.html" target="_blank" rel="noopener"><strong>Module 8: Recovering Graphics Files</strong></a> &middot; also touches <a href="module6_lesson.html" target="_blank" rel="noopener">Module 6</a>.</p><p>Carving is the hands-on heart of the graphics-recovery module. It builds directly on the signatures you previewed in Lab 2 and the offset thinking of Lab 5, feeds the picture/thumbnail analysis of Lab 11, and the pagefile carving of Lab 18 is the same technique applied to memory-on-disk.</p></section>
-<section class="blk" id="check" aria-labelledby="h-check"><h2 id="h-check"><span class="n">09</span>Check yourself</h2><div class="q"><p class="ask">1. Why isn't the first FF D9 you find necessarily the end of a JPEG?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">FF D9 can occur inside the JPEG's own compressed data as a false positive. The real footer is typically followed by zeros padding to the end of the sector, so you Find Next past false hits until you see that.</div></div><div class="q"><p class="ask">2. What single property of a file makes header-footer carving fail, and why?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Fragmentation. If the file is split across non-contiguous clusters, there's no single contiguous byte range between header and footer to carve &mdash; the technique assumes the file's bytes are contiguous.</div></div><div class="q"><p class="ask">3. Why do XLSX and ZIP files share the 50 4B signature?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Modern Office files (2007+) are ZIP archives internally, so they start with the ZIP 'PK' header. That's also why Autopsy's Embedded File Extractor can expand them into their component files.</div></div><div class="q"><p class="ask">4. A carved file has no file-system timestamps or path. What does that mean for your findings?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">It came from unallocated space with no directory entry, so you can't state when it was created or who created it from the carve alone. You recover content, not context &mdash; corroborate before attributing it to anyone.</div></div><div class="done-row"><input type="checkbox" id="done-check" data-done="check"><label for="done-check">Mark this section reviewed</label></div></section>
-<section class="blk" id="evidence" aria-labelledby="h-evidence"><h2 id="h-evidence"><span class="n">10</span>Evidence to capture</h2><p>Your instructor wants screenshots of these key steps as proof you ran the lab. Capture them as you go (the &#128248; markers in the walkthrough show where), tick each one off, then print this page or submit the list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" id="ev-1" data-evidence="1"><label for="ev-1"><span class="shotname">XLSX header found.</span> HxD's Find landing on the 50 4B 03 04 header, with the offset visible.</label></li><li><input type="checkbox" id="ev-2" data-evidence="2"><label for="ev-2"><span class="shotname">Carved XLSX.</span> The carved Carved.xlsx open without errors.</label></li><li><input type="checkbox" id="ev-3" data-evidence="3"><label for="ev-3"><span class="shotname">Carved JPEG.</span> The carved Carved.jpg rendering correctly.</label></li><li><input type="checkbox" id="ev-4" data-evidence="4"><label for="ev-4"><span class="shotname">PhotoRec results.</span> The $CarvedFiles folder in Autopsy showing the carved files.</label></li><li><input type="checkbox" id="ev-5" data-evidence="5"><label for="ev-5"><span class="shotname">Expanded archive.</span> An archive expanded by the Embedded File Extractor module in the tree.</label></li></ul></div><p class="evline">Student name:<span></span> &nbsp; Date:<span style="min-width:120px"></span></p></section>
-<section class="blk" id="cheat" aria-labelledby="h-cheat"><h2 id="h-cheat"><span class="n">11</span>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Carve recipe</h3><ul><li>Find header → note start offset</li><li>Find footer → note end offset</li><li>Select block (by offset, not drag)</li><li>Save Selection → open to verify</li></ul></div><div><h3>Gotchas</h3><ul><li>FF D9 / %%EOF false positives → zeros follow real end</li><li>Office footer = PK0506 + 18 bytes</li><li>Fragmented files can't be carved contiguously</li><li>Carved files lose name/path/timestamps → hash them</li></ul></div></div></div></section>
-<nav class="labnav" aria-label="Lab navigation"><a href="forensics_lab06_companion.html" target="_blank" rel="noopener"><small>&lsaquo; Previous lab</small>Lab 06: Keyword Search and Analysis<span class="sr-only"> (opens in new tab)</span></a><a class="nx" href="forensics_lab08_companion.html" target="_blank" rel="noopener"><small>Next lab &rsaquo;</small>Lab 08: Metadata and Link File Analysis<span class="sr-only"> (opens in new tab)</span></a></nav>
+
+<div class="prog-wrap" aria-hidden="false">
+  <div class="prog-inner">
+    <div class="prog-bar" role="progressbar" aria-label="Section progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="prog-fill" id="progFill"></div></div>
+    <span class="prog-txt" id="progTxt">0 / 0 sections</span>
+  </div>
+</div>
+
+<header class="hero" role="banner">
+  <div class="hero-inner">
+    <span class="labno">LAB 07</span>
+    <h1>Data Carving</h1>
+    <p class="lede">Deleted files linger in unallocated space. Recover them by their content alone using file signatures — carve by hand in HxD, then let Autopsy's PhotoRec automate it, and compare.</p>
+    <div class="chips"><span class="chip">&#9201; <b>75 min</b></span><span class="chip">&#128202; Difficulty: <b>Intermediate</b></span><span class="chip">&#129514; Tools: <b>HxD · Autopsy (PhotoRec)</b></span><span class="chip">&#128421; VM: <b>WinOS</b></span><span class="chip">&#128218; Maps to: <b>Module 9 — Analysis &amp; Validation</b></span></div>
+  </div>
+</header>
+
+<main id="main">
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#tools">Tools &amp; environment</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#court">Why it matters in court</a></li><li><a href="#exam">Course relevance</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav><section id="overview" data-track><h2>Overview — what this lab is really teaching</h2><p>Deleted files don't vanish — their directory entry goes, but the data lingers in <strong>unallocated space</strong> until overwritten. <strong>Data carving</strong> recovers those files by their content alone, using <strong>file signatures</strong> (headers and footers) rather than the file system's metadata. You'll carve by hand in HxD, then let Autopsy automate it — and compare.</p><p>The reason to suffer through the manual version first: once you've highlighted header-to-footer yourself, you understand exactly what the automated carver is doing — and why it sometimes produces partial or misnamed files.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section><section id="tools" data-track><h2>Tools &amp; environment</h2><p><strong>WinOS</strong> for manual carving in <strong>HxD</strong>, then <strong>Autopsy</strong>'s <strong>PhotoRec Carver</strong> ingest module for automation.</p><div class="tbl-wrap"><table><thead><tr><th>File</th><th>Header (hex)</th><th>Footer (hex)</th></tr></thead><tbody><tr><td>DOCX / XLSX / PPTX (ZIP)</td><td><code>50 4B 03 04 14 00 06 00</code></td><td><code>50 4B 05 06</code> + 18 bytes</td></tr><tr><td>PDF</td><td><code>25 50 44 46</code> (<code>%PDF</code>)</td><td><code>0D 0A 25 25 45 4F 46 0D 0A</code> (last one)</td></tr><tr><td>JPEG</td><td><code>FF D8 FF E0</code></td><td><code>FF D9</code></td></tr></tbody></table></div><div class="call tip"><span class="k">Footers can lie</span><p>A footer byte sequence can appear mid-file as a false positive. For PDF and JPEG, confirm you're at the real end by looking for the run of zeros out to the end of the sector.</p></div><div class="done-row"><input type="checkbox" id="done-tools" data-done="tools"><label for="done-tools">Mark this section reviewed</label></div></section><section id="walkthrough" data-track><h2>Walkthrough</h2><p class="task-head">Task 1 — Carve by hand in HxD</p><div class="step"><h3><span class="n">1</span> Open the image, set decimal offsets</h3><p><strong>Tools &gt; Open disk image</strong> → <code>Lab007.001</code> (sector 512). Set <strong>Offset base = Decimal</strong> so the offsets match the instructions.</p></div><div class="step"><h3><span class="n">2</span> Carve the XLSX</h3><p><strong>Find</strong> (Hex-values) the header <code>50 4B 03 04 14 00 06 00</code> → note the start offset. Find the footer <code>50 4B 05 06</code>, then <strong>add 18 bytes</strong> for the end offset. <strong>Edit &gt; Select block</strong> (Ctrl+E) with both offsets, then <strong>File &gt; Save selection</strong> as <code>Carved.xlsx</code>. It should open cleanly (~14&nbsp;KB).</p><div class="call stuck"><span class="k">Delete the spaces in the offset boxes</span><p>Select block rejects trailing spaces behind the start/end offset values — clear them before OK.</p></div></div><div class="step"><h3><span class="n">3</span> Carve the PDF (mind the false footer)</h3><p>Find <code>25 50 44 46</code> (search <strong>All</strong> — the PDF is before the XLSX). Find the footer <code>0D 0A 25 25 45 4F 46 0D 0A</code>; the <strong>first hit may be a false positive</strong> (blanks, not zeros, follow). Search again for the real end, Select block, save <code>Carved.pdf</code>.</p></div><div class="step"><h3><span class="n">4</span> Carve the JPEG</h3><p>Find header <code>FF D8 FF E0</code>, then footer <code>FF D9</code> — again watching for a false positive before the true end (look for zeros to the sector boundary). Select block, save <code>Carved.jpg</code>.</p><div class="call capture"><span class="k">&#128248; Screenshot for your report</span><p>One carved file (e.g. Carved.jpg) open and rendering, proving the manual carve succeeded.</p></div></div><p class="task-head">Task 2 — Automate with Autopsy</p><div class="step"><h3><span class="n">5</span> Run the PhotoRec Carver</h3><p>New case, add <code>NDG Lab7.001</code>, <strong>Deselect All</strong> ingest modules, enable <strong>PhotoRec Carver</strong>, Finish. It carves everything it can from unallocated space.</p></div><div class="step"><h3><span class="n">6</span> Review carved files &amp; expand archives</h3><p>Under the NTFS/exFAT volume, open <code>$CarvedFiles</code> (13 files here). Names won't match the originals — PhotoRec names by cluster/block. Then run the <strong>Embedded File Extractor</strong> module to expand ZIP/RAR/7z and Office files so their contents are added to the case.</p><div class="call tip"><span class="k">Why names change</span><p>Carving recovers <em>content</em>, not the file-system metadata, so the original filename is usually gone. The carver invents a name from the block number (or embedded metadata, if present).</p></div></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section><section id="reference" data-track><h2>Reference — carving logic</h2><div class="tbl-wrap"><table><thead><tr><th>Concept</th><th>Meaning</th></tr></thead><tbody><tr><td>Unallocated space</td><td>Clusters marked free; deleted data lingers here until overwritten.</td></tr><tr><td>File signature</td><td>Fixed header (and often footer) bytes that identify a file type.</td></tr><tr><td>Header-only files</td><td>Some types have no footer — the carver must guess the length.</td></tr><tr><td>False positive footer</td><td>Footer bytes appearing mid-file; confirm with trailing zeros to sector end.</td></tr><tr><td>Manual vs. automated</td><td>Manual teaches the mechanism; automated (PhotoRec) is practical at scale.</td></tr><tr><td>Carved filenames</td><td>Derived from block number, not the original name.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section><section id="stuck" data-track><h2>Where people get stuck</h2><div class="tbl-wrap"><table><thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead><tbody><tr><td>Carved file won't open / too small</td><td>Stopped at a false-positive footer</td><td>Continue searching to the real footer (zeros to sector end).</td></tr><tr><td>Select block does nothing</td><td>Trailing spaces in offset fields</td><td>Delete the spaces before clicking OK.</td></tr><tr><td>Wrong offsets</td><td>Offset base left on hex</td><td>Switch to Decimal to match the instructions.</td></tr><tr><td>XLSX footer confusion</td><td>Need +18 bytes after <code>50 4B 05 06</code></td><td>Add 18 to the footer offset for the end.</td></tr><tr><td>Carved names don't match originals</td><td>Normal for carving</td><td>Identify files by content; original names are lost.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section><section id="court" data-track><h2>Why it matters in court</h2><div class="call defend"><span class="k">Recovered ≠ attributed</span><p>Carving proves a file's data existed in unallocated space — it does not, by itself, tell you who put it there or when. Pair carved content with link files, registry MRUs, and timeline data (Labs 04, 08, 14) to build attribution.</p></div><ul><li><strong>Deleted isn't gone.</strong> The central fact that makes recovery possible.</li><li><strong>Explain the method.</strong> Being able to describe signatures and carving demystifies the automated tool for a jury.</li><li><strong>Note the limits.</strong> Partial carves and lost names are inherent; disclose them.</li></ul><div class="done-row"><input type="checkbox" id="done-court" data-done="court"><label for="done-court">Mark this section reviewed</label></div></section><section id="exam"><h2>Course relevance</h2><p>Part of <strong>Module 9</strong> and foundational to file recovery generally. Know the three signatures above, header/footer carving, unallocated space, and the manual-vs-automated trade-off.</p></section><section id="check"><h2>Check yourself</h2><div class="q"><p class="ask">1. What makes it possible to recover a deleted file by carving?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Deleting a file removes its directory/metadata entry but leaves the data in unallocated space until it's overwritten; carving finds that data by its signature.</div></div><div class="q"><p class="ask">2. Your JPEG carve stops at the first <code>FF D9</code> but the image is broken. What likely happened?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">The first <code>FF D9</code> was a false positive inside the file. Continue to the true footer — the one followed by zeros out to the sector boundary.</div></div><div class="q"><p class="ask">3. Why don't carved files keep their original names?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Carving recovers content from unallocated space without the file-system metadata, so the carver names files by block number (or embedded metadata) rather than the lost original name.</div></div><div class="q"><p class="ask">4. What's the value of carving by hand before using PhotoRec?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">It teaches exactly what the automated carver does — signature matching and length determination — so you can explain and trust (and debug) the automated results.</div></div></section><section id="evidence"><h2>Evidence to capture</h2><p>Your instructor wants screenshots of the key steps as proof you completed the lab. Grab these as you go, tick each one off, then use <strong>Print</strong> to submit this list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" data-evidence="l7-1"><span><span class="shot">Manual carve.</span> One hand-carved file (xlsx/pdf/jpg) open and valid.</span></li><li><input type="checkbox" data-evidence="l7-2"><span><span class="shot">PhotoRec results.</span> The <code>$CarvedFiles</code> listing in Autopsy.</span></li><li><input type="checkbox" data-evidence="l7-3"><span><span class="shot">Expanded archive.</span> Contents revealed by the Embedded File Extractor module.</span></li></ul></div></section><section id="cheat"><h2>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Signatures</h3><ul><li>JPEG <code>FF D8 FF E0</code> … <code>FF D9</code></li><li>PDF <code>%PDF</code> … <code>%%EOF</code></li><li>Office/ZIP <code>50 4B 03 04</code> … +18</li><li>Footer may be a false positive</li></ul></div><div><h3>Carve</h3><ul><li>HxD: Find hex → note offsets</li><li>Select block (Ctrl+E) → Save selection</li><li>Offset base = Decimal</li><li>Autopsy → PhotoRec Carver</li><li>Then Embedded File Extractor</li></ul></div></div></div></section>
+  <div class="printbar noprint">
+    <p>Tip: use <strong>Print</strong> above to save this companion (with your ticked checkboxes and revealed answers) as a PDF to submit.</p>
+  </div>
 </main>
-<footer class="site-footer">
-  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="index.html" target="_blank" rel="noopener">Course hub<span class="sr-only"> (opens in new tab)</span></a></p>
-  <p style="margin-top:4px">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College &middot; 2026</p>
+
+<footer class="sf">
+  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="https://mqaissaunee-bcc.github.io/forensics/" target="_blank" rel="noopener">Course home</a></p>
+  <p style="margin-top:4px" class="noprint">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College</p>
 </footer>
-<div id="live" class="sr-only" aria-live="polite"></div>
+
 <script>
 (function(){
-  "use strict";
-  var body=document.body, root=document.documentElement;
-  var P=body.getAttribute("data-prefix")||"df-lab-";
-  function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-  function del(k){try{localStorage.removeItem(k);}catch(e){}}
-
-  /* theme: shares the course hub's key so the choice follows students across the site */
-  var tb=document.getElementById("theme-toggle");
-  function applyTheme(m){
-    if(m==="dark"){root.setAttribute("data-theme","dark");}else{root.removeAttribute("data-theme");}
-    if(tb){tb.innerHTML=m==="dark"?"&#9728;&#65039; Light":"&#127769; Dark";tb.setAttribute("aria-pressed",m==="dark"?"true":"false");}
-  }
-  applyTheme(load("df-theme")==="dark"?"dark":"light");
-  if(tb){tb.addEventListener("click",function(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";save("df-theme",n);applyTheme(n);});}
-
-  /* text size */
-  var fs=parseFloat(load("df-lab-fs")||"1");
-  function applyFs(){fs=Math.min(1.4,Math.max(0.85,fs));root.style.setProperty("--fs",fs);save("df-lab-fs",String(fs));}
+  var KEY="df-lab07";
+  var root=document.documentElement;
+  // theme (light default; honor saved)
+  try{var th=localStorage.getItem('df-theme');if(th==='dark')root.setAttribute('data-theme','dark');}catch(e){}
+  function setTheme(d){if(d){root.setAttribute('data-theme','dark');}else{root.removeAttribute('data-theme');}try{localStorage.setItem('df-theme',d?'dark':'light');}catch(e){}updThemeBtn();}
+  function updThemeBtn(){var b=document.getElementById('themeBtn');if(!b)return;var d=root.getAttribute('data-theme')==='dark';b.innerHTML=d?'\u2600\ufe0f <span>Light</span>':'\u{1F319} <span>Dark</span>';}
+  // text size
+  var fs=1;try{var s=localStorage.getItem('df-fs');if(s)fs=parseFloat(s);}catch(e){}
+  function applyFs(){root.style.setProperty('--fs',fs);try{localStorage.setItem('df-fs',fs);}catch(e){}}
   applyFs();
-  var up=document.getElementById("fs-up"),dn=document.getElementById("fs-down");
-  if(up){up.addEventListener("click",function(){fs+=0.1;applyFs();});}
-  if(dn){dn.addEventListener("click",function(){fs-=0.1;applyFs();});}
 
-  var pr=document.getElementById("print-btn");
-  if(pr){pr.addEventListener("click",function(){window.print();});}
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+  function save(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+  var state=load();
 
-  /* progress */
-  var dones=document.querySelectorAll("[data-done]");
-  var barFill=document.getElementById("bar-fill"),barTxt=document.getElementById("bar-txt");
-  function refresh(){
-    var n=0;for(var i=0;i<dones.length;i++){if(dones[i].checked){n++;}}
-    var pct=dones.length?Math.round(100*n/dones.length):0;
-    if(barFill){barFill.style.width=pct+"%";}
-    if(barTxt){barTxt.textContent=n+"/"+dones.length+" reviewed";}
-    var pb=document.getElementById("progressbar");
-    if(pb){pb.setAttribute("aria-valuenow",String(pct));}
-    save(P+"total",String(dones.length));save(P+"count",String(n));
-  }
-  for(var i=0;i<dones.length;i++){(function(cb){
-    var k=P+"done-"+cb.getAttribute("data-done");
-    cb.checked=load(k)==="1";
-    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}refresh();});
-  })(dones[i]);}
-  refresh();
+  document.addEventListener('DOMContentLoaded',function(){
+    updThemeBtn();
+    var tb=document.getElementById('themeBtn');if(tb)tb.addEventListener('click',function(){setTheme(root.getAttribute('data-theme')!=='dark');});
+    var inc=document.getElementById('fsInc'),dec=document.getElementById('fsDec'),rst=document.getElementById('fsRst');
+    if(inc)inc.addEventListener('click',function(){fs=Math.min(1.4,Math.round((fs+0.1)*10)/10);applyFs();});
+    if(dec)dec.addEventListener('click',function(){fs=Math.max(0.85,Math.round((fs-0.1)*10)/10);applyFs();});
+    if(rst)rst.addEventListener('click',function(){fs=1;applyFs();});
+    var pb=document.getElementById('printBtn');if(pb)pb.addEventListener('click',function(){window.print();});
 
-  /* evidence checklist */
-  var evs=document.querySelectorAll("[data-evidence]");
-  for(var j=0;j<evs.length;j++){(function(cb){
-    var k=P+"ev-"+cb.getAttribute("data-evidence");
-    cb.checked=load(k)==="1";
-    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}});
-  })(evs[j]);}
-
-  /* reset */
-  var rs=document.getElementById("reset-btn");
-  if(rs){rs.addEventListener("click",function(){
-    if(!window.confirm("Clear your progress and evidence ticks for this lab?")){return;}
-    var ks=[];try{for(var a=0;a<localStorage.length;a++){var kk=localStorage.key(a);if(kk&&kk.indexOf(P)===0){ks.push(kk);}}}catch(e){}
-    for(var b=0;b<ks.length;b++){del(ks[b]);}
-    for(var c=0;c<dones.length;c++){dones[c].checked=false;}
-    for(var d=0;d<evs.length;d++){evs[d].checked=false;}
-    refresh();
-  });}
-
-  /* reveal answers */
-  var rv=document.querySelectorAll(".reveal");
-  for(var r=0;r<rv.length;r++){(function(btn){
-    btn.addEventListener("click",function(){
-      var a=btn.nextElementSibling;var open=a.classList.toggle("open");
-      btn.setAttribute("aria-expanded",open?"true":"false");btn.textContent=open?"Hide answer":"Show answer";
+    // reveal answers
+    document.querySelectorAll('.reveal').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var ans=btn.nextElementSibling;var open=ans.classList.toggle('show');
+        btn.setAttribute('aria-expanded',open?'true':'false');
+        btn.textContent=open?'Hide answer':'Show answer';
+      });
     });
-  })(rv[r]);}
 
-  /* copy buttons: copy the clean text stored in data-copy */
-  var live=document.getElementById("live");
-  function announce(t){if(live){live.textContent="";setTimeout(function(){live.textContent=t;},30);}}
-  function fallback(t){var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
-  var cps=document.querySelectorAll(".copy");
-  for(var q=0;q<cps.length;q++){(function(btn){
-    btn.addEventListener("click",function(){
-      var t=btn.getAttribute("data-copy");
-      function done(){btn.textContent="Copied";announce("Command copied");setTimeout(function(){btn.textContent="Copy";},1500);}
-      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done();});}else{fallback(t);done();}
+    // restore + wire all tracked checkboxes
+    function wire(box,id){
+      if(state[id])box.checked=true;
+      box.addEventListener('change',function(){state[id]=box.checked;save(state);updProg();});
+    }
+    document.querySelectorAll('[data-done]').forEach(function(b){wire(b,'done:'+b.getAttribute('data-done'));});
+    document.querySelectorAll('[data-evidence]').forEach(function(b){wire(b,'ev:'+b.getAttribute('data-evidence'));});
+
+    function updProg(){
+      var dones=document.querySelectorAll('[data-done]');
+      var n=0;dones.forEach(function(b){if(b.checked)n++;});
+      var total=dones.length||1;var pct=Math.round(n/total*100);
+      var f=document.getElementById('progFill'),t=document.getElementById('progTxt');
+      if(f)f.style.width=pct+'%';
+      if(t)t.textContent=n+' / '+total+' sections ('+pct+'%)';
+    }
+    updProg();
+
+    // copy buttons
+    document.querySelectorAll('.cmd').forEach(function(block){
+      var pre=block.querySelector('pre');if(!pre)return;
+      var btn=document.createElement('button');btn.className='copy';btn.type='button';btn.textContent='Copy';
+      btn.setAttribute('aria-label','Copy command');
+      btn.addEventListener('click',function(){
+        var txt=pre.innerText.replace(/^root@[^#]*#\s?/gm,'').replace(/^(caine|csi|deft)@[^$]*\$\s?/gm,'').replace(/^smb:[^>]*>\s?/gm,'');
+        txt=txt.replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,'-');
+        function done(){btn.textContent='Copied!';btn.classList.add('ok');setTimeout(function(){btn.textContent='Copy';btn.classList.remove('ok');},1400);}
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback(txt,done);});}
+        else fallback(txt,done);
+      });
+      block.appendChild(btn);
     });
-  })(cps[q]);}
+    function fallback(txt,cb){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){}document.body.removeChild(ta);}
+  });
 })();
 </script>
-<script src="assistant.js" defer></script>
 </body>
 </html>

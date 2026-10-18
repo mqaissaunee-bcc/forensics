@@ -3,308 +3,321 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab 05: File Systems &mdash; Digital Forensics Lab Companion</title>
-<meta name="description" content="Student companion for NDG Forensics v2 Lab 05 (File Systems): walkthrough, reference, troubleshooting, manual corrections, self-check and evidence checklist.">
+<title>Lab 05 Companion — File Systems &middot; Forensics</title>
+<meta name="description" content="Companion for Forensics Lab 05: parsing the MBR partition table and FAT/NTFS/exFAT volume boot records in HxD, little-endian, volume serials, telling the file systems apart, and course relevance.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 :root{
   --bg0:#F4F0EB;--bg1:#FFFFFF;--bg2:#EDE7E0;
-  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#6A6A7A;
+  --tx0:#1A1A2E;--tx1:#4A4A5A;--tx2:#7A7A8A;
   --ac:#0D5C63;--ac2:#14919B;--acG:rgba(13,92,99,.12);
-  --hi:#C44536;--hi2:#E76F51;--ok:#2D6A4F;--ok2:#52B788;--warn:#B7791F;--warnBg:rgba(233,196,106,.18);
-  --fixBg:rgba(196,69,54,.08);--okBg:rgba(45,106,79,.09);--tipBg:rgba(13,92,99,.07);
-  --codeBg:#1A2028;--codeTx:#E8E6E3;
-  --bdr:#D5CEC7;--shd:0 2px 16px rgba(26,26,46,.06);--shd2:0 8px 32px rgba(26,26,46,.12);
-  --r:12px;--rs:8px;--t:.3s cubic-bezier(.4,0,.2,1);
-  --fH:'Merriweather',Georgia,serif;--fB:'Source Sans 3','Segoe UI',system-ui,sans-serif;--fM:'JetBrains Mono','Consolas','Courier New',monospace;
+  --hi:#C44536;--hi2:#E76F51;
+  --ok:#2D6A4F;--ok2:#52B788;
+  --warn:#E9C46A;--warnG:rgba(233,196,106,.16);
+  --bdr:#D5CEC7;
+  --shd:0 2px 16px rgba(26,26,46,.06);
+  --shd2:0 8px 32px rgba(26,26,46,.12);
+  --r:12px;--rs:8px;
+  --t:.3s cubic-bezier(.4,0,.2,1);
+  --fH:'Merriweather',Georgia,serif;
+  --fB:'Source Sans 3','Segoe UI',sans-serif;
+  --fM:'JetBrains Mono','Courier New',monospace;
   --fs:1;
 }
 [data-theme="dark"]{
   --bg0:#0F1419;--bg1:#1A2028;--bg2:#242D38;
-  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#8F8C86;
-  --ac:#44C7D0;--ac2:#14919B;--acG:rgba(20,145,155,.18);
-  --hi:#F4A261;--hi2:#E76F51;--ok:#95D5B2;--ok2:#52B788;--warn:#E9C46A;--warnBg:rgba(233,196,106,.12);
-  --fixBg:rgba(231,111,81,.12);--okBg:rgba(82,183,136,.12);--tipBg:rgba(20,145,155,.12);
-  --codeBg:#0B0F13;--codeTx:#E8E6E3;
-  --bdr:#2E3A47;--shd:0 2px 16px rgba(0,0,0,.3);--shd2:0 8px 32px rgba(0,0,0,.5);
+  --tx0:#E8E6E3;--tx1:#B0ADA8;--tx2:#7A7872;
+  --ac:#14919B;--ac2:#44C7D0;--acG:rgba(20,145,155,.15);
+  --hi:#E76F51;--hi2:#F4A261;
+  --ok:#52B788;--ok2:#95D5B2;
+  --warn:#F4A261;--warnG:rgba(244,162,97,.14);
+  --bdr:#2E3A47;
+  --shd:0 2px 16px rgba(0,0,0,.3);
+  --shd2:0 8px 32px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;font-size:calc(16px * var(--fs))}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--fs));scroll-padding-top:70px}
 body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.7;transition:background var(--t),color var(--t);min-height:100vh}
-a{color:var(--ac)}
-.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:12px 24px;border-radius:0 0 var(--rs) var(--rs);z-index:10000;font-weight:600;text-decoration:none;transition:top .2s}
 .skip-link:focus{top:0}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--ac);border-radius:4px}
 *:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
-
-/* hero */
-.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 40%,#0D5C63 100%);padding:48px 24px 56px;text-align:center;position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,var(--bg0),transparent);pointer-events:none}
-.hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 20px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:rgba(255,255,255,.9);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;position:relative}
-.hero h1{font-family:var(--fH);font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;color:#fff;line-height:1.25;max-width:820px;margin:0 auto 12px;position:relative}
-.hero p.sub{font-size:1.05rem;color:rgba(255,255,255,.88);max-width:680px;margin:0 auto;position:relative}
-.hero p.sub a{color:#fff}
-.meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;position:relative;z-index:1}
-.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50px;padding:4px 14px;font-size:.82rem}
+a{color:var(--ac)}
 
 /* toolbar */
-.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.toolbar a.back{font-family:var(--fH);font-weight:700;font-size:.92rem;color:var(--tx0);text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
-.toolbar a.back:hover{color:var(--ac)}
-.prog{flex:1;min-width:160px;max-width:340px;display:flex;align-items:center;gap:10px;font-family:var(--fM);font-size:.72rem;color:var(--tx2);letter-spacing:1px;text-transform:uppercase}
-.bar{flex:1;height:8px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--bdr)}
-.bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .4s}
-.tools{display:flex;gap:6px;flex-wrap:wrap}
-.tbtn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:6px 14px;cursor:pointer;font:600 .85rem var(--fB);color:var(--tx0);min-height:44px;min-width:44px;transition:all var(--t)}
-.tbtn:hover,.tbtn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
-[data-theme="dark"] .tbtn:hover{color:#0F1419}
+.toolbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background var(--t);flex-wrap:wrap}
+.tb-left{display:flex;align-items:center;gap:12px;min-width:0}
+.tb-left .back{font-family:var(--fM);font-size:.78rem;color:var(--ac);text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--bdr);border-radius:50px;transition:all var(--t)}
+.tb-left .back:hover{background:var(--acG);border-color:var(--ac)}
+.tb-crumb{font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tb-btn{background:var(--bg2);border:1px solid var(--bdr);border-radius:50px;padding:7px 13px;cursor:pointer;font-size:.95rem;color:var(--tx0);transition:all var(--t);display:flex;align-items:center;gap:6px;min-height:36px;font-family:var(--fB)}
+.tb-btn:hover,.tb-btn:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tb-sizes{display:flex;gap:3px;align-items:center}
+.tb-sizes .tb-btn{padding:7px 11px;font-family:var(--fM);font-weight:600}
+
+/* progress rail */
+.prog-wrap{position:sticky;top:57px;z-index:99;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 20px}
+.prog-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:8px 0}
+.prog-bar{flex:1;height:6px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;transition:width .4s ease}
+.prog-txt{font-family:var(--fM);font-size:.74rem;color:var(--tx2);min-width:116px;text-align:right}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0D5C63 0%,#14919B 45%,#0D5C63 100%);padding:40px 24px 34px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-inner{max-width:900px;margin:0 auto;position:relative}
+.hero .labno{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);padding:5px 16px;border-radius:50px;font-family:var(--fM);font-size:.72rem;color:#fff;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-family:var(--fH);font-size:clamp(1.5rem,3.6vw,2.35rem);font-weight:900;color:#fff;line-height:1.22;margin-bottom:12px}
+.hero .lede{font-size:1.05rem;color:rgba(255,255,255,.9);max-width:720px;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:.78rem;padding:5px 12px;border-radius:50px;font-family:var(--fB)}
+.chip b{font-weight:700}
 
 /* layout */
-.wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px}
-.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;box-shadow:var(--shd);margin:-36px 0 26px;position:relative;z-index:2}
-.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px}
-.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 18px;padding-left:1.3em}
-.toc a{color:var(--tx0);text-decoration:none;font-size:.95rem}
-.toc a:hover{color:var(--ac);text-decoration:underline}
-section.blk{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:26px 28px;margin-bottom:22px;box-shadow:var(--shd)}
-section.blk>h2{font-family:var(--fH);font-size:1.4rem;font-weight:900;color:var(--tx0);margin-bottom:14px;display:flex;align-items:center;gap:12px;line-height:1.3}
-section.blk>h2 .n{flex:none;font-family:var(--fM);font-size:.8rem;background:var(--acG);color:var(--ac);border-radius:50px;padding:3px 11px}
-h3{font-family:var(--fH);font-size:1.08rem;color:var(--tx0);margin:22px 0 8px}
-section.blk p,section.blk li{color:var(--tx1)}
-section.blk p+p{margin-top:10px}
-section.blk ul,section.blk ol{padding-left:1.4em;margin:8px 0}
-section.blk li{margin:4px 0}
-strong,b{color:var(--tx0)}
-code{font-family:var(--fM);font-size:.86em;background:var(--bg2);border:1px solid var(--bdr);border-radius:5px;padding:1px 6px;color:var(--tx0);word-break:break-word}
-kbd{font-family:var(--fM);font-size:.82em;background:var(--bg1);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:0 6px}
-.path{font-family:var(--fM);font-size:.84em;color:var(--ac);word-break:break-word}
+main{max-width:900px;margin:0 auto;padding:28px 24px 90px}
+.toc{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 22px;margin-bottom:28px;box-shadow:var(--shd)}
+.toc h2{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);margin-bottom:12px;font-weight:600}
+.toc ol{list-style:none;columns:2;column-gap:28px}
+.toc li{margin-bottom:7px;break-inside:avoid}
+.toc a{color:var(--tx1);text-decoration:none;font-size:.9rem;display:inline-block;transition:color var(--t)}
+.toc a:hover{color:var(--ac)}
+.toc a::before{content:'›';color:var(--ac);margin-right:7px;font-weight:700}
 
-/* task + steps */
-.task{border-top:1px dashed var(--bdr);padding-top:6px;margin-top:18px}
-.task:first-of-type{border-top:0;margin-top:4px}
-.task>h3{display:flex;gap:10px;align-items:baseline}
-.task>h3 .tn{font-family:var(--fM);font-size:.75rem;color:var(--ac);text-transform:uppercase;letter-spacing:1.5px;flex:none}
-ol.steps{counter-reset:s;list-style:none;padding-left:0 !important}
-ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 46px;border-bottom:1px solid var(--bg2)}
-ol.steps>li:last-child{border-bottom:0}
-ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--acG);color:var(--ac);font:700 .85rem var(--fM);display:flex;align-items:center;justify-content:center}
+section{margin-bottom:34px;scroll-margin-top:70px}
+section h2{font-family:var(--fH);font-size:1.5rem;font-weight:900;color:var(--tx0);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+section p{margin-bottom:14px;color:var(--tx1)}
+section h3{font-family:var(--fH);font-size:1.12rem;font-weight:700;margin:4px 0 8px;color:var(--tx0)}
+strong{color:var(--tx0);font-weight:700}
+em{color:var(--tx0)}
+ul,ol{margin:0 0 14px 2px;padding-left:22px;color:var(--tx1)}
+li{margin-bottom:8px}
+code.inl,code{font-family:var(--fM);font-size:.86em;background:var(--acG);color:var(--ac);padding:2px 7px;border-radius:5px;word-break:break-word}
+[data-theme="dark"] code.inl,[data-theme="dark"] code{color:var(--ac2)}
+kbd{font-family:var(--fM);font-size:.82em;background:var(--bg2);border:1px solid var(--bdr);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--tx0)}
 
-/* commands */
-.cmd{margin:10px 0;border-radius:var(--rs);overflow:hidden;border:1px solid var(--bdr)}
-.cmd-bar{display:flex;justify-content:space-between;align-items:center;background:var(--bg2);padding:4px 6px 4px 12px;font-family:var(--fM);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx2)}
-.copy{background:var(--bg1);border:1px solid var(--bdr);border-radius:6px;font:600 .75rem var(--fB);color:var(--tx0);padding:4px 12px;cursor:pointer;min-height:32px;min-width:64px}
-.copy:hover,.copy:focus-visible{background:var(--ac);color:#fff;border-color:var(--ac)}
-.cmd pre{background:var(--codeBg);color:var(--codeTx);padding:12px 14px;overflow-x:auto;font-family:var(--fM);font-size:.86rem;line-height:1.55;white-space:pre}
-.cmd pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.task-head{font-family:var(--fM);font-size:.76rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ac);font-weight:600;margin:24px 0 10px;padding-left:12px;border-left:3px solid var(--ac)}
+
+.step{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shd)}
+.step h3{display:flex;align-items:baseline;gap:11px;margin-top:0}
+.step h3 .n{font-family:var(--fM);font-size:.8rem;font-weight:600;color:#fff;background:var(--ac);min-width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
+.step p:last-child{margin-bottom:0}
+
+/* command block */
+.cmd{position:relative;margin:12px 0}
+.cmd pre{background:#0F1C22;color:#D8E6E4;font-family:var(--fM);font-size:.84rem;line-height:1.75;padding:14px 48px 14px 16px;border-radius:var(--rs);overflow-x:auto;border:1px solid #1C2E35;white-space:pre}
+.cmd .p{color:#52B788;user-select:none}
+.cmd .fl{color:#44C7D0}
+.cmd .ar{color:#F4A261}
+.cmd .cm{color:#7A8A88;font-style:italic}
+.cmd .copy{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#D8E6E4;border-radius:6px;padding:4px 9px;font-size:.72rem;font-family:var(--fM);cursor:pointer;transition:all var(--t);min-height:28px}
+.cmd .copy:hover{background:var(--ac);border-color:var(--ac);color:#fff}
+.cmd .copy.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.path{font-family:var(--fM);font-size:.82rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:9px 13px;margin:10px 0;color:var(--tx1);display:block;word-break:break-word}
+.path b{color:var(--ac)}
 
 /* callouts */
-.call{border-left:4px solid var(--ac);background:var(--tipBg);border-radius:0 var(--rs) var(--rs) 0;padding:10px 14px;margin:12px 0}
-.call .k{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--ac);margin-bottom:2px}
-.call p{margin:0 !important}
-.call.warn{border-color:var(--warn);background:var(--warnBg)}.call.warn .k{color:var(--warn)}
-.call.fix{border-color:var(--hi);background:var(--fixBg)}.call.fix .k{color:var(--hi)}
-.call.court{border-color:var(--ok);background:var(--okBg)}.call.court .k{color:var(--ok)}
-.shot{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--ac2);border-radius:var(--rs);padding:8px 12px;margin:10px 0;font-size:.92rem;color:var(--tx1);background:var(--bg0)}
-.shot-ico{font-size:1.1rem;line-height:1.4}
+.call{border-radius:var(--rs);padding:14px 18px;margin:14px 0;border-left:4px solid var(--ac);background:var(--acG)}
+.call .k{display:block;font-weight:700;color:var(--tx0);margin-bottom:5px;font-size:.95rem}
+.call p{margin-bottom:0;color:var(--tx1)}
+.call.tip{border-left-color:var(--ac2);background:var(--acG)}
+.call.capture{border-left-color:var(--hi);background:rgba(196,69,54,.08)}
+[data-theme="dark"] .call.capture{background:rgba(231,111,81,.1)}
+.call.capture .k{color:var(--hi)}
+.call.stuck,.call.warn{border-left-color:var(--warn);background:var(--warnG)}
+.call.defend{border-left-color:var(--ok);background:rgba(45,106,79,.09)}
+[data-theme="dark"] .call.defend{background:rgba(82,183,136,.1)}
+.call.court{border-left-color:var(--ac);background:var(--acG)}
+
+details.go{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--rs);padding:0;margin:12px 0}
+details.go summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--ac);font-size:.92rem;list-style:none}
+details.go summary::-webkit-details-marker{display:none}
+details.go summary::before{content:'▸ ';color:var(--ac)}
+details.go[open] summary::before{content:'▾ '}
+details.go[open] summary{border-bottom:1px solid var(--bdr)}
+details.go p{padding:12px 16px 14px;margin:0;color:var(--tx1)}
 
 /* tables */
-.tblwrap{overflow-x:auto;margin:12px 0;border:1px solid var(--bdr);border-radius:var(--rs)}
-table.tbl{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
-table.tbl th{background:var(--bg2);text-align:left;font-family:var(--fM);font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx1);padding:9px 12px;border-bottom:1px solid var(--bdr)}
-table.tbl td{padding:9px 12px;border-bottom:1px solid var(--bg2);vertical-align:top;color:var(--tx1)}
-table.tbl tr:last-child td{border-bottom:0}
-table.tbl td:first-child{color:var(--tx0);font-weight:600}
+.tbl-wrap{overflow-x:auto;margin:14px 0;border-radius:var(--rs);border:1px solid var(--bdr)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:420px}
+thead th{background:var(--ac);color:#fff;padding:11px 14px;text-align:left;font-family:var(--fB);font-weight:600;font-size:.82rem}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--bdr);color:var(--tx1);vertical-align:top}
+tbody tr:nth-child(even) td{background:var(--bg2)}
+tbody tr:last-child td{border-bottom:none}
+table code{white-space:nowrap}
 
-/* env grid */
-.env{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:12px 0}
-.env div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 14px}
-.env b{display:block;font-family:var(--fM);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2);font-weight:600}
-.env span{color:var(--tx0);font-size:.95rem}
+/* check yourself */
+.q{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--rs);padding:15px 18px;margin-bottom:12px;box-shadow:var(--shd)}
+.q .ask{font-weight:600;color:var(--tx0);margin-bottom:10px}
+.reveal{background:var(--bg2);border:1px solid var(--bdr);color:var(--ac);border-radius:50px;padding:6px 16px;font-size:.82rem;font-family:var(--fB);font-weight:600;cursor:pointer;transition:all var(--t);min-height:34px}
+.reveal:hover{background:var(--ac);color:#fff;border-color:var(--ac)}
+.ans{display:none;margin-top:12px;padding:12px 15px;background:var(--acG);border-radius:var(--rs);color:var(--tx1);font-size:.94rem;border-left:3px solid var(--ac)}
+.ans.show{display:block}
 
-/* done rows */
-.done-row{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--bg2);font-size:.92rem;color:var(--tx2)}
-.done-row input,.evidence input{width:22px;height:22px;accent-color:var(--ac);cursor:pointer;flex:none}
-.done-row label{cursor:pointer}
+/* evidence + progress checkboxes */
+.evidence{background:var(--bg1);border:1px solid var(--bdr);border-left:4px solid var(--hi);border-radius:var(--rs);padding:16px 20px;box-shadow:var(--shd)}
+[data-theme="dark"] .evidence{border-left-color:var(--hi)}
+.evidence ul{list-style:none;padding:0;margin:0}
+.evidence li{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px}
+.evidence li:last-child{margin-bottom:0}
+.evidence input[type=checkbox],.done-row input[type=checkbox]{width:19px;height:19px;margin-top:2px;accent-color:var(--ac);flex-shrink:0;cursor:pointer}
+.evidence .shot{font-weight:700;color:var(--hi)}
+.shot-marker{display:inline-flex;align-items:center;gap:5px;font-family:var(--fM);font-size:.72rem;color:var(--hi);font-weight:600;letter-spacing:.5px}
+.done-row{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--bdr)}
+.done-row label{font-size:.82rem;color:var(--tx2);font-family:var(--fM);cursor:pointer}
 
-/* Q&A */
-.q{border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px;margin:10px 0;background:var(--bg0)}
-.q .ask{color:var(--tx0) !important;font-weight:600}
-.reveal{margin-top:8px;background:var(--bg1);border:1px solid var(--ac);color:var(--ac);border-radius:50px;padding:4px 14px;font:600 .82rem var(--fB);cursor:pointer;min-height:36px}
-.reveal:hover,.reveal:focus-visible{background:var(--ac);color:#fff}
-.ans{display:none;margin-top:8px;padding:8px 12px;border-left:3px solid var(--ok);background:var(--okBg);border-radius:0 6px 6px 0;color:var(--tx1)}
-.ans.open{display:block}
+/* cheat sheet */
+.cheat{background:#0F1C22;border-radius:var(--r);padding:20px 22px;margin-top:6px}
+.cheat .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.cheat h3{color:#44C7D0;font-family:var(--fM);font-size:.8rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;border:none;padding:0}
+.cheat ul{list-style:none;padding:0;margin:0}
+.cheat li{color:#C3D4D2;font-size:.85rem;margin-bottom:7px;line-height:1.5}
+.cheat code{background:rgba(68,199,208,.12);color:#9BE4EA;padding:1px 6px}
 
-/* evidence */
-.evidence ul{list-style:none;padding-left:0 !important}
-.evidence li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rs);margin:8px 0;background:var(--bg0)}
-.evidence .shotname{font-weight:700;color:var(--tx0)}
-.evline{margin-top:14px;font-size:.9rem;color:var(--tx2)}
-.evline span{display:inline-block;min-width:220px;border-bottom:1px solid var(--tx2);margin-left:6px}
+.printbar{text-align:center;color:var(--tx2);font-size:.82rem;margin-top:30px;padding-top:20px;border-top:1px solid var(--bdr)}
+.printbar a{color:var(--ac);text-decoration:none}
 
-/* cheat */
-.cheat .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.cheat .grid>div{background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 16px}
-.cheat h3{margin-top:0;font-size:.98rem;color:var(--ac)}
-.cheat li{font-size:.92rem}
-
-/* lab nav + footer */
-.labnav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
-.labnav a{flex:1;min-width:220px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;text-decoration:none;color:var(--tx0);box-shadow:var(--shd);transition:all var(--t)}
-.labnav a:hover{border-color:var(--ac);transform:translateY(-2px)}
-.labnav small{display:block;font-family:var(--fM);font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2)}
-.labnav a.nx{text-align:right}
-.site-footer{text-align:center;padding:28px 24px;border-top:1px solid var(--bdr);font-size:.85rem;color:var(--tx2);margin-top:30px}
-.site-footer a{color:var(--ac);text-decoration:none}
+footer.sf{text-align:center;padding:26px 24px;border-top:1px solid var(--bdr);font-size:.82rem;color:var(--tx2);background:var(--bg1)}
+footer.sf a{color:var(--ac);text-decoration:none}
 
 @media(max-width:640px){
-  .hero{padding:36px 16px 48px}
-  section.blk{padding:20px 16px}
-  ol.steps>li{padding-left:40px}
-  .toolbar{padding:6px 12px}
-  .prog{order:3;max-width:none;min-width:100%}
+  .toc ol{columns:1}
+  .cheat .grid{grid-template-columns:1fr;gap:18px}
+  .hero{padding:30px 18px 26px}
+  main{padding:22px 16px 70px}
+  .prog-txt{min-width:84px;font-size:.68rem}
+  .tb-crumb{display:none}
 }
-@media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
 @media print{
-  :root{--bg0:#fff;--bg1:#fff;--bg2:#f2f2f2;--tx0:#000;--tx1:#222;--tx2:#444;--codeBg:#f4f4f4;--codeTx:#000}
-  .toolbar,.toc,.labnav,.copy,.reveal,.skip-link,#df-assistant-root{display:none !important}
-  .hero{background:none;padding:10px 0;color:#000}.hero h1,.hero p.sub,.hero p.sub a{color:#000}.hero-badge,.chip{color:#000;border-color:#999;background:none}
-  .hero::after{display:none}
-  section.blk{box-shadow:none;break-inside:auto;border-color:#bbb}
-  .ans{display:block}
-  .cmd pre{white-space:pre-wrap}
-  a{color:#000}
+  .toolbar,.prog-wrap,.cmd .copy,.reveal,.skip-link,.done-row,footer.sf .noprint{display:none!important}
+  body{background:#fff;color:#000}
+  .ans{display:block!important}
+  .hero{background:#0D5C63!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .step,.q,.evidence,.toc{break-inside:avoid;box-shadow:none}
+  .cmd pre{white-space:pre-wrap;word-break:break-all}
+  a[href]::after{content:''}
 }
 </style>
 </head>
-<body data-prefix="df-lab05-">
+<body>
 <a href="#main" class="skip-link">Skip to main content</a>
-<header class="hero">
-  <div class="hero-badge">Lab 05 &middot; Hands-on Companion</div>
-  <h1>File Systems</h1>
-  <p class="sub">Supports <a href="module5_lesson.html" target="_blank" rel="noopener">Module 5 &mdash; Working with Windows and CLI Systems<span class="sr-only"> (opens in new tab)</span></a></p>
-  <div class="meta"><span class="chip">&#128187; WinOS</span><span class="chip">&#128295; HxD Hex Editor</span><span class="chip">&#9201; 75–90 min</span></div>
-</header>
-<div class="toolbar" role="navigation" aria-label="Lab tools">
-  <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&lsaquo; All labs<span class="sr-only"> (opens in new tab)</span></a>
-  <div class="prog"><div class="bar" id="progressbar" role="progressbar" aria-label="Sections reviewed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar-fill"></span></div><span id="bar-txt">0/7 reviewed</span></div>
-  <div class="tools">
-    <button class="tbtn" id="fs-down" type="button" aria-label="Smaller text">A&minus;</button>
-    <button class="tbtn" id="fs-up" type="button" aria-label="Larger text">A+</button>
-    <button class="tbtn" id="print-btn" type="button" aria-label="Print this page">&#128424;&#65039; Print</button>
-    <button class="tbtn" id="theme-toggle" type="button" aria-pressed="false">&#127769; Dark</button>
-    <button class="tbtn" id="reset-btn" type="button">Clear progress</button>
+
+<div class="toolbar" role="navigation" aria-label="Page toolbar">
+  <div class="tb-left">
+    <a class="back" href="forensics_labs.html" target="_blank" rel="noopener">&#8592; All labs</a>
+    <span class="tb-crumb">Forensics &middot; LAB 05</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-sizes" role="group" aria-label="Text size">
+      <button class="tb-btn" id="fsDec" aria-label="Decrease text size">A&#8722;</button>
+      <button class="tb-btn" id="fsRst" aria-label="Reset text size">A</button>
+      <button class="tb-btn" id="fsInc" aria-label="Increase text size">A+</button>
+    </div>
+    <button class="tb-btn" id="printBtn" aria-label="Print or save as PDF">&#128424;&#65039; <span>Print</span></button>
+    <button class="tb-btn" id="themeBtn" aria-label="Toggle dark mode">&#127769; <span>Dark</span></button>
   </div>
 </div>
-<main id="main" class="wrap">
-<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#environment">Before you start</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#corrections">Manual corrections</a></li><li><a href="#defensible">Making it defensible</a></li><li><a href="#module">Course connection</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav>
-<section class="blk" id="overview" aria-labelledby="h-overview"><h2 id="h-overview"><span class="n">01</span>Overview &mdash; what this lab is really teaching</h2><p>Under every file name and folder icon is raw structure: a <strong>partition table</strong> that says where volumes live, and a <strong>file system</strong> that says how data inside a volume is organized. This lab takes you down to the bytes &mdash; reading the Master Boot Record and Volume Boot Record by hand in a hex editor to identify FAT, NTFS, and exFAT volumes and pull out serial numbers, sizes, and cluster geometry.</p><p>You'll use <strong>HxD</strong> to navigate by <strong>offset</strong>, decode <strong>little-endian</strong> values in the Data Inspector, and read the specific bytes that reveal each file system's identity. The payoff isn't memorizing offsets &mdash; it's understanding <em>why</em> a tool reports a volume as NTFS, so that when a tool is wrong, or when someone has deliberately corrupted a boot sector to hide a volume, you can verify the ground truth yourself.</p><p>Two mechanics make everything click. <strong>Offsets</strong>: the MBR is sector 0; partition entries start at byte 446; the VBR here starts at sector 63 (offset 63 &times; 512 = 32256). <strong>Little-endian</strong>: multi-byte numbers are stored low-byte-first, so <code>86 39 01 00</code> is read as <code>00 01 39 86</code> = 80262. Miss the byte-reversal and every value you compute is wrong.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section>
-<section class="blk" id="environment" aria-labelledby="h-environment"><h2 id="h-environment"><span class="n">02</span>Before you start</h2><div class="env"><div><b>Machine</b><span>WinOS (Windows)</span></div><div><b>Login</b><span>Administrator</span></div><div><b>Tool</b><span>HxD Hex Editor</span></div><div><b>Datasets</b><span><code>NDG FAT/NTFS/exFAT Lab5.001</code></span></div><div><b>Sector size</b><span>512 bytes (don't change)</span></div></div><div class="call tip"><span class="k">Tip</span><p>Turn on <strong>View &gt; Toolbars &gt; Data Inspector</strong> and tick <em>Show integers in hexadecimal base</em> when you want hex. The Data Inspector does the little-endian conversion for you &mdash; highlight bytes and read the decimal value directly.</p></div></section>
-<section class="blk" id="walkthrough" aria-labelledby="h-walkthrough"><h2 id="h-walkthrough"><span class="n">03</span>Walkthrough</h2><p>The flow is the same for all three file systems: read the MBR partition entry to learn the file-system type byte and where the VBR starts, jump to the VBR, then read the identity bytes. Set <strong>View &gt; Offset base &gt; Decimal</strong> so the offsets below match what you type.</p><div class="task"><h3><span class="tn">Task 1</span>Read the MBR partition table (FAT image)</h3><p>The partition table is 64 bytes at offset 446, four 16-byte entries. One entry tells you the file-system type and the VBR's starting sector.</p><ol class="steps"><li>Tools &gt; Open disk image &rarr; <code>NDG FAT Lab5.001</code> &rarr; sector size 512.</li><li>Search &gt; Go to (<kbd>Ctrl</kbd>+<kbd>G</kbd>) &rarr; offset <strong>446</strong> (dec). Highlight 16 bytes &mdash; that's partition entry 1.</li><li>Decode it: byte 0 = active flag (<code>80</code>=bootable), byte 4 = <strong>type</strong> (<code>0E</code>=FAT), bytes 8&ndash;11 = starting sector (little-endian &rarr; <code>3F</code> = 63), bytes 12&ndash;15 = sector count. <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The highlighted 16-byte partition entry with the Block length showing in the status bar.</span></div></li><li>Boot signature <code>55 AA</code> sits at bytes 510&ndash;511 &mdash; the MBR's 'this is valid' marker.</li></ol></div><div class="task"><h3><span class="tn">Task 2</span>Read the FAT VBR</h3><p>Sector 63 = offset 32256. From there, fixed offsets give you the file system's identity.</p><ol class="steps"><li>Go to offset <strong>32256</strong>. The first 3 bytes are the jump instruction; the next 8 are the <strong>OEM ID</strong> (<code>MSDOS5.0</code> &rarr; FAT).</li><li>Bytes-per-sector (offset +11), sectors-per-cluster (+13) &rarr; multiply for cluster size (512 &times; 2 = 1024).</li><li>Media descriptor (+21): <code>F8</code> = fixed/removable disk. Total sectors (+32), volume serial (+39), FS type string <code>FAT16</code> (+54). <div class="shot"><span class="shot-ico" aria-hidden="true">&#128248;</span><span><b>Screenshot for your report:</b> The VBR with the FAT16 file-system type string highlighted.</span></div></li></ol></div><div class="task"><h3><span class="tn">Task 3</span>Read the NTFS VBR</h3><p>Same layout, different identity bytes &mdash; and the pointer to the Master File Table.</p><ol class="steps"><li>Open <code>NDG NTFS Lab5.001</code>. The partition type byte is now <code>07</code> (NTFS/exFAT). VBR still at sector 63.</li><li>OEM ID at +3 reads <code>NTFS</code>. Sectors-per-cluster is 8 here &rarr; cluster size 4096.</li><li>At offset +48 is the <strong>starting cluster of the MFT</strong> (here 3344) &mdash; where every file's metadata lives. Volume serial is at +72.</li></ol></div><div class="task"><h3><span class="tn">Task 4</span>Read the exFAT VBR</h3><p>A third identity, with sizes stored as powers of two.</p><ol class="steps"><li>Open <code>NDG exFAT Lab5.001</code>. Type byte is also <code>07</code> &mdash; so the <em>OEM ID</em> is what distinguishes it: <code>EXFAT</code> at +3.</li><li>exFAT stores bytes-per-sector and sectors-per-cluster as <strong>2^N</strong>: a stored value of 9 means 2^9 = 512 bytes/sector; a stored 3 means 2^3 = 8 sectors/cluster.</li><li>Volume length (+72) and volume serial (+100) round out the identity.</li></ol></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section>
-<section class="blk" id="reference" aria-labelledby="h-reference"><h2 id="h-reference"><span class="n">04</span>Reference &mdash; identity bytes at a glance</h2><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">File system</th><th scope="col">MBR type byte</th><th scope="col">OEM ID (VBR +3)</th><th scope="col">Notes</th></tr></thead><tbody><tr><td>FAT16</td><td><code>0E</code> (also 06, 04)</td><td><code>MSDOS5.0</code></td><td>Sizes stored directly; FS-type string at +54.</td></tr><tr><td>FAT32</td><td><code>0B</code> / <code>0C</code></td><td><code>MSDOS5.0</code></td><td>FS-type string <code>FAT32</code>.</td></tr><tr><td>NTFS</td><td><code>07</code></td><td><code>NTFS</code></td><td>MFT start cluster at +48; the OEM ID is the giveaway.</td></tr><tr><td>exFAT</td><td><code>07</code></td><td><code>EXFAT</code></td><td>Sizes stored as 2^N; 53 zero bytes follow the OEM ID.</td></tr></tbody></table></div><h3>The two mechanics you can't skip</h3><ul><li><strong>Offset math:</strong> sector &times; 512 = byte offset. Sector 63 = 32256. A VBR field at sector-relative byte 54 is at absolute offset 32256+54 = 32310.</li><li><strong>Little-endian:</strong> reverse the byte order before converting. <code>86 39 01 00</code> &rarr; <code>00 01 39 86</code> &rarr; 80262. Volume serials are also little-endian (shown reversed).</li><li><strong>Type byte 07 is ambiguous</strong> &mdash; both NTFS and exFAT use it. Always confirm with the OEM ID.</li></ul><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section>
-<section class="blk" id="stuck" aria-labelledby="h-stuck"><h2 id="h-stuck"><span class="n">05</span>Where people get stuck</h2><p>Most problems in this lab fall into one of these.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Symptom</th><th scope="col">Likely cause</th><th scope="col">Fix</th></tr></thead><tbody><tr><td>Computed values are all wrong</td><td>Didn't reverse little-endian bytes</td><td>Reverse the byte order before converting, or just highlight the bytes and read the Data Inspector's decimal value.</td></tr><tr><td>Go to lands in the wrong place</td><td>Offset base set to hex while typing decimal (or vice versa)</td><td>Pick the dec radio button in Go to, and set View &gt; Offset base to Decimal to match these instructions.</td></tr><tr><td>NTFS and exFAT look identical in the partition table</td><td>Both use type byte 07</td><td>They do &mdash; distinguish them by the OEM ID in the VBR (NTFS vs EXFAT).</td></tr><tr><td>Data Inspector shows nothing useful</td><td>Panel closed, or wrong base</td><td>Enable View &gt; Toolbars &gt; Data Inspector; toggle 'Show integers in hexadecimal base' as needed.</td></tr><tr><td>Sector size prompt</td><td>Changing it breaks every offset</td><td>Leave it at 512. All the offsets in this lab assume 512-byte sectors.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section>
-<section class="blk" id="corrections" aria-labelledby="h-corrections"><h2 id="h-corrections"><span class="n">06</span>Manual corrections &amp; currency notes</h2><p>The NDG manual was written in 2020&ndash;21. These are the places where it is wrong, inconsistent, or out of date &mdash; worth knowing before you trust a screenshot.</p><div class="tblwrap"><table class="tbl "><thead><tr><th scope="col">Where</th><th scope="col">The manual says</th><th scope="col">What's actually true</th></tr></thead><tbody><tr><td>File-system coverage</td><td>Covers FAT, NTFS, exFAT</td><td>Current and relevant. The modern gaps worth naming: <strong>APFS</strong> (macOS, Lab 7's cousin), <strong>ext4</strong> (Linux/Android, seen in Labs 15&ndash;16), and <strong>ReFS</strong> (Windows Server). Same MBR/VBR logic, different structures.</td></tr><tr><td>MBR vs GPT</td><td>Reads an MBR partition table</td><td>MBR is legacy (4 primary partitions, 2 TB limit). Modern disks use <strong>GPT</strong>, which keeps a protective MBR at sector 0 for compatibility but stores the real partition table in GPT headers. Recognize both.</td></tr><tr><td>'Each entry is 16 bytes, max 4 partitions'</td><td>Stated as a hard limit</td><td>True for the primary MBR table. The historical workaround is an <em>extended</em> partition holding logical partitions &mdash; the lab mentions but doesn't explore this.</td></tr><tr><td>FAT relevance</td><td>Spends the most time on FAT</td><td>FAT/exFAT are very much alive on USB drives, SD cards, and camera media &mdash; so this isn't just history. But NTFS is where most Windows evidence lives.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-corrections" data-done="corrections"><label for="done-corrections">Mark this section reviewed</label></div></section>
-<section class="blk" id="defensible" aria-labelledby="h-defensible"><h2 id="h-defensible"><span class="n">07</span>Making it defensible</h2><p>Reading structure by hand is what lets you catch deception and tool error:</p><ul><li><strong>Verify, don't trust the icon.</strong> A deliberately corrupted boot sector can make a volume 'disappear' from tools. Reading the raw bytes recovers the truth.</li><li><strong>Show your math.</strong> If you state a volume is 41 MB, be able to show sectors &times; sector size. Reproducibility is the standard.</li><li><strong>Cite the byte.</strong> 'The OEM ID at offset +3 reads NTFS' is a verifiable claim; 'the tool said NTFS' is a secondhand one.</li><li><strong>Record the volume serial.</strong> It's created at format time and can tie a file (via link files, Lab 8) back to the exact volume it lived on.</li></ul><div class="call court"><span class="k">On the stand</span><p>Byte-level analysis is the antidote to 'the tool could be wrong.' You can show the examining attorney the actual bytes and the arithmetic &mdash; that's as reproducible as forensics gets.</p></div><div class="done-row"><input type="checkbox" id="done-defensible" data-done="defensible"><label for="done-defensible">Mark this section reviewed</label></div></section>
-<section class="blk" id="module" aria-labelledby="h-module"><h2 id="h-module"><span class="n">08</span>Course connection</h2><p>This lab is the hands-on side of <a href="module5_lesson.html" target="_blank" rel="noopener"><strong>Module 5: Working with Windows and CLI Systems</strong></a> &middot; also touches <a href="module7_lesson.html" target="_blank" rel="noopener">Module 7</a>.</p><p>File-system structure underpins the Windows/CLI module. The manual carving of Lab 7 relies on exactly this offset-and-signature thinking; the volume serials here connect to Lab 8's link-file analysis; and the ext4 volumes you meet in Labs 15&ndash;16 are the Linux/Android counterpart to what you read here.</p></section>
-<section class="blk" id="check" aria-labelledby="h-check"><h2 id="h-check"><span class="n">09</span>Check yourself</h2><div class="q"><p class="ask">1. The partition type byte is 07 on two different images. How do you tell NTFS from exFAT?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">Type byte 07 covers both. Read the OEM ID at VBR offset +3: 'NTFS' versus 'EXFAT' is what distinguishes them.</div></div><div class="q"><p class="ask">2. The bytes 86 39 01 00 store a sector count. What's the value and why?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">80262. The value is little-endian, so you reverse to 00 01 39 86 before converting from hex to decimal.</div></div><div class="q"><p class="ask">3. A volume's VBR starts at sector 63. What byte offset is that, and why does it matter?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">63 &times; 512 = offset 32256. You add the field's sector-relative offset to 32256 to reach any VBR field, so getting the sector-to-byte math right is the basis of everything else.</div></div><div class="q"><p class="ask">4. exFAT stores a sectors-per-cluster value of 3. How many sectors per cluster is that?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">exFAT stores it as a power of two: 2^3 = 8 sectors per cluster.</div></div><div class="done-row"><input type="checkbox" id="done-check" data-done="check"><label for="done-check">Mark this section reviewed</label></div></section>
-<section class="blk" id="evidence" aria-labelledby="h-evidence"><h2 id="h-evidence"><span class="n">10</span>Evidence to capture</h2><p>Your instructor wants screenshots of these key steps as proof you ran the lab. Capture them as you go (the &#128248; markers in the walkthrough show where), tick each one off, then print this page or submit the list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" id="ev-1" data-evidence="1"><label for="ev-1"><span class="shotname">FAT partition entry.</span> The 16-byte partition entry at offset 446 highlighted, with the type byte 0E visible.</label></li><li><input type="checkbox" id="ev-2" data-evidence="2"><label for="ev-2"><span class="shotname">FAT identity.</span> The VBR with OEM ID MSDOS5.0 and/or the FAT16 type string highlighted.</label></li><li><input type="checkbox" id="ev-3" data-evidence="3"><label for="ev-3"><span class="shotname">NTFS identity.</span> The NTFS VBR with OEM ID NTFS and the MFT start cluster highlighted.</label></li><li><input type="checkbox" id="ev-4" data-evidence="4"><label for="ev-4"><span class="shotname">exFAT identity.</span> The exFAT VBR with OEM ID EXFAT highlighted.</label></li><li><input type="checkbox" id="ev-5" data-evidence="5"><label for="ev-5"><span class="shotname">A volume serial.</span> A highlighted 4-byte volume serial with its converted value in the Data Inspector.</label></li></ul></div><p class="evline">Student name:<span></span> &nbsp; Date:<span style="min-width:120px"></span></p></section>
-<section class="blk" id="cheat" aria-labelledby="h-cheat"><h2 id="h-cheat"><span class="n">11</span>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>Offsets</h3><ul><li>MBR = sector 0; partition entries @ 446</li><li>Boot signature 55 AA @ 510</li><li>VBR here @ sector 63 = offset 32256</li><li>OEM ID @ VBR+3; serial varies by FS</li></ul></div><div><h3>Decode</h3><ul><li>Reverse little-endian before converting</li><li>sector × 512 = byte offset</li><li>Type 07 = NTFS OR exFAT → check OEM ID</li><li>exFAT sizes are 2^N</li></ul></div></div></div></section>
-<nav class="labnav" aria-label="Lab navigation"><a href="forensics_lab04_companion.html" target="_blank" rel="noopener"><small>&lsaquo; Previous lab</small>Lab 04: Registry Forensics<span class="sr-only"> (opens in new tab)</span></a><a class="nx" href="forensics_lab06_companion.html" target="_blank" rel="noopener"><small>Next lab &rsaquo;</small>Lab 06: Keyword Search and Analysis<span class="sr-only"> (opens in new tab)</span></a></nav>
+
+<div class="prog-wrap" aria-hidden="false">
+  <div class="prog-inner">
+    <div class="prog-bar" role="progressbar" aria-label="Section progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="prog-fill" id="progFill"></div></div>
+    <span class="prog-txt" id="progTxt">0 / 0 sections</span>
+  </div>
+</div>
+
+<header class="hero" role="banner">
+  <div class="hero-inner">
+    <span class="labno">LAB 05</span>
+    <h1>File Systems</h1>
+    <p class="lede">Before you trust a tool, read the disk yourself. Drop to the byte level in a hex editor to identify FAT, NTFS, and exFAT by their signatures and decode serials, sizes, and geometry.</p>
+    <div class="chips"><span class="chip">&#9201; <b>75 min</b></span><span class="chip">&#128202; Difficulty: <b>Advanced</b></span><span class="chip">&#129514; Tools: <b>HxD Hex Editor</b></span><span class="chip">&#128421; VM: <b>WinOS</b></span><span class="chip">&#128218; Maps to: <b>Module 5 — Windows &amp; CLI Systems</b></span></div>
+  </div>
+</header>
+
+<main id="main">
+<nav class="toc" aria-label="On this page"><h2>On this page</h2><ol><li><a href="#overview">Overview</a></li><li><a href="#tools">Tools &amp; environment</a></li><li><a href="#walkthrough">Walkthrough</a></li><li><a href="#reference">Reference</a></li><li><a href="#stuck">Where people get stuck</a></li><li><a href="#court">Why it matters in court</a></li><li><a href="#exam">Course relevance</a></li><li><a href="#check">Check yourself</a></li><li><a href="#evidence">Evidence to capture</a></li><li><a href="#cheat">Cheat sheet</a></li></ol></nav><section id="overview" data-track><h2>Overview — what this lab is really teaching</h2><p>Before you trust what a tool tells you a volume is, you should be able to read it yourself. This lab drops to the byte level with a <strong>hex editor</strong> and manually parses the structures that define a disk: the <strong>Master Boot Record (MBR)</strong> partition table and each file system's <strong>Volume Boot Record (VBR)</strong>.</p><p>You'll identify <strong>FAT, NTFS, and exFAT</strong> by their on-disk signatures and decode their serial numbers, sizes, and cluster geometry. The deeper point: file systems store multi-byte values in <strong>little-endian</strong> (reversed) order, and knowing where each field lives lets you spot volumes that have been hidden or manipulated.</p><div class="done-row"><input type="checkbox" id="done-overview" data-done="overview"><label for="done-overview">Mark this section reviewed</label></div></section><section id="tools" data-track><h2>Tools &amp; environment</h2><p>On <strong>WinOS</strong>, you use <strong>HxD Hex Editor</strong> against three prepared evidence files (FAT, NTFS, exFAT). Key HxD features: <strong>Open disk image</strong>, <strong>Go to</strong> offset, <strong>Offset base</strong> (switch Hex/Decimal), the <strong>Data Inspector</strong> (interprets selected bytes), and the <strong>Find</strong> search.</p><div class="tbl-wrap"><table><thead><tr><th>MBR section</th><th>Offset (dec)</th><th>Length</th></tr></thead><tbody><tr><td>Bootstrap code area</td><td>0–445</td><td>446 bytes</td></tr><tr><td>Partition table (4 × 16-byte entries)</td><td>446–509</td><td>64 bytes</td></tr><tr><td>Boot record signature <code>55 AA</code></td><td>510–511</td><td>2 bytes</td></tr></tbody></table></div><div class="call tip"><span class="k">Little-endian, in one line</span><p>A value stored <code>86 39 01 00</code> is read back-to-front as <code>00 01 39 86</code> = 80262 decimal. Reverse the byte order before you convert.</p></div><div class="done-row"><input type="checkbox" id="done-tools" data-done="tools"><label for="done-tools">Mark this section reviewed</label></div></section><section id="walkthrough" data-track><h2>Walkthrough</h2><p class="task-head">Task 1 — Read the partition table (MBR)</p><div class="step"><h3><span class="n">1</span> Open the FAT image and go to offset 446</h3><p><strong>Tools &gt; Open disk image</strong> → <code>NDG FAT Lab5.001</code>, sector size 512. Switch <strong>Offset base to Decimal</strong>, then <strong>Go to 446</strong> and highlight the next 16 bytes — the first partition entry.</p></div><div class="step"><h3><span class="n">2</span> Decode the 16-byte partition entry</h3><p>Break the entry into its fields. The 5th byte is the <strong>file-system type</strong>:</p><div class="tbl-wrap"><table><thead><tr><th>Bytes</th><th>Field</th><th>FAT example</th></tr></thead><tbody><tr><td>1</td><td>Boot flag</td><td><code>80</code> = active / bootable</td></tr><tr><td>2–4</td><td>Starting CHS</td><td>—</td></tr><tr><td><b>5</b></td><td><b>File-system type</b></td><td><code>0E</code> = FAT (<code>07</code> = NTFS/exFAT)</td></tr><tr><td>6–8</td><td>Ending CHS</td><td>—</td></tr><tr><td>9–12</td><td>Start sector (LBA)</td><td><code>3F 00 00 00</code> → 63</td></tr><tr><td>13–16</td><td>Sector count</td><td><code>86 39 01 00</code> → 80262 → ×512 ≈ 40&nbsp;MB</td></tr></tbody></table></div><div class="call tip"><span class="k">The VBR is at the start sector</span><p>Start sector 63 × 512 bytes = offset <strong>32256</strong> — that's where the volume's boot record (and all the file-system fields) begin.</p></div></div><p class="task-head">Task 2 — Identify the file system (VBR)</p><div class="step"><h3><span class="n">3</span> FAT fields at sector 63</h3><p>Go to 32256 and read: <strong>OEM ID</strong> (<code>MSDOS5.0</code>), bytes/sector (<code>00 02</code> = 512), sectors/cluster, media type (<code>F8</code> = fixed/removable), total sectors, <strong>volume serial number</strong>, and file-system type (<code>FAT16</code>).</p><div class="call capture"><span class="k">&#128248; Screenshot for your report</span><p>The FAT VBR at offset 32256 with the OEM ID (MSDOS5.0) and FAT16 type highlighted.</p></div></div><div class="step"><h3><span class="n">4</span> NTFS — the tell-tale differences</h3><p>Open <code>NDG NTFS Lab5.001</code>. The partition entry's type byte is now <code>07</code>, OEM ID reads <code>NTFS</code>, and uniquely you can read the <strong>MFT start cluster</strong> (offset 48 in the VBR). The volume serial sits at a different offset than FAT.</p></div><div class="step"><h3><span class="n">5</span> exFAT — the modern one</h3><p>Open <code>NDG exFAT Lab5.001</code>. Type byte is also <code>07</code>, but OEM ID reads <code>EXFAT</code> and the next 53 bytes are zero. exFAT stores sizes as <strong>powers of two</strong> — bytes/sector is <code>2^N</code> (e.g. <code>09</code> → 2⁹ = 512), sectors/cluster likewise.</p><div class="call capture"><span class="k">&#128248; Screenshot for your report</span><p>The exFAT VBR showing the EXFAT OEM ID.</p></div></div><div class="done-row"><input type="checkbox" id="done-walkthrough" data-done="walkthrough"><label for="done-walkthrough">Mark this section reviewed</label></div></section><section id="reference" data-track><h2>Reference — telling the three apart</h2><div class="tbl-wrap"><table><thead><tr><th>Clue</th><th>FAT</th><th>NTFS</th><th>exFAT</th></tr></thead><tbody><tr><td>Partition type byte (5th)</td><td><code>0E</code> (and others)</td><td><code>07</code></td><td><code>07</code></td></tr><tr><td>OEM ID string</td><td><code>MSDOS5.0</code></td><td><code>NTFS</code></td><td><code>EXFAT</code></td></tr><tr><td>Size encoding</td><td>Direct values</td><td>Direct values</td><td>Powers of two (<code>2^N</code>)</td></tr><tr><td>Unique field</td><td>—</td><td>MFT start cluster (offset 48)</td><td>53 zero bytes after OEM ID</td></tr><tr><td>Typical use</td><td>Old/small media</td><td>Windows system drives</td><td>Large flash media, cross-platform</td></tr></tbody></table></div><div class="call court"><span class="k">MBR has a hard limit</span><p>The 64-byte partition table holds only four 16-byte entries — hence max four primary partitions (or three primary + one extended). GPT replaces MBR on modern large disks, but MBR parsing is still bread-and-butter.</p></div><div class="done-row"><input type="checkbox" id="done-reference" data-done="reference"><label for="done-reference">Mark this section reviewed</label></div></section><section id="stuck" data-track><h2>Where people get stuck</h2><div class="tbl-wrap"><table><thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead><tbody><tr><td>Converted size is nonsense</td><td>Forgot little-endian</td><td>Reverse the byte order first, then convert.</td></tr><tr><td>Can't find the VBR fields</td><td>Still in sector 0</td><td>Jump to start-sector × 512 (here 63 × 512 = 32256).</td></tr><tr><td>exFAT sizes look tiny</td><td>Read the raw value as a count</td><td>exFAT stores <code>2^N</code> — raise 2 to that power.</td></tr><tr><td>Changed the sector size prompt</td><td>Altered from 512</td><td>Leave sector size at 512 as the lab states.</td></tr><tr><td>Serial number differs from Windows' display</td><td>Byte order + formatting</td><td>Little-endian; Windows shows it as XXXX-XXXX.</td></tr></tbody></table></div><div class="done-row"><input type="checkbox" id="done-stuck" data-done="stuck"><label for="done-stuck">Mark this section reviewed</label></div></section><section id="court" data-track><h2>Why it matters in court</h2><div class="call defend"><span class="k">Reading raw bytes defeats hiding</span><p>Technical users manipulate partition tables and VBRs to conceal volumes. An examiner who can parse the MBR/VBR by hand can prove a volume exists, identify its real file system regardless of a faked extension, and extract its serial for attribution.</p></div><ul><li><strong>Ground truth over tool output.</strong> You can verify, not just trust, what a suite reports.</li><li><strong>Volume serials</strong> link a volume to link-file and registry artifacts (Labs 04, 08).</li><li><strong>Detect manipulation</strong> — mismatched type bytes vs. OEM IDs are a red flag.</li></ul><div class="done-row"><input type="checkbox" id="done-court" data-done="court"><label for="done-court">Mark this section reviewed</label></div></section><section id="exam"><h2>Course relevance</h2><p>Underpins <strong>Module 5 (Windows/CLI file systems)</strong> and feeds <strong>Module 7 (Linux/Mac file systems)</strong>. Know MBR layout, the FAT/NTFS/exFAT signatures, little-endian, and how to compute a VBR offset from a start sector.</p></section><section id="check"><h2>Check yourself</h2><div class="q"><p class="ask">1. The on-disk bytes for a sector count are <code>86 39 01 00</code>. What's the decimal value and why?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">80262. The value is little-endian, so reverse to <code>00 01 39 86</code> before converting.</div></div><div class="q"><p class="ask">2. A partition entry's 5th byte is <code>07</code> and the OEM ID reads EXFAT. What file system is it?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">exFAT. Type byte 07 is shared by NTFS and exFAT, so the OEM ID string disambiguates them.</div></div><div class="q"><p class="ask">3. The start sector is 63. At what byte offset does the VBR begin, and how did you get it?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">32256 — start sector 63 × 512 bytes per sector.</div></div><div class="q"><p class="ask">4. Why can an MBR disk have at most four primary partitions?</p><button class="reveal" type="button" aria-expanded="false">Show answer</button><div class="ans">The partition table is 64 bytes and each entry is 16 bytes, so only four entries fit.</div></div></section><section id="evidence"><h2>Evidence to capture</h2><p>Your instructor wants screenshots of the key steps as proof you completed the lab. Grab these as you go, tick each one off, then use <strong>Print</strong> to submit this list as your evidence cover sheet.</p><div class="evidence"><ul><li><input type="checkbox" data-evidence="l5-1"><span><span class="shot">FAT VBR.</span> The FAT OEM ID (MSDOS5.0) and FAT16 type at offset 32256.</span></li><li><input type="checkbox" data-evidence="l5-2"><span><span class="shot">NTFS VBR.</span> The NTFS OEM ID and MFT start cluster field.</span></li><li><input type="checkbox" data-evidence="l5-3"><span><span class="shot">exFAT VBR.</span> The EXFAT OEM ID with the following zero bytes.</span></li></ul></div></section><section id="cheat"><h2>Cheat sheet</h2><div class="cheat"><div class="grid"><div><h3>MBR</h3><ul><li>Partition entries @ offset 446</li><li>Each entry = 16 bytes, max 4</li><li>Byte 5 = FS type (0E FAT · 07 NTFS/exFAT)</li><li>Signature <code>55 AA</code> @ 510</li><li>VBR offset = start sector × 512</li></ul></div><div><h3>VBR / identify</h3><ul><li>OEM ID: MSDOS5.0 · NTFS · EXFAT</li><li>All multi-byte = little-endian</li><li>exFAT sizes = <code>2^N</code></li><li>NTFS: MFT start @ offset 48</li><li>Volume serial for attribution</li></ul></div></div></div></section>
+  <div class="printbar noprint">
+    <p>Tip: use <strong>Print</strong> above to save this companion (with your ticked checkboxes and revealed answers) as a PDF to submit.</p>
+  </div>
 </main>
-<footer class="site-footer">
-  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="index.html" target="_blank" rel="noopener">Course hub<span class="sr-only"> (opens in new tab)</span></a></p>
-  <p style="margin-top:4px">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College &middot; 2026</p>
+
+<footer class="sf">
+  <p>Digital Forensics &amp; Investigations &mdash; Hands-on Lab Companion &middot; <a href="https://mqaissaunee-bcc.github.io/forensics/" target="_blank" rel="noopener">Course home</a></p>
+  <p style="margin-top:4px" class="noprint">Companion to the NDG Forensics v2 lab series &middot; Brookdale Community College</p>
 </footer>
-<div id="live" class="sr-only" aria-live="polite"></div>
+
 <script>
 (function(){
-  "use strict";
-  var body=document.body, root=document.documentElement;
-  var P=body.getAttribute("data-prefix")||"df-lab-";
-  function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-  function del(k){try{localStorage.removeItem(k);}catch(e){}}
-
-  /* theme: shares the course hub's key so the choice follows students across the site */
-  var tb=document.getElementById("theme-toggle");
-  function applyTheme(m){
-    if(m==="dark"){root.setAttribute("data-theme","dark");}else{root.removeAttribute("data-theme");}
-    if(tb){tb.innerHTML=m==="dark"?"&#9728;&#65039; Light":"&#127769; Dark";tb.setAttribute("aria-pressed",m==="dark"?"true":"false");}
-  }
-  applyTheme(load("df-theme")==="dark"?"dark":"light");
-  if(tb){tb.addEventListener("click",function(){var n=root.getAttribute("data-theme")==="dark"?"light":"dark";save("df-theme",n);applyTheme(n);});}
-
-  /* text size */
-  var fs=parseFloat(load("df-lab-fs")||"1");
-  function applyFs(){fs=Math.min(1.4,Math.max(0.85,fs));root.style.setProperty("--fs",fs);save("df-lab-fs",String(fs));}
+  var KEY="df-lab05";
+  var root=document.documentElement;
+  // theme (light default; honor saved)
+  try{var th=localStorage.getItem('df-theme');if(th==='dark')root.setAttribute('data-theme','dark');}catch(e){}
+  function setTheme(d){if(d){root.setAttribute('data-theme','dark');}else{root.removeAttribute('data-theme');}try{localStorage.setItem('df-theme',d?'dark':'light');}catch(e){}updThemeBtn();}
+  function updThemeBtn(){var b=document.getElementById('themeBtn');if(!b)return;var d=root.getAttribute('data-theme')==='dark';b.innerHTML=d?'\u2600\ufe0f <span>Light</span>':'\u{1F319} <span>Dark</span>';}
+  // text size
+  var fs=1;try{var s=localStorage.getItem('df-fs');if(s)fs=parseFloat(s);}catch(e){}
+  function applyFs(){root.style.setProperty('--fs',fs);try{localStorage.setItem('df-fs',fs);}catch(e){}}
   applyFs();
-  var up=document.getElementById("fs-up"),dn=document.getElementById("fs-down");
-  if(up){up.addEventListener("click",function(){fs+=0.1;applyFs();});}
-  if(dn){dn.addEventListener("click",function(){fs-=0.1;applyFs();});}
 
-  var pr=document.getElementById("print-btn");
-  if(pr){pr.addEventListener("click",function(){window.print();});}
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+  function save(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+  var state=load();
 
-  /* progress */
-  var dones=document.querySelectorAll("[data-done]");
-  var barFill=document.getElementById("bar-fill"),barTxt=document.getElementById("bar-txt");
-  function refresh(){
-    var n=0;for(var i=0;i<dones.length;i++){if(dones[i].checked){n++;}}
-    var pct=dones.length?Math.round(100*n/dones.length):0;
-    if(barFill){barFill.style.width=pct+"%";}
-    if(barTxt){barTxt.textContent=n+"/"+dones.length+" reviewed";}
-    var pb=document.getElementById("progressbar");
-    if(pb){pb.setAttribute("aria-valuenow",String(pct));}
-    save(P+"total",String(dones.length));save(P+"count",String(n));
-  }
-  for(var i=0;i<dones.length;i++){(function(cb){
-    var k=P+"done-"+cb.getAttribute("data-done");
-    cb.checked=load(k)==="1";
-    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}refresh();});
-  })(dones[i]);}
-  refresh();
+  document.addEventListener('DOMContentLoaded',function(){
+    updThemeBtn();
+    var tb=document.getElementById('themeBtn');if(tb)tb.addEventListener('click',function(){setTheme(root.getAttribute('data-theme')!=='dark');});
+    var inc=document.getElementById('fsInc'),dec=document.getElementById('fsDec'),rst=document.getElementById('fsRst');
+    if(inc)inc.addEventListener('click',function(){fs=Math.min(1.4,Math.round((fs+0.1)*10)/10);applyFs();});
+    if(dec)dec.addEventListener('click',function(){fs=Math.max(0.85,Math.round((fs-0.1)*10)/10);applyFs();});
+    if(rst)rst.addEventListener('click',function(){fs=1;applyFs();});
+    var pb=document.getElementById('printBtn');if(pb)pb.addEventListener('click',function(){window.print();});
 
-  /* evidence checklist */
-  var evs=document.querySelectorAll("[data-evidence]");
-  for(var j=0;j<evs.length;j++){(function(cb){
-    var k=P+"ev-"+cb.getAttribute("data-evidence");
-    cb.checked=load(k)==="1";
-    cb.addEventListener("change",function(){if(cb.checked){save(k,"1");}else{del(k);}});
-  })(evs[j]);}
-
-  /* reset */
-  var rs=document.getElementById("reset-btn");
-  if(rs){rs.addEventListener("click",function(){
-    if(!window.confirm("Clear your progress and evidence ticks for this lab?")){return;}
-    var ks=[];try{for(var a=0;a<localStorage.length;a++){var kk=localStorage.key(a);if(kk&&kk.indexOf(P)===0){ks.push(kk);}}}catch(e){}
-    for(var b=0;b<ks.length;b++){del(ks[b]);}
-    for(var c=0;c<dones.length;c++){dones[c].checked=false;}
-    for(var d=0;d<evs.length;d++){evs[d].checked=false;}
-    refresh();
-  });}
-
-  /* reveal answers */
-  var rv=document.querySelectorAll(".reveal");
-  for(var r=0;r<rv.length;r++){(function(btn){
-    btn.addEventListener("click",function(){
-      var a=btn.nextElementSibling;var open=a.classList.toggle("open");
-      btn.setAttribute("aria-expanded",open?"true":"false");btn.textContent=open?"Hide answer":"Show answer";
+    // reveal answers
+    document.querySelectorAll('.reveal').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var ans=btn.nextElementSibling;var open=ans.classList.toggle('show');
+        btn.setAttribute('aria-expanded',open?'true':'false');
+        btn.textContent=open?'Hide answer':'Show answer';
+      });
     });
-  })(rv[r]);}
 
-  /* copy buttons: copy the clean text stored in data-copy */
-  var live=document.getElementById("live");
-  function announce(t){if(live){live.textContent="";setTimeout(function(){live.textContent=t;},30);}}
-  function fallback(t){var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
-  var cps=document.querySelectorAll(".copy");
-  for(var q=0;q<cps.length;q++){(function(btn){
-    btn.addEventListener("click",function(){
-      var t=btn.getAttribute("data-copy");
-      function done(){btn.textContent="Copied";announce("Command copied");setTimeout(function(){btn.textContent="Copy";},1500);}
-      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done();});}else{fallback(t);done();}
+    // restore + wire all tracked checkboxes
+    function wire(box,id){
+      if(state[id])box.checked=true;
+      box.addEventListener('change',function(){state[id]=box.checked;save(state);updProg();});
+    }
+    document.querySelectorAll('[data-done]').forEach(function(b){wire(b,'done:'+b.getAttribute('data-done'));});
+    document.querySelectorAll('[data-evidence]').forEach(function(b){wire(b,'ev:'+b.getAttribute('data-evidence'));});
+
+    function updProg(){
+      var dones=document.querySelectorAll('[data-done]');
+      var n=0;dones.forEach(function(b){if(b.checked)n++;});
+      var total=dones.length||1;var pct=Math.round(n/total*100);
+      var f=document.getElementById('progFill'),t=document.getElementById('progTxt');
+      if(f)f.style.width=pct+'%';
+      if(t)t.textContent=n+' / '+total+' sections ('+pct+'%)';
+    }
+    updProg();
+
+    // copy buttons
+    document.querySelectorAll('.cmd').forEach(function(block){
+      var pre=block.querySelector('pre');if(!pre)return;
+      var btn=document.createElement('button');btn.className='copy';btn.type='button';btn.textContent='Copy';
+      btn.setAttribute('aria-label','Copy command');
+      btn.addEventListener('click',function(){
+        var txt=pre.innerText.replace(/^root@[^#]*#\s?/gm,'').replace(/^(caine|csi|deft)@[^$]*\$\s?/gm,'').replace(/^smb:[^>]*>\s?/gm,'');
+        txt=txt.replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,'-');
+        function done(){btn.textContent='Copied!';btn.classList.add('ok');setTimeout(function(){btn.textContent='Copy';btn.classList.remove('ok');},1400);}
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback(txt,done);});}
+        else fallback(txt,done);
+      });
+      block.appendChild(btn);
     });
-  })(cps[q]);}
+    function fallback(txt,cb){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){}document.body.removeChild(ta);}
+  });
 })();
 </script>
-<script src="assistant.js" defer></script>
 </body>
 </html>

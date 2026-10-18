@@ -201,6 +201,25 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .feature .f-title{font-family:var(--fH);font-weight:700;font-size:.95rem;color:var(--tx0);margin-bottom:4px}
 .feature .f-desc{font-size:.82rem;color:var(--tx2);line-height:1.5}
 
+/*  -- LAB COMPANION BANNER  -- */
+.labcomp{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));
+  border-radius:var(--r);padding:22px 26px;margin:8px 0 28px;
+  box-shadow:var(--shd2);position:relative;overflow:hidden;text-decoration:none;
+  transition:transform var(--t),box-shadow var(--t);
+}
+.labcomp:hover{transform:translateY(-3px);box-shadow:var(--shd2),0 0 0 2px var(--ac2)}
+.labcomp::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.07'%3E%3Cpath d='M20 20c0-5.5 4.5-10 10-10V0H0v40h40V30c-5.5 0-10-4.5-10-10z'/%3E%3C/g%3E%3C/svg%3E")}
+.labcomp .lc-ico{font-size:2rem;position:relative;background:rgba(255,255,255,.16);width:58px;height:58px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.labcomp .lc-txt{position:relative;flex:1;min-width:220px}
+.labcomp .lc-eyebrow{font-family:var(--fM);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:4px}
+.labcomp .lc-h{font-family:var(--fH);font-size:1.25rem;font-weight:900;color:#fff;line-height:1.25;margin-bottom:4px}
+.labcomp .lc-sub{font-size:.9rem;color:rgba(255,255,255,.88);line-height:1.5}
+.labcomp .lc-go{position:relative;font-family:var(--fM);font-size:.8rem;font-weight:600;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:9px 18px;border-radius:50px;white-space:nowrap;display:flex;align-items:center;gap:8px;transition:all var(--t)}
+.labcomp:hover .lc-go{background:#fff;color:var(--ac);border-color:#fff}
+@media(max-width:640px){.labcomp{padding:18px}.labcomp .lc-h{font-size:1.1rem}}
+
 /*  -- FOOTER  -- */
 .site-footer{
   text-align:center;padding:32px 24px;border-top:1px solid var(--bdr);
@@ -242,17 +261,6 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 .ch-card:nth-child(11){animation-delay:.55s}
 .ch-card:nth-child(12){animation-delay:.6s}
 .ch-card:nth-child(13){animation-delay:.65s}
-
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
-.labs-cta{max-width:1040px;margin:-28px auto 8px;padding:0 24px;position:relative;z-index:5}
-.labs-cta-inner{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--bg1);border:1px solid var(--bdr);border-left:4px solid var(--ac);border-radius:var(--r);padding:16px 20px;box-shadow:var(--shd)}
-.labs-cta-ico{font-size:1.6rem;flex:none}
-.labs-cta-text{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
-.labs-cta-text strong{font-family:var(--fH);font-size:1.05rem;color:var(--tx0)}
-.labs-cta-text span{font-size:.9rem;color:var(--tx2)}
-.labs-cta-btn{flex:none;background:var(--ac);color:#fff;text-decoration:none;font-family:var(--fB);font-weight:600;font-size:.92rem;padding:10px 20px;border-radius:50px;border:1px solid var(--ac);transition:all var(--t);min-height:44px;display:inline-flex;align-items:center}
-.labs-cta-btn:hover,.labs-cta-btn:focus-visible{background:var(--ac2);border-color:var(--ac2)}
-@media(max-width:640px){.labs-cta{margin-top:-20px}.labs-cta-btn{width:100%;justify-content:center}}
 </style>
 </head>
 <body>
@@ -264,18 +272,6 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
   <h1>Digital Forensics &amp; Investigations</h1>
   <p>A comprehensive, interactive learning experience covering digital evidence, investigation procedures, forensic tools, and courtroom-ready analysis techniques.</p>
 </header>
-
-<div class="labs-cta" role="region" aria-label="Lab companions">
-  <div class="labs-cta-inner">
-    <span class="labs-cta-ico" aria-hidden="true">&#128269;</span>
-    <div class="labs-cta-text">
-      <strong>Hands-on Lab Companions</strong>
-      <span>Step-by-step guides, tool references, troubleshooting &amp; evidence checklists for all 21 forensics labs.</span>
-    </div>
-    <a class="labs-cta-btn" href="forensics_labs.html" target="_blank" rel="noopener">Open lab companions &rarr;<span class="sr-only"> (opens in new tab)</span></a>
-  </div>
-</div>
-
 
 <div class="toolbar" role="navigation" aria-label="Toolbar">
   <div class="toolbar-title"><span class="ico" aria-hidden="true">&#128218;</span> Course Modules</div>
@@ -296,6 +292,16 @@ body{font-family:var(--fB);background:var(--bg0);color:var(--tx0);line-height:1.
 </div>
 
 <main id="main-content" class="container">
+
+  <a class="labcomp" href="forensics_labs.html" target="_blank" rel="noopener noreferrer" aria-label="Open the hands-on lab companions (opens in a new tab)">
+    <span class="lc-ico" aria-hidden="true">&#128269;</span>
+    <span class="lc-txt">
+      <span class="lc-eyebrow">New &middot; Hands-on practice</span>
+      <span class="lc-h">Lab Companions</span>
+      <span class="lc-sub">Step-by-step guides for all 21 forensics labs &mdash; the reasoning behind each step, troubleshooting, and screenshot checklists to submit.</span>
+    </span>
+    <span class="lc-go">Open lab guides &#8594;</span>
+  </a>
 
   <div class="features" aria-label="Lesson features">
     <div class="feature"><span class="f-ico" aria-hidden="true">&#127919;</span><div class="f-title">Objectives</div><div class="f-desc">Clear learning goals for every module</div></div>
