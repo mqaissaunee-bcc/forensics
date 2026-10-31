@@ -199,6 +199,20 @@ footer.sf a{color:var(--ac);text-decoration:none}
   .cmd pre{white-space:pre-wrap;word-break:break-all}
   a[href]::after{content:''}
 }
+
+/* machine bands (reconciliation) */
+#fullsteps .mband{display:flex;align-items:center;gap:9px;margin:20px 0 10px;padding:9px 14px;border-radius:var(--rs);
+  background:var(--bg2);border-left:5px solid var(--mb,var(--ac));font-family:var(--fM);font-weight:600;font-size:.82rem;
+  letter-spacing:.5px;color:var(--tx0)}
+#fullsteps .mband .mb-ico{font-size:1.05rem;line-height:1}
+#fullsteps .mband .mb-sub{font-family:var(--fB);font-weight:400;font-size:.76rem;color:var(--tx2);margin-left:auto;text-transform:none;letter-spacing:0}
+#fullsteps .mband:first-child{margin-top:4px}
+#fullsteps .step[data-vm]{border-left:3px solid var(--mb,var(--bdr))}
+#fullsteps .inlinevm{display:inline-block;font-family:var(--fM);font-size:.72rem;font-weight:600;color:#fff;
+  background:var(--mb,var(--ac));border-radius:4px;padding:1px 7px;margin-right:7px;vertical-align:middle}
+.src-note{border-radius:var(--rs);padding:11px 15px;margin:12px 0;border-left:4px solid var(--warn);background:var(--warnG);font-size:.9rem;color:var(--tx1)}
+.src-note b{color:var(--tx0)}
+
 </style>
 </head>
 <body>
