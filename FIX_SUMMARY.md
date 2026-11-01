@@ -82,3 +82,28 @@ evidence checklists, cheat sheets) is untouched except for one additive CSS bloc
 The rest of the Forensics v2 set is analysis/examiner-side (imaging, carving, registry,
 timeline, hashing, documentation). Nothing hands over a working weapon, so no other
 content was held back. Lab 19 is the only page with a flagged safety decision.
+
+
+## Update — self-contained field values (standalone resource)
+
+Several steps in the PDFs say "fill in the information as seen in the fields below" and show
+the actual values only in a screenshot. Those values are now surfaced in the companions as a
+styled **"Values to enter"** block, so no step sends a student back to the PDF.
+
+- **Lab 01** — the FTK Imager evidence-item fields for *both* images are now written out, in
+  the walkthrough step 3 card (the one students read first) and at each full-steps point:
+  physical image — Case `FOR_LAB_001`, Evidence `001`, Description
+  `Image os 1GB Seagate HDD bearing S/n 954321`, Notes `Hard drive seized from suspect's
+  computer`, folder `FOR_LAB_001`, filename `1GB_Seagate_SN954321`; logical image —
+  Evidence `001A`, Description `Image of Drive G of 1TB HDD S/n 954322`, Notes `N/A`, folder
+  `FOR-LAB-001A`, filename `Drive_G_Seagate_SN954322`. (Examiner = the student's own name.)
+- **Labs 06, 07, 09, 13, 14, 16, 18, 19, 20** — the Autopsy "Optional Information" screen now
+  states plainly that only the **examiner Name = your own name** matters; Phone / Email /
+  case-Number on that screen are NDG placeholder examples, so there's nothing to copy from a
+  screenshot.
+- **Lab 21** — the intake and chain-of-custody form text (the EID 001 description and the
+  service-type request) is written out in full, since it's free-text the student types into
+  the PDF form.
+
+Student-supplied values are shown in the accent colour and italic (e.g. *your name*) so it's
+obvious they are not fixed. The block reuses the existing palette/fonts — no design change.

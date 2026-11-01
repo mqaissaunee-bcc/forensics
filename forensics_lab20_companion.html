@@ -242,6 +242,16 @@ html[data-present="on"] .pm-dock{position:fixed;left:0;right:0;bottom:0;z-index:
   background:var(--mb,var(--ac));border-radius:4px;padding:1px 7px;margin-right:7px;vertical-align:middle}
 .src-note{border-radius:var(--rs);padding:11px 15px;margin:12px 0;border-left:4px solid var(--warn);background:var(--warnG);font-size:.9rem;color:var(--tx1)}
 .src-note b{color:var(--tx0)}
+/* field-values block (standalone-resource reconciliation) */
+#fullsteps .fvals{margin:11px 0 4px;border:1px solid var(--bdr);border-left:4px solid var(--ac2);border-radius:var(--rs);background:var(--acG);overflow:hidden}
+#fullsteps .fvals .fv-h{font-family:var(--fM);font-size:.7rem;letter-spacing:.8px;text-transform:uppercase;color:var(--ac);font-weight:600;padding:8px 13px 4px}
+#fullsteps .fvals table{width:100%;border-collapse:collapse;min-width:0;font-size:.86rem;margin:0}
+#fullsteps .fvals td{padding:5px 13px;border:none;vertical-align:top;background:transparent}
+#fullsteps .fvals tr td:first-child{color:var(--tx2);white-space:nowrap;width:1%;font-weight:600}
+#fullsteps .fvals tr td:last-child{color:var(--tx0);font-family:var(--fM);font-size:.82rem;word-break:break-word}
+#fullsteps .fvals tr:nth-child(even) td{background:transparent}
+#fullsteps .fvals .fv-own{font-family:var(--fB);font-style:italic;color:var(--hi);font-weight:600}
+#fullsteps .fvals .fv-note{display:block;padding:4px 13px 9px;font-family:var(--fB);font-size:.8rem;color:var(--tx2);font-style:italic}
 
 </style>
 </head>
@@ -324,7 +334,7 @@ html[data-present="on"] .pm-dock{position:fixed;left:0;right:0;bottom:0;z-index:
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">4</span> The Select window will appear. Navigate to This PC &gt; Evidence Repository (E:) &gt; FOR_LAB_020 as seen in items 1, 2, and 3. Once there, click the Create New Folder icon to create a new folder, as seen in item 4.</h3></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">5</span> Next, name the folder <code>Autopsy</code> as seen in item 1, then click Select as seen in item 2 below to use this folder as the case directory.</h3></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">6</span> You will be taken back to the Case Information window. Verify that all the paths and names are correct, and then click Next as highlighted below.</h3></div>
-<div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">7</span> The next window in the New Case wizard is the Optional information window. Here you can type more information about the case and examiner. Fill in the information as seen in the fields below, and then click Finish when you are done. Remember, the Name field highlighted within the Examiner section should contain your name.</h3></div>
+<div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">7</span> The next window in the New Case wizard is the Optional information window. Here you can type more information about the case and examiner. Fill in the information as seen in the fields below, and then click Finish when you are done. Remember, the Name field highlighted within the Examiner section should contain your name.</h3><div class="fvals"><div class="fv-h">✍️ Values to enter &mdash; Optional Information (examiner)</div><table><tbody><tr><td>Examiner Name</td><td><span class="fv-own">your name</span></td></tr><tr><td>Phone</td><td>(555) 555-5555 (example)</td></tr><tr><td>Email</td><td>youremail@yourdomain.com (example)</td></tr></tbody></table><span class="fv-note">Only your name matters here; the rest are placeholder examples.</span></div></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">8</span> You will now be taken to the Add Data Source window. Here you can choose between different evidence sources. In this exercise, we will be using a Forensic Evidence File ( FEF) so let us select Disk Image or VM file and click Next as highlighted below.</h3></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">9</span> The next window will allow you to choose the image you want to add to the case. Click the Browse button highlighted below to open the Open window that allows you to browse for the FEF.</h3></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">10</span> In the Open window, browse to ThisPC &gt; Evidence Repository 2 (H:) &gt; Forensic Evidence Files &gt; FOR_LAB_020 &gt; FEF and click the file called Lab20_FEF.E01 and then click Open as highlighted in steps 1 - 7 below.</h3></div>

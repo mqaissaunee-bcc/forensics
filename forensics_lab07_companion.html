@@ -242,6 +242,16 @@ html[data-present="on"] .pm-dock{position:fixed;left:0;right:0;bottom:0;z-index:
   background:var(--mb,var(--ac));border-radius:4px;padding:1px 7px;margin-right:7px;vertical-align:middle}
 .src-note{border-radius:var(--rs);padding:11px 15px;margin:12px 0;border-left:4px solid var(--warn);background:var(--warnG);font-size:.9rem;color:var(--tx1)}
 .src-note b{color:var(--tx0)}
+/* field-values block (standalone-resource reconciliation) */
+#fullsteps .fvals{margin:11px 0 4px;border:1px solid var(--bdr);border-left:4px solid var(--ac2);border-radius:var(--rs);background:var(--acG);overflow:hidden}
+#fullsteps .fvals .fv-h{font-family:var(--fM);font-size:.7rem;letter-spacing:.8px;text-transform:uppercase;color:var(--ac);font-weight:600;padding:8px 13px 4px}
+#fullsteps .fvals table{width:100%;border-collapse:collapse;min-width:0;font-size:.86rem;margin:0}
+#fullsteps .fvals td{padding:5px 13px;border:none;vertical-align:top;background:transparent}
+#fullsteps .fvals tr td:first-child{color:var(--tx2);white-space:nowrap;width:1%;font-weight:600}
+#fullsteps .fvals tr td:last-child{color:var(--tx0);font-family:var(--fM);font-size:.82rem;word-break:break-word}
+#fullsteps .fvals tr:nth-child(even) td{background:transparent}
+#fullsteps .fvals .fv-own{font-family:var(--fB);font-style:italic;color:var(--hi);font-weight:600}
+#fullsteps .fvals .fv-note{display:block;padding:4px 13px 9px;font-family:var(--fB);font-size:.8rem;color:var(--tx2);font-style:italic}
 
 </style>
 </head>
@@ -344,7 +354,7 @@ html[data-present="on"] .pm-dock{position:fixed;left:0;right:0;bottom:0;z-index:
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">4</span> In the Select window, we can browse to the desired location for our case folder. Let us do this by browsing to the folder FOR_LAB_007 that you created earlier at ThisPC &gt; Evidence Repository &gt; FOR_LAB_007 as highlighted in items 1, 2, and 3, respectively . Once there, create a new folder by clicking the Make New Folder button as highlighted in item 4 .</h3></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">5</span> Name this new folder <code>Autopsy Cases</code> and then select it by clicking it once and then click the Select button as highlighted below. This will add the location to the Base Directory field in the New Case information window.</h3></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">6</span> Once you are back to the New Case Information window, verify that all the fields are correct and then click Next as highlighted below.</h3></div>
-<div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">7</span> The next window in the New Case wizard is the Optional Information window. Here you can type more information about the case and examiner. Fill out the information with your details where highlighted as items 1 and 2 below and click Finish as highlighted at item 3 .</h3></div>
+<div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">7</span> The next window in the New Case wizard is the Optional Information window. Here you can type more information about the case and examiner. Fill out the information with your details where highlighted as items 1 and 2 below and click Finish as highlighted at item 3 .</h3><div class="fvals"><div class="fv-h">✍️ Values to enter &mdash; Optional Information (examiner)</div><table><tbody><tr><td>Case Number</td><td>NDG007 (example)</td></tr><tr><td>Examiner Name</td><td><span class="fv-own">your name</span></td></tr><tr><td>Phone</td><td>(555) 555-5555 (example)</td></tr><tr><td>Email</td><td>youremail@yourdomain.com (example)</td></tr></tbody></table><span class="fv-note">Only your name matters here; the rest are placeholder examples.</span></div></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">8</span> You will now be taken to the Add Data Source window. Here you can choose between different evidence sources. In this exercise, we will be using an FEF so let us leave that as default as well and click Next as highlighted below.</h3></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">9</span> The next window will allow you to choose the image you want to add to the case. Click the Browse button highlighted below to open the Open window that allows you to browse for the FEF.</h3></div>
 <div class="step" data-vm="WinOS" style="--mb:#2563A8"><h3 class="fh"><span class="n">10</span> In the Open window, browse to Desktop &gt; Toolbox &gt; Datasets &gt; Lab 7 and click the file called NDG Lab7.001 as highlighted in items 1, 2, 3, 4, and 5 , and then click Open as highlighted in item 6 below.</h3></div>
